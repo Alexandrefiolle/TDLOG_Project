@@ -22,4 +22,3 @@ class Point():
 
     def norm(self, other: Point) -> float:
         return np.sqrt((self._x-other._x)**2 + (self._y-other._y)**2)
-
