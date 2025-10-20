@@ -1,2 +1,2 @@
 from PIL import *
-#im = Image.open('')
+im = Image.open('Carte.png')
