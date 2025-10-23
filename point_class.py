@@ -1,27 +1,14 @@
 from __future__ import annotations
+from dataclasses import dataclass
 import numpy as np
 
-class Point():
-    def __init__(self, x: int, y: int) -> None:
-        self._x = x
-        self._y = y
-
-    @property
-    def x(self) -> int:
-        return self._x
-    @x.setter
-    def x(self, new_x: int) -> None:
-        self._x = new_x
-    
-    @property
-    def y(self) -> int:
-        return self._y
-    @y.setter
-    def y(self, new_y) -> None:
-        self._y = new_y
+@dataclass(frozen=True)
+class Point:
+    x: int
+    y: int
 
     def __eq__(self, other: Point) -> bool:
-        return (self._x == other._x) and (self._y == other._y)
+        return (self.x == other.x) and (self.y == other.y)
 
-    def norm(self, other: Point) -> float:
-        return np.sqrt((self._x-other._x)**2 + (self._y-other._y)**2)
+    def norm(self, other: "Point") -> float:
+        return np.sqrt((self.x - other.x) ** 2 + (self.y - other.y) ** 2)

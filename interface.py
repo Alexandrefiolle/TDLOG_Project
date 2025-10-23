@@ -29,7 +29,7 @@ class GreyImage:
         return self._graph
     
     def __getitem__(self, key: pc.Point) -> int:
-        return self._grey_levels[key]
+        return self._graph[key]
     
     def neighbors(self, m: pc.Point) -> list[pc.Point]:
         """Returns the list of neighbors of a given point m"""
