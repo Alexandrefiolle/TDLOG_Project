@@ -1,5 +1,5 @@
-import numpy as np
 from __future__ import annotations
+import numpy as np
 
 class Point():
     def __init__(self, x: int, y: int) -> None:
@@ -19,6 +19,9 @@ class Point():
     @y.setter
     def y(self, new_y) -> None:
         self._y = new_y
+
+    def __eq__(self, other: Point) -> bool:
+        return (self._x == other._x) and (self._y == other._y)
 
     def norm(self, other: Point) -> float:
         return np.sqrt((self._x-other._x)**2 + (self._y-other._y)**2)
