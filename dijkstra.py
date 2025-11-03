@@ -50,12 +50,17 @@ def distances_costs(start: pc.Point, end: pc.Point, grey_levels: ui.GreyImage) -
 
 def coloration_map(distances: dict[pc.Point, float], grey_levels: ui.GreyImage) -> np.ndarray:
     """Colors the map according to the distances computed"""
-    max_dist = max(distances.values())
+    max_dist = 0
+    for distance in distances.values():
+        if distance < np.inf and distance>max_dist:
+            max_dist = distance
     min_dist = min(distances.values())
+    print(max_dist)
     colored_map = np.zeros((grey_levels.height, grey_levels.width, 3), dtype=np.uint8)
     for point, distance in distances.items():
-        intensity = int(255 * (distance - min_dist) / (max_dist - min_dist))
-        colored_map[point.x, point.y] = [intensity, intensity, intensity]
+        if distance < np.inf:
+            intensity = int(255 * (distance - min_dist) / (max_dist - min_dist))
+            colored_map[point.x, point.y] = [intensity, intensity, intensity]
     return colored_map
 
 if __name__ == "__main__":
