@@ -42,7 +42,7 @@ def distances_costs(start: pc.Point, end: pc.Point, grey_levels: ui.GreyImage) -
         candidate = to_visit.remove()
         if candidate == end: break
         for neighbor in grey_levels.neighbors(candidate):
-            cost = grey_levels.cost(candidate, neighbor, epsilon)
+            cost = grey_levels.cost(start, neighbor, epsilon)
             if dist[neighbor] > dist[candidate] + cost:
                 dist[neighbor] = dist[candidate] + cost
                 to_visit.append(neighbor, dist[neighbor])
@@ -60,7 +60,7 @@ def coloration_map(distances: dict[pc.Point, float], grey_levels: ui.GreyImage) 
     for point, distance in distances.items():
         if distance < np.inf:
             intensity = int(255 * (distance - min_dist) / (max_dist - min_dist))
-            colored_map[point.x, point.y] = [intensity, intensity, intensity]
+            colored_map[point.x, point.y] = [255-intensity, intensity, intensity]
     return colored_map
 
 if __name__ == "__main__":
