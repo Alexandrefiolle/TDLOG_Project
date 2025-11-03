@@ -12,3 +12,6 @@ class Point:
 
     def norm(self, other: "Point") -> float:
         return np.sqrt((self.x - other.x) ** 2 + (self.y - other.y) ** 2)
+    
+    def __lt__(self, other: Point) -> bool:
+        return True
