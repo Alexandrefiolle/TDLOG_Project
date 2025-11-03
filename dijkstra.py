@@ -3,6 +3,8 @@ import interface as ui
 from collections import deque
 import numpy as np
 import heapq
+import matplotlib.pyplot as plt
+import matplotlib.colors as col
 
 epsilon = 2.0
 
@@ -76,19 +78,22 @@ def coloration_map(distances: dict[pc.Point, float], grey_levels: ui.GreyImage) 
     min_dist = min(distances.values())
     print(max_dist)
     colored_map = np.zeros((grey_levels.height, grey_levels.width, 3), dtype=np.uint8)
+    myMap = plt.get_cmap('Spectral')
     for point, distance in distances.items():
         if distance < np.inf:
-            intensity = int(255 * (distance - min_dist) / (max_dist - min_dist))
-            colored_map[point.x, point.y] = [255-intensity, intensity, intensity]
+            intensity = (distance - min_dist) / (max_dist - min_dist)
+            color = col.to_rgb(myMap(intensity))
+            color_list = [color[0], color[1], color[2]]
+            for i in range (3):
+                color_list[i] = int(255*color_list[i])
+            colored_map[point.x, point.y] = color_list
     return colored_map
 
 if __name__ == "__main__":
     im = ui.GreyImage(ui.im_array)
     start = pc.Point(10,10)
-    end = pc.Point(700,1000)
+    end = pc.Point(701,1325)
     distances = distances_costs(start, end, im)
     colored_map = coloration_map(distances, im)
     img = ui.Image.fromarray(colored_map, 'RGB')
     img.show()
-
-    #   fzon    onfzpo  
