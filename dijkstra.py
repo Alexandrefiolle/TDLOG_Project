@@ -9,7 +9,7 @@ class PriorityQueue:
     def __init__(self, dic: dict[pc.Point, float]) -> None:
         self._dic = dic
     
-    def _find_higher_priority_point(self) -> pc.Point:
+    def _find_higher_priority_point(self) -> pc.Point: # ensuite, utiliser un tas de priorité
         dist_inf = np.inf
         best_point = None
         for (point, distance) in self._dic.items():

@@ -4,7 +4,7 @@ import point_class as pc
 
 im = Image.open('Carte.png')
 im.show()
-im_array = np.array(im)
+im_array = np.array(im.convert('L'), dtype=np.int16)
 print(im_array.shape)
 print(im_array[0][0])
 
@@ -45,6 +45,7 @@ class GreyImage:
             neigh.append(pc.Point(x, y+1))
         return neigh
     
-    def cost(self, m0: pc.Point, m: pc.Point, epsilon: float) -> float:
+    def cost(self, m0: pc.Point, m: pc.Point, epsilon: float=1) -> float:
         """Computes the cost induced two points of the image"""
+        print(self[m0].dtype, self[m].dtype)
         return epsilon + np.abs(self[m0] - self[m])
