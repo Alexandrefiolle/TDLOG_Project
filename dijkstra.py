@@ -1,5 +1,5 @@
 import point_class as pc
-import interface as ui
+import manipulation as ui
 from collections import deque
 import numpy as np
 
@@ -64,7 +64,7 @@ def coloration_map(distances: dict[pc.Point, float], grey_levels: ui.GreyImage) 
     return colored_map
 
 if __name__ == "__main__":
-    im = ui.GreyImage(ui.im_array)
+    im = ui.GreyImage('Carte.png')
     start = pc.Point(10,10)
     end = pc.Point(400,400)
     distances = distances_costs(start, end, im)
