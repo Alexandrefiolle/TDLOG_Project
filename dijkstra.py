@@ -71,3 +71,5 @@ if __name__ == "__main__":
     colored_map = coloration_map(distances, im)
     img = ui.Image.fromarray(colored_map, 'RGB')
     img.show()
+
+    #   fzon    onfzpo  
