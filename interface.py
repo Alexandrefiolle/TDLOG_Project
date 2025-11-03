@@ -47,5 +47,4 @@ class GreyImage:
     
     def cost(self, m0: pc.Point, m: pc.Point, epsilon: float=1) -> float:
         """Computes the cost induced two points of the image"""
-        #print(self[m0].dtype, self[m].dtype)
         return epsilon + np.abs(self[m0] - self[m])
