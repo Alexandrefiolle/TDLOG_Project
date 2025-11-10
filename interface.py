@@ -16,6 +16,7 @@ class Menu(widgets.QGroupBox):
     def __init__(self) -> None:
         super().__init__(None)
         assert isinstance(self, widgets.QWidget), "problem"
+
         self.select_button = widgets.QPushButton("Select an image", self)
         self.select_button.clicked.connect(self.select_button_was_clicked)
         self.original_image_button = widgets.QPushButton("Original image", self)
@@ -49,7 +50,7 @@ class Menu(widgets.QGroupBox):
         pass
 
 class Vue(widgets.QGroupBox):
-
+    pass
     def __init__(self):
         super().__init__(None)
         vertical = widgets.QVBoxLayout(self)
