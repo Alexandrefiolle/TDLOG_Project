@@ -47,15 +47,11 @@ class Menu(widgets.QGroupBox):
 class Vue(widgets.QGroupBox):
 
     def __init__(self):
-        super().__init__()
-        central = widgets.QWidget()
-        vertical = widgets.QVBoxLayout()
-        self.texte = widgets.QLabel()
-        vertical.addWidget(self.texte)
+        super().__init__(None)
+        self.texte = widgets.QLabel("Lorem ipsum &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+        self.texte.setVisible(True)
         self.image = gui.QImage()
-        vertical.addWidget(self.image)
-        central.setLayout(vertical)
-        self.setCentralWidget(central)
+        
 
 class Window(widgets.QMainWindow):
     """A simple window class to open and display an image."""
