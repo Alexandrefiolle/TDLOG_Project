@@ -5,7 +5,7 @@ import numpy as np
 import heapq
 import matplotlib.pyplot as plt
 import matplotlib.colors as col
-
+from math import*
 epsilon = 2.0
 
 class PriorityQueue:
@@ -71,11 +71,77 @@ def coloration_map(distances: dict[pc.Point, float], grey_levels: ui.GreyImage) 
             colored_map[point.x, point.y] = color_list
     return colored_map
 
+def gradient_point_x(point: pc.Point, dist: dict[pc.Point, float], grey_levels: ui.GreyImage) -> float:
+    """Compute the gradient of a point of the distance_map"""
+    p_east = pc.Point(point.x+1, point.y)
+    p_west = pc.Point(point.x-1,point.y)
+    if not(dist[p_east] < np.inf) or not(point.x<grey_levels.width - 2): # petit souci pour x grand (point.x=700)
+        p_east = point
+    if point.x==0:
+        p_west = point
+    print(p_west, point)
+    return (dist[p_east] - dist[p_west])/2
+
+def gradient_point_y(point: pc.Point, dist: dict[pc.Point, float], grey_levels: ui.GreyImage) -> float:
+    """Compute the gradient of a point of the distance_map"""
+    p_north = pc.Point(point.x, point.y-1)
+    p_south = pc.Point(point.x, point.y+1)
+    if point.y==0 :
+        p_north = point
+    if not(dist[p_south] < np.inf) or not(point.y<grey_levels.height - 2):
+        p_south = point
+    return (dist[p_north] - dist[p_south])/2
+
+def gradient_x(dist: dict[pc.Point, float], grey_levels: ui.GreyImage) -> dict[pc.Point, float]:
+    """compute the gradient on the distance map"""
+    image_gradient = {}
+    for point in dist:
+        if dist[point] < np.inf:
+            image_gradient[point] = gradient_point_x(point, dist, grey_levels)
+    return image_gradient
+
+def gradient_y(dist: dict[pc.Point, float], grey_levels: ui.GreyImage) -> dict[pc.Point, float]:
+    """compute the gradient on the distance map"""
+    image_gradient = {}
+    for point in dist:
+        if dist[point] < np.inf:
+           image_gradient[point] = gradient_point_y(point, dist, grey_levels)
+    return image_gradient
+
+def gradient_on_image(dist: dict[pc.Point, float], grey_levels: ui.GreyImage) -> np.ndarray:
+    """Display the gradient on an image"""
+    grad_x = gradient_x(dist, grey_levels)
+    grad_y = gradient_y(dist, grey_levels)
+    #print(grad_x, grad_y)
+    colored_map = np.zeros((grey_levels.height, grey_levels.width, 3), dtype=np.uint8)
+    myMap = plt.get_cmap('GnBu')
+    intensity = {}
+    max_intensity = 0
+    for point in grad_x:
+        intensity[point] = sqrt(abs(grad_x[point])+abs(grad_y[point]))
+        #print(grad_x[point], grad_y[point])
+        if intensity[point] > max_intensity and intensity[point] < np.inf:
+            max_intensity = intensity[point]
+    print(max_intensity)
+    for point in grad_x:
+        if intensity[point]<np.inf:
+            r = intensity[point]/max_intensity
+            theta = (atan2(grad_y[point],grad_x[point])*180/np.pi+180)/360
+            color = col.to_rgb(myMap(theta))
+            color_list = [color[0], color[1], color[2]]
+            for i in range (3):
+                color_list[i] = int(255*color_list[i]*r)
+            colored_map[point.x, point.y] = color_list
+    return colored_map
+
 if __name__ == "__main__":
     im = ui.GreyImage(ui.im_array)
     start = pc.Point(10,10)
-    end = pc.Point(400,400)
+    end = pc.Point(700,100)
     distances = distances_costs(start, end, im)
     colored_map = coloration_map(distances, im)
     img = ui.Image.fromarray(colored_map, 'RGB')
+    img.show()
+    grad_image = gradient_on_image(distances, im)
+    img = ui.Image.fromarray(grad_image, 'RGB')
     img.show()
