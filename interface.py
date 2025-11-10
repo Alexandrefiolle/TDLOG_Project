@@ -7,21 +7,18 @@ import PyQt6.QtWidgets as widgets
 import PyQt6.QtGui as gui
 from PIL import Image
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-class Menu(widgets.QMainWindow):
-=======
-=======
 class Vue(widgets.QGroupBox):
-    pass
     def __init__(self):
         super().__init__(None)
-        self.texte = widgets.QLabel("Lorem ipsum &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-        self.texte.setVisible(True)
-        self.image = gui.QImage()
-    
-    def change_image(self, path) -> None:
-        pass
+        vertical = widgets.QVBoxLayout(self)
+        self.texte = widgets.QLabel("Lorem ipsum ", self)
+        vertical.addWidget(self.texte)
+        self.image = widgets.QLabel(self)
+        vertical.addWidget(self.image)
+        self.image.setPixmap(gui.QPixmap("Carte.png").scaledToWidth(1000, mode = Qt.TransformationMode.SmoothTransformation))
+
+    def change_image(self, path):
+        self.image.setPixmap(gui.QPixmap(path).scaledToWidth(1000, mode = Qt.TransformationMode.SmoothTransformation))
 
 >>>>>>> 01afcae (send image to class Vue)
 class Menu(widgets.QGroupBox):
@@ -63,9 +60,8 @@ class Menu(widgets.QGroupBox):
     def path_button_was_clicked(self) -> None:
         pass
 
-<<<<<<< HEAD
 class Vue(widgets.QGroupBox):
-    pass
+
     def __init__(self):
         super().__init__(None)
         vertical = widgets.QVBoxLayout(self)
@@ -78,8 +74,6 @@ class Vue(widgets.QGroupBox):
     def change_image(self, path):
         self.image.setPixmap(gui.QPixmap(path).scaledToWidth(1000, mode = Qt.TransformationMode.SmoothTransformation))
 
-=======
->>>>>>> 01afcae (send image to class Vue)
 class Window(widgets.QMainWindow):
     """A simple window class to open and display an image."""
     def __init__(self) -> None:
