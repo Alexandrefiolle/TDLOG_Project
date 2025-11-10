@@ -48,10 +48,15 @@ class Vue(widgets.QGroupBox):
 
     def __init__(self):
         super().__init__(None)
-        self.texte = widgets.QLabel("Lorem ipsum &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-        self.texte.setVisible(True)
-        self.image = gui.QImage()
-        
+        vertical = widgets.QVBoxLayout(self)
+        self.texte = widgets.QLabel("Lorem ipsum ", self)
+        vertical.addWidget(self.texte)
+        self.image = widgets.QLabel(self)
+        vertical.addWidget(self.image)
+        self.image.setPixmap(gui.QPixmap("Carte.png").scaledToWidth(1000, mode = Qt.TransformationMode.SmoothTransformation))
+
+    def change_image(self, path):
+        self.image.setPixmap(gui.QPixmap(path).scaledToWidth(1000, mode = Qt.TransformationMode.SmoothTransformation))
 
 class Window(widgets.QMainWindow):
     """A simple window class to open and display an image."""
@@ -60,12 +65,12 @@ class Window(widgets.QMainWindow):
         super().__init__(None)
         central = widgets.QWidget()
         horizontal = widgets.QHBoxLayout()
+        self.vue = Vue()
+        self.menu = Menu(self.vue)
         horizontal.addWidget(Menu())
         horizontal.addWidget(Vue())
         central.setLayout(horizontal)
         self.setCentralWidget(central)
-
-       
  
 
 if __name__ == "__main__":
