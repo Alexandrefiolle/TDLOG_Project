@@ -83,8 +83,8 @@ class Window(widgets.QMainWindow):
         horizontal = widgets.QHBoxLayout()
         self.vue = Vue()
         self.menu = Menu(self.vue)
-        horizontal.addWidget(Menu())
-        horizontal.addWidget(Vue())
+        horizontal.addWidget(self.menu)
+        horizontal.addWidget(self.vue)
         central.setLayout(horizontal)
         self.setCentralWidget(central)
  
