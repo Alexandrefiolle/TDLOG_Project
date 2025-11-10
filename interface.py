@@ -4,9 +4,10 @@ import sys
 import PyQt6
 from PyQt6.QtCore import Qt
 import PyQt6.QtWidgets as widgets
+import PyQt6.QtGui as gui
 from PIL import Image
 
-class Menu:
+class Menu(widgets.QGroupBox):
      
     def __init__(self):
         self.a_button = widgets.QPushButton("click me", self)
@@ -20,10 +21,18 @@ class Menu:
         pic.setPixmap(PyQt6.QtGui.QPixmap(file_name).scaledToHeight(500, mode = Qt.TransformationMode.SmoothTransformation))
         pic.show()
 
-class Vue:
+class Vue(widgets.QGroupBox):
 
-    def __init__():
-        pass
+    def __init__(self):
+        super().__init__()
+        central = widgets.QWidget()
+        vertical = widgets.QVBoxLayout()
+        self.texte = widgets.QLabel()
+        vertical.addWidget(self.texte)
+        self.image = gui.QImage()
+        vertical.addWidget(self.image)
+        central.setLayout(vertical)
+        self.setCentralWidget(central)
 
 class Window(widgets.QMainWindow):
     """A simple window class to open and display an image."""
