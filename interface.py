@@ -6,19 +6,42 @@ from PyQt6.QtCore import Qt
 import PyQt6.QtWidgets as widgets
 from PIL import Image
 
-class Menu:
+class Menu(widgets.QMainWindow):
      
-    def __init__(self):
-        self.a_button = widgets.QPushButton("click me", self)
-        self.a_button.clicked.connect(self.a_button_was_clicked)
+    def __init__(self) -> None:
+        super().__init__(None)
+        assert isinstance(self, widgets.QWidget), "problem"
+        self.select_button = widgets.QPushButton("Select an image", self)
+        self.select_button.clicked.connect(self.select_button_was_clicked)
+        self.original_image_button = widgets.QPushButton("Original image", self)
+        self.original_image_button.clicked.connect(self.original_image_button_was_selected)
+        self.distances_map_button = widgets.QPushButton("Distances map", self)
+        self.distances_map_button.clicked.connect(self.distances_map_button_was_selected)
+        self.gradients_map_button = widgets.QPushButton("Gradients map", self)
+        self.gradients_map_button.clicked.connect(self.gradients_map_button_was_clicked)
+        self.path_button = widgets.QPushButton("Print the optimal path", self)
+        self.path_button.clicked.connect(self.path_button_was_clicked)
 
-    def a_button_was_clicked(self) -> None:
+    def select_button_was_clicked(self) -> None:
         """Handles the button click event to open a file dialog and display the selected image."""
-        file_name, _ = widgets.QFileDialog.getOpenFileName(self)
-        pic = widgets.QLabel(self)
-        pic.setGeometry(0, 50, 1325, 701)
-        pic.setPixmap(PyQt6.QtGui.QPixmap(file_name).scaledToHeight(500, mode = Qt.TransformationMode.SmoothTransformation))
-        pic.show()
+        pass
+        #file_name, _ = widgets.QFileDialog.getOpenFileName(self)
+        #pic = widgets.QLabel(self)
+        #pic.setGeometry(0, 50, 1325, 701)
+        #pic.setPixmap(PyQt6.QtGui.QPixmap(file_name).scaledToHeight(500, mode = Qt.TransformationMode.SmoothTransformation))
+        #pic.show()
+
+    def original_image_button_was_selected(self) -> None:
+        pass
+
+    def distances_map_button_was_selected(self) -> None:
+        pass
+
+    def gradients_map_button_was_clicked(self) -> None:
+        pass
+    
+    def path_button_was_clicked(self) -> None:
+        pass
 
 class Vue:
 
