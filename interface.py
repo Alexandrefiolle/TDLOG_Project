@@ -4,9 +4,14 @@ import sys
 import PyQt6
 from PyQt6.QtCore import Qt
 import PyQt6.QtWidgets as widgets
+import PyQt6.QtGui as gui
 from PIL import Image
 
+<<<<<<< HEAD
 class Menu(widgets.QMainWindow):
+=======
+class Menu(widgets.QGroupBox):
+>>>>>>> 7163366 (Implémentation de Vue)
      
     def __init__(self) -> None:
         super().__init__(None)
@@ -43,10 +48,18 @@ class Menu(widgets.QMainWindow):
     def path_button_was_clicked(self) -> None:
         pass
 
-class Vue:
+class Vue(widgets.QGroupBox):
 
-    def __init__():
-        pass
+    def __init__(self):
+        super().__init__()
+        central = widgets.QWidget()
+        vertical = widgets.QVBoxLayout()
+        self.texte = widgets.QLabel()
+        vertical.addWidget(self.texte)
+        self.image = gui.QImage()
+        vertical.addWidget(self.image)
+        central.setLayout(vertical)
+        self.setCentralWidget(central)
 
 class Window(widgets.QMainWindow):
     """A simple window class to open and display an image."""
