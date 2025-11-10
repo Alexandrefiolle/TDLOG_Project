@@ -2,15 +2,13 @@
 
 import sys
 import PyQt6
+from PyQt6.QtCore import Qt
 import PyQt6.QtWidgets as widgets
 from PIL import Image
 
-class MyWindow(widgets.QMainWindow):
-    """A simple window class to open and display an image."""
-    def __init__(self) -> None:
-        """Initializes the main window and its components."""
-        super().__init__(None)
-        self.setGeometry(200, 100, 500, 400) # size and position of␣
+class Menu:
+     
+    def __init__(self):
         self.a_button = widgets.QPushButton("click me", self)
         self.a_button.clicked.connect(self.a_button_was_clicked)
 
@@ -19,13 +17,32 @@ class MyWindow(widgets.QMainWindow):
         file_name, _ = widgets.QFileDialog.getOpenFileName(self)
         pic = widgets.QLabel(self)
         pic.setGeometry(0, 50, 1325, 701)
-        pic.setPixmap(PyQt6.QtGui.QPixmap(file_name).scaledToHeight(500))
+        pic.setPixmap(PyQt6.QtGui.QPixmap(file_name).scaledToHeight(500, mode = Qt.TransformationMode.SmoothTransformation))
         pic.show()
+
+class Vue:
+
+    def __init__():
+        pass
+
+class Window(widgets.QMainWindow):
+    """A simple window class to open and display an image."""
+    def __init__(self) -> None:
+        """Initializes the main window and its components."""
+        super().__init__(None)
+        central = widgets.QWidget()
+        horizontal = widgets.QHBoxLayout()
+        horizontal.addWidget(Menu())
+        horizontal.addWidget(Vue())
+        central.setLayout(horizontal)
+        self.setCentralWidget(central)
+
+       
  
 
 if __name__ == "__main__":
     application = widgets.QApplication(sys.argv)
-    main_window = MyWindow()
-    main_window.show()
+    main_window = Window()
+    main_window.showMaximized()
     sys.exit(application.exec())
 
