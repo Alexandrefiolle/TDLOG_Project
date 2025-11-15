@@ -8,16 +8,12 @@ import PyQt6.QtGui as gui
 from PIL import Image
 
 class Vue(widgets.QGroupBox):
-<<<<<<< HEAD
-    def __init__(self):
-=======
     """
     A view class to display an image and some text, 
     which will constitute one of the two parts of the graphic window.
     """
     def __init__(self) -> None:
         """Initializes the view with a label for text and an image display area."""
->>>>>>> 01d248fad92498c78dece39070811b0cd231e826
         super().__init__(None)
         vertical = widgets.QVBoxLayout(self)
         self.texte = widgets.QLabel("Lorem ipsum ", self)
@@ -29,9 +25,6 @@ class Vue(widgets.QGroupBox):
     def change_image(self, path) -> None:
         """Changes the displayed image to the one located at the given path."""
         self.image.setPixmap(gui.QPixmap(path).scaledToWidth(1000, mode = Qt.TransformationMode.SmoothTransformation))
-<<<<<<< HEAD
-class Menu(widgets.QGroupBox):     
-=======
 
 class Menu(widgets.QGroupBox):
     """
@@ -39,7 +32,6 @@ class Menu(widgets.QGroupBox):
     to enable functionalities such as loading an image, 
     displaying different maps, and printing the optimal path.
     """ 
->>>>>>> 01d248fad92498c78dece39070811b0cd231e826
     def __init__(self, vue: Vue) -> None:
         """Initializes the menu with buttons linked to various functionalities."""
         super().__init__(None)
