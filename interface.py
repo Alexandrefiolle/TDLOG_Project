@@ -19,11 +19,7 @@ class Vue(widgets.QGroupBox):
 
     def change_image(self, path):
         self.image.setPixmap(gui.QPixmap(path).scaledToWidth(1000, mode = Qt.TransformationMode.SmoothTransformation))
-
->>>>>>> 01afcae (send image to class Vue)
-class Menu(widgets.QGroupBox):
->>>>>>> 7163366 (Implémentation de Vue)
-     
+class Menu(widgets.QGroupBox):     
     def __init__(self, vue: Vue) -> None:
         super().__init__(None)
         self.select_button = widgets.QPushButton("Select an image", self)
@@ -59,20 +55,6 @@ class Menu(widgets.QGroupBox):
     
     def path_button_was_clicked(self) -> None:
         pass
-
-class Vue(widgets.QGroupBox):
-
-    def __init__(self):
-        super().__init__(None)
-        vertical = widgets.QVBoxLayout(self)
-        self.texte = widgets.QLabel("Lorem ipsum ", self)
-        vertical.addWidget(self.texte)
-        self.image = widgets.QLabel(self)
-        vertical.addWidget(self.image)
-        self.image.setPixmap(gui.QPixmap("Carte.png").scaledToWidth(1000, mode = Qt.TransformationMode.SmoothTransformation))
-
-    def change_image(self, path):
-        self.image.setPixmap(gui.QPixmap(path).scaledToWidth(1000, mode = Qt.TransformationMode.SmoothTransformation))
 
 class Window(widgets.QMainWindow):
     """A simple window class to open and display an image."""
