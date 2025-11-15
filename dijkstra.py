@@ -5,6 +5,7 @@ import point_class as pc
 import manipulation as ui
 from collections import deque
 import numpy as np
+import heapq
 
 epsilon = 2.0 # constant cost added to each movement
 
@@ -35,7 +36,25 @@ class PriorityQueue:
     def size(self) -> int:
         """Returns the current size of the priority queue."""
         return len(self._dic)
-        
+
+class PriorityQueue_heap:
+    def __init__(self, heap: list[pc.Point, float]) -> None:
+        self._heap = heap
+    
+    def _find_higher_priority_point(self) -> pc.Point: 
+        best_point = self._heap[0][1]
+        return best_point
+
+    def append(self, point: pc.Point, priority: float) -> None:
+        heapq.heappush(self._heap, (priority, point)) # this function adds the new value (priority, point) by preseving the heap structure
+
+    def remove(self) -> pc.Point:
+        best_point = self._find_higher_priority_point()
+        heapq.heappop(self._heap) 
+        return best_point
+    
+    def size(self) -> int:
+        return len(self._heap)  
 
 def distances_costs(start: pc.Point, end: pc.Point, grey_levels: ui.GreyImage) -> dict[pc.Point, float]:
     """Computes the list of shortest path costs from start until we reach the end point"""
@@ -43,7 +62,7 @@ def distances_costs(start: pc.Point, end: pc.Point, grey_levels: ui.GreyImage) -
     for point in grey_levels.graph.keys():
         dist[point] = np.inf
     dist[start] = 0
-    to_visit = PriorityQueue({})
+    to_visit = PriorityQueue_heap([])
     to_visit.append(start, 0)
     while to_visit.size() > 0:
         candidate = to_visit.remove()
