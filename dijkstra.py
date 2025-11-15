@@ -70,6 +70,10 @@ def coloration_map(distances: dict[pc.Point, float], grey_levels: ui.GreyImage) 
             colored_map[point.x, point.y] = [255-intensity, intensity, intensity]
     return colored_map
 
+def distances_map(start: pc.Point, end: pc.Point, grey_levels: ui.GreyImage) -> np.ndarray:
+    """Generates a colored distances map from start to end points based on grey levels."""
+    return coloration_map(distances_costs(start, end, grey_levels), grey_levels)
+
 if __name__ == "__main__":
     im = ui.GreyImage('Carte.png')
     start = pc.Point(10,10)
