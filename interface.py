@@ -1,50 +1,106 @@
+"This file aims at creating a simple interface which allows the user to open and display an image."
+
+import sys
+import PyQt6
+from PyQt6.QtCore import Qt
+import PyQt6.QtWidgets as widgets
+import PyQt6.QtGui as gui
 from PIL import Image
-import numpy as np
-import point_class as pc
 
-im = Image.open('Carte.png')
-im.show()
-im_array = np.array(im.convert('L'), dtype=np.int16)
-print(im_array.shape)
-print(im_array[0][0])
+class Vue(widgets.QGroupBox):
+<<<<<<< HEAD
+    def __init__(self):
+=======
+    """
+    A view class to display an image and some text, 
+    which will constitute one of the two parts of the graphic window.
+    """
+    def __init__(self) -> None:
+        """Initializes the view with a label for text and an image display area."""
+>>>>>>> 01d248fad92498c78dece39070811b0cd231e826
+        super().__init__(None)
+        vertical = widgets.QVBoxLayout(self)
+        self.texte = widgets.QLabel("Lorem ipsum ", self)
+        vertical.addWidget(self.texte)
+        self.image = widgets.QLabel(self)
+        vertical.addWidget(self.image)
+        self.image.setPixmap(gui.QPixmap("Carte.png").scaledToWidth(1000, mode = Qt.TransformationMode.SmoothTransformation))
 
-class GreyImage:
-    def __init__(self, image: np.ndarray) -> None:
-        self._height = image.shape[0]
-        self._width = image.shape[1]
-        self._graph: dict[pc.Point, int] = {}
-        for x in range(self._height):
-            for y in range(self._width):
-                p = pc.Point(x,y)
-                self._graph[p] = image[x][y]
+    def change_image(self, path) -> None:
+        """Changes the displayed image to the one located at the given path."""
+        self.image.setPixmap(gui.QPixmap(path).scaledToWidth(1000, mode = Qt.TransformationMode.SmoothTransformation))
+<<<<<<< HEAD
+class Menu(widgets.QGroupBox):     
+=======
 
-    @property
-    def height(self) -> int:
-        return self._height
-    @property
-    def width(self) -> int:
-        return self._width
-    @property
-    def graph(self) -> dict[pc.Point, int]:
-        return self._graph
+class Menu(widgets.QGroupBox):
+    """
+    A menu class with buttons to interact with the image view,
+    to enable functionalities such as loading an image, 
+    displaying different maps, and printing the optimal path.
+    """ 
+>>>>>>> 01d248fad92498c78dece39070811b0cd231e826
+    def __init__(self, vue: Vue) -> None:
+        """Initializes the menu with buttons linked to various functionalities."""
+        super().__init__(None)
+        self.select_button = widgets.QPushButton("Select an image", self)
+        self.select_button.setGeometry(10, 10, 150, 30)
+        self.select_button.clicked.connect(self.select_button_was_clicked)
+        self.original_image_button = widgets.QPushButton("Original image", self)
+        self.original_image_button.setGeometry(10, 50, 150, 30)
+        self.original_image_button.clicked.connect(self.original_image_button_was_selected)
+        self.distances_map_button = widgets.QPushButton("Distances map", self)
+        self.distances_map_button.setGeometry(10, 90, 150, 30)
+        self.distances_map_button.clicked.connect(self.distances_map_button_was_selected)
+        self.gradients_map_button = widgets.QPushButton("Gradients map", self)
+        self.gradients_map_button.setGeometry(10, 130, 150, 30)
+        self.gradients_map_button.clicked.connect(self.gradients_map_button_was_clicked)
+        self.path_button = widgets.QPushButton("Print the optimal path", self)
+        self.path_button.setGeometry(10, 170, 150, 30)
+        self.path_button.clicked.connect(self.path_button_was_clicked)
+        self._original_vue = vue
+        self._distances_map_vue = None
+        self._gradients_map_vue = None
+
+    def select_button_was_clicked(self) -> None:
+        """Handles the button click event to open a file dialog and display the selected image."""
+        file_name, _ = widgets.QFileDialog.getOpenFileName(self)
+        self._original_vue.change_image(file_name)
+
+    def original_image_button_was_selected(self) -> None:
+        """Handles the button click event to display the original image."""
+        pass
+
+    def distances_map_button_was_selected(self) -> None:
+        """Handles the button click event to display the distances map."""
+        pass
+
+    def gradients_map_button_was_clicked(self) -> None:
+        """Handles the button click event to display the gradients map."""
+        pass
     
-    def __getitem__(self, key: pc.Point) -> int:
-        return self._graph[key]
-    
-    def neighbors(self, m: pc.Point) -> list[pc.Point]:
-        """Returns the list of neighbors of a given point m"""
-        neigh = []
-        x, y = m.x, m.y
-        if x > 0:
-            neigh.append(pc.Point(x-1, y))
-        if x < self._height - 1:
-            neigh.append(pc.Point(x+1, y))
-        if y > 0:
-            neigh.append(pc.Point(x, y-1))
-        if y < self._width - 1:
-            neigh.append(pc.Point(x, y+1))
-        return neigh
-    
-    def cost(self, m0: pc.Point, m: pc.Point, epsilon: float=1) -> float:
-        """Computes the cost induced two points of the image"""
-        return epsilon + np.abs(self[m0] - self[m])
+    def path_button_was_clicked(self) -> None:
+        """Handles the button click event to print the optimal path."""
+        pass
+
+class Window(widgets.QMainWindow):
+    """A simple window class to open and display an image."""
+    def __init__(self) -> None:
+        """Initializes the main window and its components."""
+        super().__init__(None)
+        central = widgets.QWidget()
+        horizontal = widgets.QHBoxLayout()
+        self.vue = Vue()
+        self.menu = Menu(self.vue)
+        horizontal.addWidget(self.menu)
+        horizontal.addWidget(self.vue)
+        central.setLayout(horizontal)
+        self.setCentralWidget(central)
+ 
+
+if __name__ == "__main__":
+    application = widgets.QApplication(sys.argv)
+    main_window = Window()
+    main_window.showMaximized()
+    sys.exit(application.exec())
+

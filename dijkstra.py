@@ -1,12 +1,16 @@
+"This file dwells on the implementation of Dijkstra's algorithm "
+"to compute shortest paths on a graph represented by image grey levels."
+
 import point_class as pc
-import interface as ui
+import manipulation as ui
 from collections import deque
 import numpy as np
 
-epsilon = 2.0
+epsilon = 2.0 # constant cost added to each movement
 
 class PriorityQueue:
     def __init__(self, dic: dict[pc.Point, float]) -> None:
+        """Initializes the priority queue with a dictionary of points and their priorities."""
         self._dic = dic
     
     def _find_higher_priority_point(self) -> pc.Point: # ensuite, utiliser un tas de priorité
@@ -19,14 +23,17 @@ class PriorityQueue:
         return best_point
 
     def append(self, point: pc.Point, priority: float) -> None:
+        """Adds a point with its priority to the queue."""
         self._dic[point] = priority
 
     def remove(self) -> pc.Point:
+        """Removes and returns the point with the highest priority (lowest cost)."""
         best_point = self._find_higher_priority_point()
         del self._dic[best_point] 
         return best_point
     
     def size(self) -> int:
+        """Returns the current size of the priority queue."""
         return len(self._dic)
         
 
@@ -63,8 +70,12 @@ def coloration_map(distances: dict[pc.Point, float], grey_levels: ui.GreyImage) 
             colored_map[point.x, point.y] = [255-intensity, intensity, intensity]
     return colored_map
 
+def distances_map(start: pc.Point, end: pc.Point, grey_levels: ui.GreyImage) -> np.ndarray:
+    """Generates a colored distances map from start to end points based on grey levels."""
+    return coloration_map(distances_costs(start, end, grey_levels), grey_levels)
+
 if __name__ == "__main__":
-    im = ui.GreyImage(ui.im_array)
+    im = ui.GreyImage('Carte.png')
     start = pc.Point(10,10)
     end = pc.Point(400,400)
     distances = distances_costs(start, end, im)
