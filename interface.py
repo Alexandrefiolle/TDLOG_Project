@@ -8,7 +8,16 @@ import PyQt6.QtGui as gui
 from PIL import Image
 
 class Vue(widgets.QGroupBox):
+<<<<<<< HEAD
     def __init__(self):
+=======
+    """
+    A view class to display an image and some text, 
+    which will constitute one of the two parts of the graphic window.
+    """
+    def __init__(self) -> None:
+        """Initializes the view with a label for text and an image display area."""
+>>>>>>> 01d248fad92498c78dece39070811b0cd231e826
         super().__init__(None)
         vertical = widgets.QVBoxLayout(self)
         self.texte = widgets.QLabel("Lorem ipsum ", self)
@@ -17,10 +26,22 @@ class Vue(widgets.QGroupBox):
         vertical.addWidget(self.image)
         self.image.setPixmap(gui.QPixmap("Carte.png").scaledToWidth(1000, mode = Qt.TransformationMode.SmoothTransformation))
 
-    def change_image(self, path):
+    def change_image(self, path) -> None:
+        """Changes the displayed image to the one located at the given path."""
         self.image.setPixmap(gui.QPixmap(path).scaledToWidth(1000, mode = Qt.TransformationMode.SmoothTransformation))
+<<<<<<< HEAD
 class Menu(widgets.QGroupBox):     
+=======
+
+class Menu(widgets.QGroupBox):
+    """
+    A menu class with buttons to interact with the image view,
+    to enable functionalities such as loading an image, 
+    displaying different maps, and printing the optimal path.
+    """ 
+>>>>>>> 01d248fad92498c78dece39070811b0cd231e826
     def __init__(self, vue: Vue) -> None:
+        """Initializes the menu with buttons linked to various functionalities."""
         super().__init__(None)
         self.select_button = widgets.QPushButton("Select an image", self)
         self.select_button.setGeometry(10, 10, 150, 30)
@@ -37,23 +58,29 @@ class Menu(widgets.QGroupBox):
         self.path_button = widgets.QPushButton("Print the optimal path", self)
         self.path_button.setGeometry(10, 170, 150, 30)
         self.path_button.clicked.connect(self.path_button_was_clicked)
-        self._vue = vue
+        self._original_vue = vue
+        self._distances_map_vue = None
+        self._gradients_map_vue = None
 
     def select_button_was_clicked(self) -> None:
         """Handles the button click event to open a file dialog and display the selected image."""
         file_name, _ = widgets.QFileDialog.getOpenFileName(self)
-        self._vue.change_image(file_name)
+        self._original_vue.change_image(file_name)
 
     def original_image_button_was_selected(self) -> None:
+        """Handles the button click event to display the original image."""
         pass
 
     def distances_map_button_was_selected(self) -> None:
+        """Handles the button click event to display the distances map."""
         pass
 
     def gradients_map_button_was_clicked(self) -> None:
+        """Handles the button click event to display the gradients map."""
         pass
     
     def path_button_was_clicked(self) -> None:
+        """Handles the button click event to print the optimal path."""
         pass
 
 class Window(widgets.QMainWindow):
