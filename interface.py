@@ -3,13 +3,38 @@
 from __future__ import annotations 
 import sys
 import PyQt6
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QPoint
 import PyQt6.QtWidgets as widgets
 import PyQt6.QtGui as gui
 from PIL import Image
 import dijkstra
 import point_class as pc
 import manipulation as ui
+
+class Image(widgets.QLabel):
+
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.p1 = None
+
+    def mousePressEvent(self, event):
+        if self.underMouse():
+            point = self.mapFromGlobal(gui.QCursor.pos())
+            self.p1 = point
+            print("clicked", point.x(), point.y())
+            point = pc.Point(point.x(), point.y())
+            self.update()
+    
+    def paintEvent(self, a0):
+        painter = gui.QPainter()
+        painter.begin(self)
+        painter.setBrush(gui.QBrush(gui.QColor("red")))
+        print("paint")
+        painter.drawPixmap(self.mapToParent(QPoint()), self.pixmap())
+        if self.p1 is not None:
+            print("painting")
+            painter.drawEllipse(self.p1, 5, 5)
+        painter.end()
 
 class Vue(widgets.QGroupBox):
     """
@@ -22,9 +47,10 @@ class Vue(widgets.QGroupBox):
         vertical = widgets.QVBoxLayout(self)
         self.texte = widgets.QLabel("Lorem ipsum ", self)
         vertical.addWidget(self.texte)
-        self.image = widgets.QLabel(self)
+        self.image = Image(self)
         vertical.addWidget(self.image)
         self.image.setPixmap(gui.QPixmap("Carte.png").scaledToWidth(1000, mode = Qt.TransformationMode.SmoothTransformation))
+        
 
     def change_image(self, path) -> None:
         """Changes the displayed image to the one located at the given path."""
@@ -34,20 +60,7 @@ class Vue(widgets.QGroupBox):
         """Displays the image currently stored in the view."""
         self.image.setPixmap(gui.QPixmap(image_name).scaledToWidth(1000, mode = Qt.TransformationMode.SmoothTransformation))
 
-    def mousePressEvent(self, event):
-        if self.image.underMouse():
-            point = gui.QCursor.pos()
-            print("clicked", point.x(), point.y())
-            point = pc.Point(point.x(), point.y())
-            if self.parent().menu.starting_point is None:
-                self.parent().menu.starting_point = point
-                print("Starting point set to:", point)
-            elif self.parent().menu.ending_point is None:
-                self.parent().menu.ending_point = point
-                print("Ending point set to:", point)
-                self.parent().menu._starting_and_ending_points_set = True
-            else:
-                print("Both starting and ending points are already set.")
+    
         
         
 class Menu(widgets.QGroupBox):
