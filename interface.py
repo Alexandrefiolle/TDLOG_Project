@@ -35,8 +35,9 @@ class Vue(widgets.QGroupBox):
         self.image.setPixmap(gui.QPixmap(image_name).scaledToWidth(1000, mode = Qt.TransformationMode.SmoothTransformation))
 
     def mousePressEvent(self, event):
-        point = gui.QCursor.pos()
-        print("clicked", point.x(), point.y())
+        if self.image.underMouse():
+            point = gui.QCursor.pos()
+            print("clicked", point.x(), point.y())
         
 class Menu(widgets.QGroupBox):
     """
