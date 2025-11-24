@@ -37,6 +37,17 @@ class Vue(widgets.QGroupBox):
     def mousePressEvent(self, event):
         point = gui.QCursor.pos()
         print("clicked", point.x(), point.y())
+        point = pc.Point(point.x(), point.y())
+        if self.parent().menu.starting_point is None:
+            self.parent().menu.starting_point = point
+            print("Starting point set to:", point)
+        elif self.parent().menu.ending_point is None:
+            self.parent().menu.ending_point = point
+            print("Ending point set to:", point)
+            self.parent().menu._starting_and_ending_points_set = True
+        else:
+            print("Both starting and ending points are already set.")
+        
         
 class Menu(widgets.QGroupBox):
     """
@@ -68,6 +79,26 @@ class Menu(widgets.QGroupBox):
         self._distances_map_computed = False
         self._gradients_map_image_name = 'gradients_map.png'
         self._gradients_map_computed = False
+        self._starting_point = None
+        self._ending_point = None
+        self._starting_and_ending_points_set = False
+    
+    @property
+    def starting_point(self) -> pc.Point:
+        """Returns the starting point for pathfinding."""
+        return self._starting_point
+    @starting_point.setter
+    def starting_point(self, point: pc.Point) -> None:
+        """Sets the starting point for pathfinding."""
+        self._starting_point = point
+    @property
+    def ending_point(self) -> pc.Point:
+        """Returns the ending point for pathfinding."""
+        return self._ending_point
+    @ending_point.setter
+    def ending_point(self, point: pc.Point) -> None:
+        """Sets the ending point for pathfinding."""
+        self._ending_point = point
 
     def select_button_was_clicked(self) -> None:
         """Handles the button click event to open a file dialog and display the selected image."""
