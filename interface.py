@@ -25,6 +25,16 @@ class Vue(widgets.QGroupBox):
         self.image = widgets.QLabel(self)
         vertical.addWidget(self.image)
         self.image.setPixmap(gui.QPixmap("Carte.png").scaledToWidth(1000, mode = Qt.TransformationMode.SmoothTransformation))
+        self._menu = None
+
+    @property
+    def menu(self) -> Menu:
+        """Returns the menu associated with the view."""
+        return self._menu
+    @menu.setter
+    def menu(self, menu: Menu) -> None:
+        """Sets the menu associated with the view."""
+        self._menu = menu
 
     def change_image(self, path) -> None:
         """Changes the displayed image to the one located at the given path."""
@@ -37,7 +47,19 @@ class Vue(widgets.QGroupBox):
     def mousePressEvent(self, event):
         point = gui.QCursor.pos()
         print("clicked", point.x(), point.y())
+        point = self.image.mapFromGlobal(point)
+        print("mapped", point.x(), point.y())
         point = pc.Point(point.x(), point.y())
+        if self._menu.starting_point is None:
+            self._menu.starting_point = point
+            print("Starting point set to:", point)
+        elif self._menu.ending_point is None:
+            self._menu.ending_point = point
+            print("Ending point set to:", point)
+            self._menu._starting_and_ending_points_set = True
+        else:
+            print("Both starting and ending points are already set.")
+        """
         if self.parent().menu.starting_point is None:
             self.parent().menu.starting_point = point
             print("Starting point set to:", point)
@@ -47,6 +69,7 @@ class Vue(widgets.QGroupBox):
             self.parent().menu._starting_and_ending_points_set = True
         else:
             print("Both starting and ending points are already set.")
+        """
         
         
 class Menu(widgets.QGroupBox):
@@ -122,6 +145,14 @@ class Menu(widgets.QGroupBox):
 
     def distances_map_button_was_selected(self) -> None:
         """Handles the button click event to display the distances map."""
+        if self._distances_map_computed:
+            self._vue.print_stocked_image(self._distances_map_image_name)
+        elif self._starting_and_ending_points_set:
+            self.distances_map_creation(self._starting_point, self._ending_point)
+            self._vue.print_stocked_image(self._distances_map_image_name)
+        else:
+            print("Please select starting and ending points by clicking on the image.")
+        """
         if not self._distances_map_computed:
             start = pc.Point(10,10)
             end = pc.Point(400,400)
@@ -129,6 +160,7 @@ class Menu(widgets.QGroupBox):
             self._vue.print_stocked_image(self._distances_map_image_name)
         else:
             self._vue.print_stocked_image(self._distances_map_image_name)
+        """
 
     def gradients_map_button_was_clicked(self) -> None:
         """Handles the button click event to display the gradients map."""
@@ -147,6 +179,7 @@ class Window(widgets.QMainWindow):
         horizontal = widgets.QHBoxLayout()
         self.vue = Vue()
         self.menu = Menu(self.vue)
+        self.vue.menu = self.menu
         horizontal.addWidget(self.menu)
         horizontal.addWidget(self.vue)
         central.setLayout(horizontal)
