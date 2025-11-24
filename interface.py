@@ -33,6 +33,10 @@ class Vue(widgets.QGroupBox):
     def print_stocked_image(self, image_name: str) -> None:
         """Displays the image currently stored in the view."""
         self.image.setPixmap(gui.QPixmap(image_name).scaledToWidth(1000, mode = Qt.TransformationMode.SmoothTransformation))
+
+    def mousePressEvent(self, event):
+        point = gui.QCursor.pos()
+        print("clicked", point.x(), point.y())
         
 class Menu(widgets.QGroupBox):
     """
