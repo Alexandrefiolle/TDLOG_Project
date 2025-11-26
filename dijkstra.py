@@ -43,7 +43,7 @@ def distances_costs(start: pc.Point, end: pc.Point, grey_levels: ui.GreyImage) -
     to_visit.append(start, 0)
     while to_visit.size() > 0:
         candidate = to_visit.remove()
-        #if candidate == end: break
+        if candidate == end: break
         for neighbor in grey_levels.neighbors(candidate):
             cost = grey_levels.cost(start, neighbor, epsilon)
             if dist[neighbor] > dist[candidate] + cost:
@@ -202,10 +202,21 @@ def affiche_descent(descent: list[pc.Point], img: ui.GreyImage) -> None:
 
 if __name__ == "__main__":
     im = ui.GreyImage(ui.im_array)
-    start = pc.Point(10,10)
-    end = pc.Point(100,20)
+    start = pc.Point(204,276)
+    end = pc.Point(115,477)
     distances = distances_costs(start, end, im)
+    print(distances[end])
     colored_map = coloration_map(distances, im)
+    colored_map[start.x, start.y] = [255,0,0]
+    for k in range(10):
+        colored_map[start.x+k, start.y] = [0,0,0]
+        colored_map[start.x-k, start.y] = [0,0,0]
+        colored_map[start.x, start.y+k] = [0,0,0]
+        colored_map[start.x, start.y-k] = [0,0,0]
+        colored_map[end.x+k, end.y] = [0,255,0]
+        colored_map[end.x-k, end.y] = [0,255,0]
+        colored_map[end.x, end.y+k] = [0,255,0]
+        colored_map[end.x, end.y-k] = [0,255,0]
     img = ui.Image.fromarray(colored_map, 'RGB')
     img.show()
     grad_image = gradient_on_image(distances, im)
