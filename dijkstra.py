@@ -8,38 +8,32 @@ import matplotlib.colors as col
 from math import*
 epsilon = 2.0
 
-class PriorityQueue:
-    def __init__(self, dic: dict[pc.Point, float]) -> None:
-        self._dic = dic
+class PriorityQueue_heap:
+    def __init__(self, heap: list[pc.Point, float]) -> None:
+        self._heap = heap
     
-    def _find_higher_priority_point(self) -> pc.Point: # ensuite, utiliser un tas de priorité
-        dist_inf = np.inf
-        best_point = None
-        for (point, distance) in self._dic.items():
-            if dist_inf > distance:
-                dist_inf = distance
-                best_point = point
+    def _find_higher_priority_point(self) -> pc.Point: 
+        best_point = self._heap[0][1]
         return best_point
 
     def append(self, point: pc.Point, priority: float) -> None:
-        self._dic[point] = priority
+        heapq.heappush(self._heap, (priority, point)) # this function adds the new value (priority, point) by preseving the heap structure
 
     def remove(self) -> pc.Point:
         best_point = self._find_higher_priority_point()
-        del self._dic[best_point] 
+        heapq.heappop(self._heap) 
         return best_point
     
     def size(self) -> int:
-        return len(self._dic)
+        return len(self._heap) 
         
-
 def distances_costs(start: pc.Point, end: pc.Point, grey_levels: ui.GreyImage) -> dict[pc.Point, float]:
     """Computes the list of shortest path costs from start until we reach the end point"""
     dist = {}
     for point in grey_levels.graph.keys():
         dist[point] = np.inf
     dist[start] = 0
-    to_visit = PriorityQueue({})
+    to_visit = PriorityQueue_heap([])
     to_visit.append(start, 0)
     while to_visit.size() > 0:
         candidate = to_visit.remove()
