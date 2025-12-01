@@ -73,11 +73,11 @@ def coloration_map(distances: dict[pc.Point, float], grey_levels: ui.GreyImage) 
 
 def gradient_point_y(point: pc.Point, dist: dict[pc.Point, float], grey_levels: ui.GreyImage) -> float:
     """Compute the gradient of a point of the distance_map"""
-    p_north = pc.Point(point.y-1,point.x)
+    p_north = pc.Point(point.x-1,point.y)
     if point.x == grey_levels.height - 1:
         p_south = point
     else : 
-        p_south = pc.Point(point.y+1, point.x)
+        p_south = pc.Point(point.x+1, point.y)
         if not(dist[p_south] < np.inf):
             p_south = point
     if point.x==0:
@@ -88,11 +88,11 @@ def gradient_point_y(point: pc.Point, dist: dict[pc.Point, float], grey_levels: 
 
 def gradient_point_x(point: pc.Point, dist: dict[pc.Point, float], grey_levels: ui.GreyImage) -> float:
     """Compute the gradient of a point of the distance_map"""
-    p_west = pc.Point(point.y, point.x-1)
+    p_west = pc.Point(point.x, point.y-1)
     if point.y == grey_levels.width - 1:
         p_east = point
     else : 
-        p_east = pc.Point(point.y, point.x+1)
+        p_east = pc.Point(point.x, point.y+1)
         if not(dist[p_east] < np.inf):
             p_east = point
     if point.y==0 :
