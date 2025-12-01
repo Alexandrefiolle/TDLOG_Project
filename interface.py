@@ -18,20 +18,6 @@ class Fenetre(widgets.QLabel):
         self.ps = None
         self.pe = None
 
-    @property
-    def ps(self):
-        return self.ps
-    @ps.setter
-    def ps(self, value):
-        self.ps = value
-    @property
-    def pe(self):
-        return self.pe
-    @pe.setter
-    def pe(self, value):
-        self.pe = value
-    
-
     def mousePressEvent(self, event):
         if self.underMouse():
             point = gui.QCursor.pos()
