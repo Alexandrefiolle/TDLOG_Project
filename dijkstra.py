@@ -53,7 +53,7 @@ def distances_costs(start: pc.Point, end: pc.Point, grey_levels: ui.GreyImage) -
             if dist[neighbor] > dist[candidate] + cost:
                 dist[neighbor] = dist[candidate] + cost
                 to_visit.append(neighbor, dist[neighbor])
-    return dist
+    return dist,visited
 
 def coloration_map(distances: dict[pc.Point, float], grey_levels: ui.GreyImage) -> np.ndarray:
     """Colors the map according to the distances computed"""
@@ -79,7 +79,7 @@ def coloration_map(distances: dict[pc.Point, float], grey_levels: ui.GreyImage) 
 def gradient_point_y(point: pc.Point, dist: dict[pc.Point, float], grey_levels: ui.GreyImage) -> float:
     """Compute the gradient of a point of the distance_map"""
     p_north = pc.Point(point.x-1,point.y)
-    if point.x == grey_levels.height - 1:
+    if point.x == grey_levels.width - 1:
         p_south = point
     else : 
         p_south = pc.Point(point.x+1, point.y)
@@ -94,7 +94,7 @@ def gradient_point_y(point: pc.Point, dist: dict[pc.Point, float], grey_levels: 
 def gradient_point_x(point: pc.Point, dist: dict[pc.Point, float], grey_levels: ui.GreyImage) -> float:
     """Compute the gradient of a point of the distance_map"""
     p_west = pc.Point(point.x, point.y-1)
-    if point.y == grey_levels.width - 1:
+    if point.y == grey_levels.height - 1:
         p_east = point
     else : 
         p_east = pc.Point(point.x, point.y+1)
@@ -173,10 +173,11 @@ def test_minimum_neighbours(point: pc.Point, grad_x: dict[pc.Point, float], grad
         mini_point = pc.Point(point.x, int(point.y-copysign(1,grad_x[point])))
 
     if pc.Point(point.x, point.y-copysign(1,grad_x[point])) in neighbours:
-        if (abs(grad_x[point]) < abs(grad_y[point]) or grad_x[point] == 0) :
+        if (abs(grad_x[point]) <= abs(grad_y[point]) or grad_x[point] == 0) :
             mini_point = pc.Point(point.x, int(point.y-copysign(1,grad_x[point])))
     elif pc.Point(point.x-copysign(1,grad_y[point]), point.y) in neighbours:
         mini_point = pc.Point(point.x-int(copysign(1,grad_y[point])), point.y)
+    print(neighbours, mini_point)
     return mini_point
 
 def gradient_descent(dist: dict[pc.Point, float], grey_levels: ui.GreyImage, start_point: pc.Point, end_point: pc.Point, list_visited: list[pc.Point]) -> list[pc.Point]:
@@ -192,42 +193,44 @@ def gradient_descent(dist: dict[pc.Point, float], grey_levels: ui.GreyImage, sta
     while point != start_point:
             next_point = test_minimum_neighbours(point, grad_x, grad_y, grey_levels, dist, visited, list_visited)
             if next_point is None:
-                next_point = descent[-k-1]
-                k += 1
                 descent.pop()
+                next_point = descent[-1]
             else:
                 k=0
                 visited[next_point] = True
                 descent.append(next_point)
             print(i, point, next_point)
+            
             #assert(point != next_point)
             point = next_point
             i+=1
-            assert(i<10000)
+            assert(i<20000)
     return descent
 
 def affiche_descent(descent: list[pc.Point], img: ui.GreyImage) -> np.ndarray:
-    colored_map = np.zeros((img.height, img.width, 3), dtype=np.uint8)
-    for i in range(img.height):
-        for j in range(img.width):
-            p = pc.Point(i,j)
-            colored_map[i][j] = [img.graph[p], img.graph[p], img.graph[p]]
-    sum = 0
+    #colored_map = np.zeros((img.height, img.width, 3), dtype=np.uint8)
+    #print(img.width, img.height)
+    #for i in range(img.width):
+    #    for j in range(img.height):
+    #        p = pc.Point(i,j)
+    #        colored_map[j][i] = [img.graph[p], img.graph[p], img.graph[p]]
+    #sum = 0
     for point in descent:
-        sum += img.cost(pc.Point(289,136), point)
-        colored_map[point.y][point.x] = [255, 0, 0]
-    print(sum)
-    return colored_map
+    #    sum += img.cost(pc.Point(289,136), point)
+        img[point.y][point.x] = [255, 0, 0]
+    #print(sum)
+    return img
 
 def distances_map(start: pc.Point, end: pc.Point, grey_levels: ui.GreyImage) -> np.ndarray:
     """Generates a colored distances map from start to end points based on grey levels."""
     return coloration_map(distances_costs(start, end, grey_levels), grey_levels)
 
 if __name__ == "__main__":
-    im = ui.GreyImage('Carte.png')
-    start = pc.Point(10,10)
-    end = pc.Point(120,10)
-    distances = distances_costs(start, end, im)
+    im = ui.GreyImage('EZEZEZEZ.png')
+    print(im.width, im.height)
+    start = pc.Point(165,89)
+    end = pc.Point(358,473)
+    distances,visited = distances_costs(start, end, im)
     colored_map = coloration_map(distances, im)
     colored_map[start.y, start.x] = [255,0,0]
     for k in range(10):
@@ -242,10 +245,10 @@ if __name__ == "__main__":
     img = ui.Image.fromarray(colored_map, 'RGB')
     img.show()
     grad_image = gradient_on_image(distances, im)
-    grad_image = ui.Image.fromarray(grad_image, 'RGB')
-    grad_image.show()
-    descent = gradient_descent(distances, im, start, end)
-    final_img = affiche_descent(descent,im)
+    grad_image_ = ui.Image.fromarray(grad_image, 'RGB')
+    grad_image_.show()
+    descent = gradient_descent(distances, im, start, end,visited)
+    final_img = affiche_descent(descent,grad_image)
     print("a", im.cost(start,pc.Point(288,236))+im.cost(pc.Point(288,236),end))
     final_img = ui.Image.fromarray(final_img, 'RGB')
     final_img.show()
