@@ -1,5 +1,8 @@
+"This file dwells on the implementation of Dijkstra's algorithm "
+"to compute shortest paths on a graph represented by image grey levels."
+
 import point_class as pc
-import interface as ui
+import manipulation as ui
 from collections import deque
 import numpy as np
 import heapq
@@ -20,6 +23,7 @@ class PriorityQueue_heap:
         heapq.heappush(self._heap, (priority, point)) # this function adds the new value (priority, point) by preseving the heap structure
 
     def remove(self) -> pc.Point:
+        """Removes and returns the point with the highest priority (lowest cost)."""
         best_point = self._find_higher_priority_point()
         heapq.heappop(self._heap) 
         return best_point
@@ -210,8 +214,12 @@ def affiche_descent(descent: list[pc.Point], img: ui.GreyImage) -> np.ndarray:
     print(sum)
     return colored_map
 
+def distances_map(start: pc.Point, end: pc.Point, grey_levels: ui.GreyImage) -> np.ndarray:
+    """Generates a colored distances map from start to end points based on grey levels."""
+    return coloration_map(distances_costs(start, end, grey_levels), grey_levels)
+
 if __name__ == "__main__":
-    im = ui.GreyImage(ui.im_array)
+    im = ui.GreyImage('Carte.png')
     start = pc.Point(10,10)
     end = pc.Point(120,10)
     distances,visited = distances_costs(start, end, im)
