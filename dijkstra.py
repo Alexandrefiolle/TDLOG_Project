@@ -43,13 +43,17 @@ def distances_costs(start: pc.Point, end: pc.Point, grey_levels: ui.GreyImage) -
     while to_visit.size() > 0:
         candidate = to_visit.remove()
         visited.append(candidate)
-        #if candidate == end: break
+        if candidate == end: 
+            print(candidate)
+            print(candidate.norm(end))
+            break
         for neighbor in grey_levels.neighbors(candidate):
+            assert neighbor.x < grey_levels.width and neighbor.y < grey_levels.height
             cost = grey_levels.cost(start, neighbor, epsilon)
             if dist[neighbor] > dist[candidate] + cost:
                 dist[neighbor] = dist[candidate] + cost
                 to_visit.append(neighbor, dist[neighbor])
-    return dist,visited
+    return dist
 
 def coloration_map(distances: dict[pc.Point, float], grey_levels: ui.GreyImage) -> np.ndarray:
     """Colors the map according to the distances computed"""
@@ -62,13 +66,14 @@ def coloration_map(distances: dict[pc.Point, float], grey_levels: ui.GreyImage) 
     colored_map = np.zeros((grey_levels.height, grey_levels.width, 3), dtype=np.uint8)
     myMap = plt.get_cmap('Spectral')
     for point, distance in distances.items():
+        assert(point.y < grey_levels.height and point.x < grey_levels.width)
         if distance < np.inf:
             intensity = (distance - min_dist) / (max_dist - min_dist)
             color = col.to_rgb(myMap(intensity))
             color_list = [color[0], color[1], color[2]]
             for i in range (3):
                 color_list[i] = int(255*color_list[i])
-            colored_map[point.x, point.y] = color_list
+            colored_map[point.y, point.x] = color_list
     return colored_map
 
 def gradient_point_y(point: pc.Point, dist: dict[pc.Point, float], grey_levels: ui.GreyImage) -> float:
@@ -222,7 +227,7 @@ if __name__ == "__main__":
     im = ui.GreyImage('Carte.png')
     start = pc.Point(10,10)
     end = pc.Point(120,10)
-    distances,visited = distances_costs(start, end, im)
+    distances = distances_costs(start, end, im)
     colored_map = coloration_map(distances, im)
     colored_map[start.x, start.y] = [255,0,0]
     for k in range(10):

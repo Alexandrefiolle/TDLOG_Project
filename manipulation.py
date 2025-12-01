@@ -13,10 +13,10 @@ class GreyImage:
         self._height = image.shape[0]
         self._width = image.shape[1]
         self._graph: dict[pc.Point, int] = {}
-        for x in range(self._height):
-            for y in range(self._width):
+        for x in range(self._width):
+            for y in range(self._height):
                 p = pc.Point(x,y)
-                self._graph[p] = image[x][y]
+                self._graph[p] = image[y][x]
 
     @property
     def height(self) -> int:
@@ -41,11 +41,11 @@ class GreyImage:
         x, y = m.x, m.y
         if x > 0:
             neigh.append(pc.Point(x-1, y))
-        if x < self._height - 1:
+        if x < self._width - 1:
             neigh.append(pc.Point(x+1, y))
         if y > 0:
             neigh.append(pc.Point(x, y-1))
-        if y < self._width - 1:
+        if y < self._height - 1:
             neigh.append(pc.Point(x, y+1))
         return neigh
     
