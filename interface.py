@@ -24,7 +24,7 @@ class Fenetre(widgets.QLabel):
             print("clicked", point.x(), point.y())
             point = self.mapFromGlobal(point)
             print("mapped", point.x(), point.y())
-            point = pc.Point(point.x(), point.y())
+            point = pc.Point(int(self.parent().ratio*point.x()), int(self.parent().ratio*point.y()))
             if self.parent()._menu.starting_point is None:
                 self.ps = self.mapFromGlobal(gui.QCursor.pos())
                 self.parent()._menu.starting_point = point
@@ -63,7 +63,9 @@ class Vue(widgets.QGroupBox):
         vertical.addWidget(self.texte)
         self.image = Fenetre(self)
         vertical.addWidget(self.image)
-        self.image.setPixmap(gui.QPixmap("Carte.png").scaledToWidth(1000, mode = Qt.TransformationMode.SmoothTransformation))
+        img = gui.QPixmap("Carte.png")
+        self.ratio = img.width()/1000
+        self.image.setPixmap(img.scaledToWidth(1000, mode = Qt.TransformationMode.SmoothTransformation))
         self._menu = None
 
     @property
@@ -150,6 +152,8 @@ class Menu(widgets.QGroupBox):
     def distances_map_creation(self, start: pc.Point, end: pc.Point) -> None:
         """Creates the distances map and stores it in the corresponding view."""
         im = ui.GreyImage(self._original_image_name)
+        print("Starting point set to:", start)
+        print("Ending point set to:", end)
         distances_map_image = dijkstra.distances_map(start, end, im)
         img = Image.fromarray(distances_map_image)
         img.save(self._distances_map_image_name)
