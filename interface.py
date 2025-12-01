@@ -18,6 +18,20 @@ class Fenetre(widgets.QLabel):
         self.ps = None
         self.pe = None
 
+    @property
+    def ps(self):
+        return self.ps
+    @ps.setter
+    def ps(self, value):
+        self.ps = value
+    @property
+    def pe(self):
+        return self.pe
+    @pe.setter
+    def pe(self, value):
+        self.pe = value
+    
+
     def mousePressEvent(self, event):
         if self.underMouse():
             point = gui.QCursor.pos()
@@ -96,17 +110,20 @@ class Menu(widgets.QGroupBox):
         self.select_button = widgets.QPushButton("Select an image", self)
         self.select_button.setGeometry(10, 10, 150, 30)
         self.select_button.clicked.connect(self.select_button_was_clicked)
+        self.select_button_erase_points = widgets.QPushButton("Erase the points", self)
+        self.select_button_erase_points.setGeometry(10, 50, 150, 30)
+        self.select_button_erase_points.clicked.connect(self.erase_points_was_clicked)
         self.original_image_button = widgets.QPushButton("Original image", self)
-        self.original_image_button.setGeometry(10, 50, 150, 30)
+        self.original_image_button.setGeometry(10, 90, 150, 30)
         self.original_image_button.clicked.connect(self.original_image_button_was_selected)
         self.distances_map_button = widgets.QPushButton("Distances map", self)
-        self.distances_map_button.setGeometry(10, 90, 150, 30)
+        self.distances_map_button.setGeometry(10, 130, 150, 30)
         self.distances_map_button.clicked.connect(self.distances_map_button_was_selected)
         self.gradients_map_button = widgets.QPushButton("Gradients map", self)
-        self.gradients_map_button.setGeometry(10, 130, 150, 30)
+        self.gradients_map_button.setGeometry(10, 170, 150, 30)
         self.gradients_map_button.clicked.connect(self.gradients_map_button_was_clicked)
         self.path_button = widgets.QPushButton("Print the optimal path", self)
-        self.path_button.setGeometry(10, 170, 150, 30)
+        self.path_button.setGeometry(10, 210, 150, 30)
         self.path_button.clicked.connect(self.path_button_was_clicked)
         self._vue = vue
         self._original_image_name = 'Carte.png'
@@ -142,6 +159,17 @@ class Menu(widgets.QGroupBox):
         self._original_image_name = file_name
         self._distances_map_computed = False
         self._gradients_map_computed = False
+    
+    def erase_points_was_clicked(self) -> None:
+        self._vue.image.ps = None
+        self._vue.image.pe = None
+        self._starting_point = None
+        self._ending_point = None
+        self._starting_and_ending_points_set = False
+        self._distances_map_computed = False
+        self._gradients_map_computed = False
+        self._vue.image.update()
+
 
     def original_image_button_was_selected(self) -> None:
         """Handles the button click event to display the original image."""
