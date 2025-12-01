@@ -43,13 +43,17 @@ def distances_costs(start: pc.Point, end: pc.Point, grey_levels: ui.GreyImage) -
     while to_visit.size() > 0:
         candidate = to_visit.remove()
         visited.append(candidate)
-        if candidate == end: break
+        if candidate == end: 
+            print(candidate)
+            print(candidate.norm(end))
+            break
         for neighbor in grey_levels.neighbors(candidate):
+            assert neighbor.x < grey_levels.width and neighbor.y < grey_levels.height
             cost = grey_levels.cost(start, neighbor, epsilon)
             if dist[neighbor] > dist[candidate] + cost:
                 dist[neighbor] = dist[candidate] + cost
                 to_visit.append(neighbor, dist[neighbor])
-    return dist,visited
+    return dist
 
 def coloration_map(distances: dict[pc.Point, float], grey_levels: ui.GreyImage) -> np.ndarray:
     """Colors the map according to the distances computed"""
@@ -62,6 +66,7 @@ def coloration_map(distances: dict[pc.Point, float], grey_levels: ui.GreyImage) 
     colored_map = np.zeros((grey_levels.height, grey_levels.width, 3), dtype=np.uint8)
     myMap = plt.get_cmap('Spectral')
     for point, distance in distances.items():
+        assert(point.y < grey_levels.height and point.x < grey_levels.width)
         if distance < np.inf:
             intensity = (distance - min_dist) / (max_dist - min_dist)
             color = col.to_rgb(myMap(intensity))
@@ -220,9 +225,9 @@ def distances_map(start: pc.Point, end: pc.Point, grey_levels: ui.GreyImage) -> 
 
 if __name__ == "__main__":
     im = ui.GreyImage('Carte.png')
-    start = pc.Point(123,77)
-    end = pc.Point(341,81)
-    distances,visited = distances_costs(start, end, im)
+    start = pc.Point(10,10)
+    end = pc.Point(120,10)
+    distances = distances_costs(start, end, im)
     colored_map = coloration_map(distances, im)
     colored_map[start.y, start.x] = [255,0,0]
     for k in range(10):
@@ -239,7 +244,7 @@ if __name__ == "__main__":
     grad_image = gradient_on_image(distances, im)
     grad_image = ui.Image.fromarray(grad_image, 'RGB')
     grad_image.show()
-    descent = gradient_descent(distances, im, start, end, visited)
+    descent = gradient_descent(distances, im, start, end)
     final_img = affiche_descent(descent,im)
     print("a", im.cost(start,pc.Point(288,236))+im.cost(pc.Point(288,236),end))
     final_img = ui.Image.fromarray(final_img, 'RGB')

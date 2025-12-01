@@ -18,13 +18,27 @@ class Fenetre(widgets.QLabel):
         self.ps = None
         self.pe = None
 
+    @property
+    def ps(self):
+        return self.ps
+    @ps.setter
+    def ps(self, value):
+        self.ps = value
+    @property
+    def pe(self):
+        return self.pe
+    @pe.setter
+    def pe(self, value):
+        self.pe = value
+    
+
     def mousePressEvent(self, event):
         if self.underMouse():
             point = gui.QCursor.pos()
             print("clicked", point.x(), point.y())
             point = self.mapFromGlobal(point)
             print("mapped", point.x(), point.y())
-            point = pc.Point(point.x(), point.y())
+            point = pc.Point(int(self.parent().ratio*point.x()), int(self.parent().ratio*point.y()))
             if self.parent()._menu.starting_point is None:
                 self.ps = self.mapFromGlobal(gui.QCursor.pos())
                 self.parent()._menu.starting_point = point
@@ -63,7 +77,9 @@ class Vue(widgets.QGroupBox):
         vertical.addWidget(self.texte)
         self.image = Fenetre(self)
         vertical.addWidget(self.image)
-        self.image.setPixmap(gui.QPixmap("Carte.png").scaledToWidth(1000, mode = Qt.TransformationMode.SmoothTransformation))
+        img = gui.QPixmap("Carte.png")
+        self.ratio = img.width()/1000
+        self.image.setPixmap(img.scaledToWidth(1000, mode = Qt.TransformationMode.SmoothTransformation))
         self._menu = None
 
     @property
@@ -96,17 +112,20 @@ class Menu(widgets.QGroupBox):
         self.select_button = widgets.QPushButton("Select an image", self)
         self.select_button.setGeometry(10, 10, 150, 30)
         self.select_button.clicked.connect(self.select_button_was_clicked)
+        self.select_button_erase_points = widgets.QPushButton("Erase the points", self)
+        self.select_button_erase_points.setGeometry(10, 50, 150, 30)
+        self.select_button_erase_points.clicked.connect(self.erase_points_was_clicked)
         self.original_image_button = widgets.QPushButton("Original image", self)
-        self.original_image_button.setGeometry(10, 50, 150, 30)
+        self.original_image_button.setGeometry(10, 90, 150, 30)
         self.original_image_button.clicked.connect(self.original_image_button_was_selected)
         self.distances_map_button = widgets.QPushButton("Distances map", self)
-        self.distances_map_button.setGeometry(10, 90, 150, 30)
+        self.distances_map_button.setGeometry(10, 130, 150, 30)
         self.distances_map_button.clicked.connect(self.distances_map_button_was_selected)
         self.gradients_map_button = widgets.QPushButton("Gradients map", self)
-        self.gradients_map_button.setGeometry(10, 130, 150, 30)
+        self.gradients_map_button.setGeometry(10, 170, 150, 30)
         self.gradients_map_button.clicked.connect(self.gradients_map_button_was_clicked)
         self.path_button = widgets.QPushButton("Print the optimal path", self)
-        self.path_button.setGeometry(10, 170, 150, 30)
+        self.path_button.setGeometry(10, 210, 150, 30)
         self.path_button.clicked.connect(self.path_button_was_clicked)
         self._vue = vue
         self._original_image_name = 'Carte.png'
@@ -142,6 +161,17 @@ class Menu(widgets.QGroupBox):
         self._original_image_name = file_name
         self._distances_map_computed = False
         self._gradients_map_computed = False
+    
+    def erase_points_was_clicked(self) -> None:
+        self._vue.image.ps = None
+        self._vue.image.pe = None
+        self._starting_point = None
+        self._ending_point = None
+        self._starting_and_ending_points_set = False
+        self._distances_map_computed = False
+        self._gradients_map_computed = False
+        self._vue.image.update()
+
 
     def original_image_button_was_selected(self) -> None:
         """Handles the button click event to display the original image."""
@@ -150,6 +180,8 @@ class Menu(widgets.QGroupBox):
     def distances_map_creation(self, start: pc.Point, end: pc.Point) -> None:
         """Creates the distances map and stores it in the corresponding view."""
         im = ui.GreyImage(self._original_image_name)
+        print("Starting point set to:", start)
+        print("Ending point set to:", end)
         distances_map_image = dijkstra.distances_map(start, end, im)
         img = Image.fromarray(distances_map_image)
         img.save(self._distances_map_image_name)
