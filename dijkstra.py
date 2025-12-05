@@ -9,6 +9,8 @@ import heapq
 import matplotlib.pyplot as plt
 import matplotlib.colors as col
 from math import*
+import time
+import interface as vis
 epsilon = 2.0
 
 class PriorityQueue_heap:
@@ -31,7 +33,7 @@ class PriorityQueue_heap:
     def size(self) -> int:
         return len(self._heap) 
         
-def distances_costs(start: pc.Point, end: pc.Point, grey_levels: ui.GreyImage) -> tuple[dict[pc.Point, float], list[pc.Point]]:
+def distances_costs(start: pc.Point, end: pc.Point, grey_levels: ui.GreyImage, obs: vis.Observer|None = None) -> tuple[dict[pc.Point, float], list[pc.Point]]:
     """Computes the list of shortest path costs from start until we reach the end point"""
     dist = {}
     for point in grey_levels.graph.keys():
@@ -42,10 +44,10 @@ def distances_costs(start: pc.Point, end: pc.Point, grey_levels: ui.GreyImage) -
     visited = []
     while to_visit.size() > 0:
         candidate = to_visit.remove()
+        #if time.time() % 1 == 0:
+        obs.notify_observer(candidate.norm(end))
         visited.append(candidate)
         if candidate == end: 
-            print(candidate)
-            print(candidate.norm(end))
             break
         for neighbor in grey_levels.neighbors(candidate):
             assert neighbor.x < grey_levels.width and neighbor.y < grey_levels.height
@@ -219,9 +221,9 @@ def affiche_descent(descent: list[pc.Point], img: ui.GreyImage) -> np.ndarray:
     print(sum)
     return colored_map
 
-def distances_map(start: pc.Point, end: pc.Point, grey_levels: ui.GreyImage) -> np.ndarray:
+def distances_map(start: pc.Point, end: pc.Point, grey_levels: ui.GreyImage, obs = None) -> np.ndarray:
     """Generates a colored distances map from start to end points based on grey levels."""
-    return coloration_map(distances_costs(start, end, grey_levels), grey_levels)
+    return coloration_map(distances_costs(start, end, grey_levels, obs), grey_levels)
 
 if __name__ == "__main__":
     im = ui.GreyImage('Carte.png')

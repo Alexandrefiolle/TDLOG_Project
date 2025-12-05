@@ -11,6 +11,21 @@ import dijkstra
 import point_class as pc
 import manipulation as ui
 
+class Chargement(widgets.QProgressBar):
+
+    def __init__(self, v_init = 0):
+        super().__init__()
+        self.maxi = v_init
+        self.setValue(0)
+
+    def reinitialise(self, v_init):
+        self.maxi = v_init
+        self.setValue(0)
+
+    def update(self, value):
+        if 100 - 100*value//self.maxi > self.value():
+            self.setValue(int(100 - 100*value/self.maxi))
+
 class Fenetre(widgets.QLabel):
 
     def __init__(self, parent):
@@ -29,11 +44,13 @@ class Fenetre(widgets.QLabel):
                 self.ps = self.mapFromGlobal(gui.QCursor.pos())
                 self.parent()._menu.starting_point = point
                 print("Starting point set to:", point)
+                self.parent().texte.setText("Select an ending point")
             elif self.parent()._menu.ending_point is None:
                 self.pe = self.mapFromGlobal(gui.QCursor.pos())
                 self.parent()._menu.ending_point = point
                 print("Ending point set to:", point)
                 self.parent()._menu._starting_and_ending_points_set = True
+                self.parent().texte.setText("Compute a distance map")
             else:
                 print("Both starting and ending points are already set.")
             self.update()
@@ -59,7 +76,8 @@ class Vue(widgets.QGroupBox):
         """Initializes the view with a label for text and an image display area."""
         super().__init__(None)
         vertical = widgets.QVBoxLayout(self)
-        self.texte = widgets.QLabel("Lorem ipsum ", self)
+        self.texte = widgets.QLabel("Select a starting point", self)
+        self.texte.setSizePolicy(widgets.QSizePolicy.Policy.Minimum, widgets.QSizePolicy.Policy.Fixed)
         vertical.addWidget(self.texte)
         self.image = Fenetre(self)
         vertical.addWidget(self.image)
@@ -67,6 +85,12 @@ class Vue(widgets.QGroupBox):
         self.ratio = img.width()/1000
         self.image.setPixmap(img.scaledToWidth(1000, mode = Qt.TransformationMode.SmoothTransformation))
         self._menu = None
+        self.bar = Chargement()
+        self.bar.setFixedWidth(1000)
+        self.bar.setSizePolicy(widgets.QSizePolicy.Policy.Minimum, widgets.QSizePolicy.Policy.Fixed)
+        vertical.addWidget(self.bar)
+        self.bar.hide()
+
 
     @property
     def menu(self) -> Menu:
@@ -122,6 +146,7 @@ class Menu(widgets.QGroupBox):
         self._starting_point = None
         self._ending_point = None
         self._starting_and_ending_points_set = False
+        self.obs = Observer()
     
     @property
     def starting_point(self) -> pc.Point:
@@ -157,6 +182,7 @@ class Menu(widgets.QGroupBox):
         self._distances_map_computed = False
         self._gradients_map_computed = False
         self._vue.image.update()
+        self._vue.texte.setText("Select a starting point")
 
 
     def original_image_button_was_selected(self) -> None:
@@ -165,13 +191,19 @@ class Menu(widgets.QGroupBox):
 
     def distances_map_creation(self, start: pc.Point, end: pc.Point) -> None:
         """Creates the distances map and stores it in the corresponding view."""
+        self._vue.bar.reinitialise(start.norm(end))
+        self._vue.bar.show()
+        self.obs.add_observer(self._vue.bar)
         im = ui.GreyImage(self._original_image_name)
         print("Starting point set to:", start)
         print("Ending point set to:", end)
-        distances_map_image = dijkstra.distances_map(start, end, im)
+        distances_map_image = dijkstra.distances_map(start, end, im, self.obs)
         img = Image.fromarray(distances_map_image)
         img.save(self._distances_map_image_name)
         self._distances_map_computed = True
+        self._vue.texte.setText("Compute a gradient map")
+        self._vue.bar.hide()
+        self.obs.del_observer(self._vue.bar)
 
     def distances_map_button_was_selected(self) -> None:
         """Handles the button click event to display the distances map."""
@@ -215,6 +247,21 @@ class Window(widgets.QMainWindow):
         central.setLayout(horizontal)
         self.setCentralWidget(central)
  
+class Observer:
+
+    def __init__(self):
+        self.liste = list()
+
+    def add_observer(self, ob):
+        self.liste.append(ob)
+
+    def del_observer(self, ob):
+        if ob in self.liste:
+            self.liste.remove(ob)
+
+    def notify_observer(self, value):
+        for ob in self.liste:
+            ob.update(value)
 
 if __name__ == "__main__":
     application = widgets.QApplication(sys.argv)
