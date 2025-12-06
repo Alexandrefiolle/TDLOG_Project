@@ -147,6 +147,8 @@ class Menu(widgets.QGroupBox):
         self._original_image_name = file_name
         self._distances_map_computed = False
         self._gradients_map_computed = False
+        self.erase_points_was_clicked()
+        self._vue.ratio = gui.QPixmap(file_name).width()/1000
     
     def erase_points_was_clicked(self) -> None:
         self._vue.image.ps = None
