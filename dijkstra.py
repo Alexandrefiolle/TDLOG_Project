@@ -143,7 +143,7 @@ def gradient_on_image(dist: dict[pc.Point, float], grey_levels: ui.GreyImage) ->
             color_list = [color[0], color[1], color[2]]
             for i in range (3):
                 color_list[i] = int(255*color_list[i]*r)
-            colored_map[point.x, point.y] = color_list
+            colored_map[point.y, point.x] = color_list
     return colored_map
 
 def valid_neighbours(grey_levels: ui.GreyImage, point:pc.Point, visited: dict[pc.Point, bool],

@@ -75,6 +75,7 @@ class Vue(widgets.QGroupBox):
     def __init__(self) -> None:
         """Initializes the view with a label for text and an image display area."""
         super().__init__(None)
+        self.setFixedWidth(1000)
         vertical = widgets.QVBoxLayout(self)
         self.texte = widgets.QLabel("Select a starting point", self)
         self.texte.setSizePolicy(widgets.QSizePolicy.Policy.Minimum, widgets.QSizePolicy.Policy.Fixed)
@@ -83,7 +84,7 @@ class Vue(widgets.QGroupBox):
         vertical.addWidget(self.image)
         img = gui.QPixmap("Carte.png")
         self.ratio = img.width()/1000
-        self.image.setPixmap(img.scaledToWidth(1000, mode = Qt.TransformationMode.SmoothTransformation))
+        self.image.setPixmap(img.scaled(1000, 700, aspectRatioMode=Qt.AspectRatioMode.KeepAspectRatio, transformMode=Qt.TransformationMode.SmoothTransformation))
         self._menu = None
         self.bar = Chargement()
         self.bar.setFixedWidth(1000)
@@ -103,11 +104,11 @@ class Vue(widgets.QGroupBox):
 
     def change_image(self, path) -> None:
         """Changes the displayed image to the one located at the given path."""
-        self.image.setPixmap(gui.QPixmap(path).scaledToWidth(1000, mode = Qt.TransformationMode.SmoothTransformation))
+        self.image.setPixmap(gui.QPixmap(path).scaled(1000, 700, aspectRatioMode=Qt.AspectRatioMode.KeepAspectRatio, transformMode=Qt.TransformationMode.SmoothTransformation))
     
     def print_stocked_image(self, image_name: str) -> None:
         """Displays the image currently stored in the view."""
-        self.image.setPixmap(gui.QPixmap(image_name).scaledToWidth(1000, mode = Qt.TransformationMode.SmoothTransformation))
+        self.image.setPixmap(gui.QPixmap(image_name).scaled(1000, 700, aspectRatioMode=Qt.AspectRatioMode.KeepAspectRatio, transformMode=Qt.TransformationMode.SmoothTransformation))
         
         
 class Menu(widgets.QGroupBox):
@@ -119,6 +120,7 @@ class Menu(widgets.QGroupBox):
     def __init__(self, vue: Vue) -> None:
         """Initializes the menu with buttons linked to various functionalities."""
         super().__init__(None)
+        self.setFixedWidth(500)
         self.select_button = widgets.QPushButton("Select an image", self)
         self.select_button.setGeometry(10, 10, 150, 30)
         self.select_button.clicked.connect(self.select_button_was_clicked)
@@ -226,9 +228,35 @@ class Menu(widgets.QGroupBox):
             self._vue.print_stocked_image(self._distances_map_image_name)
         """
 
+    def gradients_map_creation(self, start: pc.Point, end: pc.Point) -> None:
+        """
+        Creates the gradients map and stores it in the corresponding view.
+        Using the functions from dijkstra.py
+        """
+        #self._vue.bar.reinitialise(start.norm(end))
+        #self._vue.bar.show()
+        #self.obs.add_observer(self._vue.bar)
+        im = ui.GreyImage(self._original_image_name)
+        print("Starting point set to:", start)
+        print("Ending point set to:", end)
+        distances = dijkstra.distances_costs(start, end, im, self.obs)
+        gradients_map_image = dijkstra.gradient_on_image(distances, im)
+        img = Image.fromarray(gradients_map_image)
+        img.save(self._gradients_map_image_name)
+        self._gradients_map_computed = True
+        self._vue.texte.setText("You can now print the optimal path")
+        #self._vue.bar.hide()
+        
+
     def gradients_map_button_was_clicked(self) -> None:
         """Handles the button click event to display the gradients map."""
-        pass
+        if self._gradients_map_computed:
+            self._vue.print_stocked_image(self._gradients_map_image_name)
+        elif self._starting_and_ending_points_set:
+            self.gradients_map_creation(self._starting_point, self._ending_point)
+            self._vue.print_stocked_image(self._gradients_map_image_name)
+        else:
+            print("Please select starting and ending points by clicking on the image.")
     
     def path_button_was_clicked(self) -> None:
         """Handles the button click event to print the optimal path."""
