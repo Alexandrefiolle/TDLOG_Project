@@ -11,6 +11,7 @@ import matplotlib.colors as col
 from math import*
 import time
 import interface as vis
+from PIL import Image
 epsilon = 2.0
 
 class PriorityQueue_heap:
@@ -33,12 +34,9 @@ class PriorityQueue_heap:
     def size(self) -> int:
         return len(self._heap) 
         
-def distances_costs(start: pc.Point, end: pc.Point, grey_levels: ui.GreyImage, obs: vis.Observer|None = None) -> tuple[dict[pc.Point, float], list[pc.Point]]:
+def distances_costs(start: pc.Point, end: pc.Point, grey_levels: ui.GreyImage, obs = None) -> tuple[dict[pc.Point, float], list[pc.Point]]:
     """Computes the list of shortest path costs from start until we reach the end point"""
-    dist = {}
-    for x in range(grey_levels.width):
-        for y in range(grey_levels.height):
-            dist[pc.Point(x,y)] = np.inf
+    dist = ui.Distances(grey_levels)
     dist[start] = 0
     to_visit = PriorityQueue_heap([])
     to_visit.append(start, 0)
@@ -58,25 +56,15 @@ def distances_costs(start: pc.Point, end: pc.Point, grey_levels: ui.GreyImage, o
                 to_visit.append(neighbor, dist[neighbor])
     return dist
 
-def coloration_map(distances: dict[pc.Point, float], grey_levels: ui.GreyImage) -> np.ndarray:
+def coloration_map(distances: ui.Distances, grey_levels: ui.GreyImage) -> np.ndarray:
     """Colors the map according to the distances computed"""
-    max_dist = 0
-    for distance in distances.values():
-        if distance < np.inf and distance>max_dist:
-            max_dist = distance
-    min_dist = min(distances.values())
+    max_dist = np.max(distances.map, where=np.isfinite(distances.map), initial=0)
+    min_dist = np.min(distances.map)
     print(max_dist)
-    colored_map = np.zeros((grey_levels.height, grey_levels.width, 3), dtype=np.uint8)
+    distances.map = (distances.map - min_dist)/(max_dist - min_dist)
     myMap = plt.get_cmap('Spectral')
-    for point, distance in distances.items():
-        assert(point.y < grey_levels.height and point.x < grey_levels.width)
-        if distance < np.inf:
-            intensity = (distance - min_dist) / (max_dist - min_dist)
-            color = col.to_rgb(myMap(intensity))
-            color_list = [color[0], color[1], color[2]]
-            for i in range (3):
-                color_list[i] = int(255*color_list[i])
-            colored_map[point.y, point.x] = color_list
+    myMap.set_over(color='black')
+    colored_map = (myMap(distances.map)[:, :, :3] * 255).astype(np.uint8)
     return colored_map
 
 def gradient_point_y(point: pc.Point, dist: dict[pc.Point, float], grey_levels: ui.GreyImage) -> float:
@@ -123,7 +111,7 @@ def gradient_x(dist: dict[pc.Point, float], grey_levels: ui.GreyImage) -> dict[p
            image_gradient[point] = gradient_point_y(point, dist, grey_levels)
     return image_gradient
 
-def gradient_on_image(dist: dict[pc.Point, float], grey_levels: ui.GreyImage, obs: vis.Observer|None = None) -> np.ndarray:
+def gradient_on_image(dist: dict[pc.Point, float], grey_levels: ui.GreyImage, obs = None) -> np.ndarray:
     """Display the gradient on an image"""
     debut = time.time()
     grad_x = gradient_x(dist, grey_levels)
@@ -244,6 +232,8 @@ if __name__ == "__main__":
     end = pc.Point(120,10)
     distances = distances_costs(start, end, im)
     colored_map = coloration_map(distances, im)
+    img = Image.fromarray(colored_map)
+    img.save("color.png")
     colored_map[start.x, start.y] = [255,0,0]
     for k in range(10):
         colored_map[min(start.x+k,700), start.y] = [0,0,0]

@@ -43,3 +43,30 @@ class GreyImage:
     def cost(self, m0: pc.Point, m: pc.Point, epsilon: float=1) -> float:
         """Computes the cost induced two points of the image"""
         return epsilon + np.abs(self[m0] - self[m])
+    
+class Distances:
+    """A class representing a distance map."""
+    def __init__(self, im : GreyImage) -> None:
+        """initializes the distance map."""
+        self.map = np.full_like(im.image, np.inf, dtype=np.float64)
+        self._height = self.map.shape[0]
+        self._width = self.map.shape[1]
+
+    @property
+    def height(self) -> int:
+        """Returns the height of the image."""
+        return self._height
+    @property
+    def width(self) -> int:
+        """Returns the width of the image."""
+        return self._width
+    
+    def __getitem__(self, key: pc.Point) -> int:
+        """Allows accessing the grey level of a point using indexing."""
+        return self.map[key.y][key.x]
+    
+    def __setitem__(self, key: pc.Point, value) -> int:
+        """Allows accessing the grey level of a point using indexing."""
+        self.map[key.y][key.x] = value
+
+    
