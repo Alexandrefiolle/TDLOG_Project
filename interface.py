@@ -83,7 +83,7 @@ class Vue(widgets.QGroupBox):
         self.image = Fenetre(self)
         vertical.addWidget(self.image)
         img = gui.QPixmap("Carte.png")
-        self.ratio = img.width()/1000
+        self.ratio = max(img.width()/1000, img.height()/700)
         self.image.setPixmap(img.scaled(1000, 700, aspectRatioMode=Qt.AspectRatioMode.KeepAspectRatio, transformMode=Qt.TransformationMode.SmoothTransformation))
         self._menu = None
         self.bar = Chargement()
@@ -120,7 +120,7 @@ class Menu(widgets.QGroupBox):
     def __init__(self, vue: Vue) -> None:
         """Initializes the menu with buttons linked to various functionalities."""
         super().__init__(None)
-        self.setFixedWidth(500)
+        self.setFixedWidth(200)
         self.select_button = widgets.QPushButton("Select an image", self)
         self.select_button.setGeometry(10, 10, 150, 30)
         self.select_button.clicked.connect(self.select_button_was_clicked)
@@ -177,7 +177,7 @@ class Menu(widgets.QGroupBox):
         self._distances_map_computed = False
         self._gradients_map_computed = False
         self.erase_points_was_clicked()
-        self._vue.ratio = gui.QPixmap(file_name).width()/1000
+        self._vue.ratio = max(gui.QPixmap(file_name).width()/1000, gui.QPixmap(file_name).height()/700)
     
     def erase_points_was_clicked(self) -> None:
         self._vue.image.ps = None
@@ -236,10 +236,11 @@ class Menu(widgets.QGroupBox):
         Creates the gradients map and stores it in the corresponding view.
         Using the functions from dijkstra.py
         """
-        #self._vue.bar.reinitialise(start.norm(end))
-        #self._vue.bar.show()
-        #self.obs.add_observer(self._vue.bar)
-        im = self._original_image_grey_level
+        
+        self.obs.add_observer(self._vue.bar)
+        im = ui.GreyImage(self._original_image_name)
+        self._vue.bar.reinitialise(im.width*im.height)
+        self._vue.bar.show()
         print("Starting point set to:", start)
         print("Ending point set to:", end)
         gradients_map_image = dijkstra.gradient_on_image(self._distances_costs, im)
@@ -247,7 +248,8 @@ class Menu(widgets.QGroupBox):
         img.save(self._gradients_map_image_name)
         self._gradients_map_computed = True
         self._vue.texte.setText("You can now print the optimal path")
-        #self._vue.bar.hide()
+        self._vue.bar.hide()
+        self.obs.del_observer(self._vue.bar)
         
 
     def gradients_map_button_was_clicked(self) -> None:

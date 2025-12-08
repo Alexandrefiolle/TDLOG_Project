@@ -44,8 +44,8 @@ def distances_costs(start: pc.Point, end: pc.Point, grey_levels: ui.GreyImage, o
     visited = []
     while to_visit.size() > 0:
         candidate = to_visit.remove()
-        #if time.time() % 1 == 0:
-        obs.notify_observer(candidate.norm(end))
+        if obs is not None:
+            obs.notify_observer(candidate.norm(end))
         visited.append(candidate)
         if candidate == end: 
             break
@@ -122,10 +122,15 @@ def gradient_x(dist: dict[pc.Point, float], grey_levels: ui.GreyImage) -> dict[p
            image_gradient[point] = gradient_point_x(point, dist, grey_levels)
     return image_gradient
 
-def gradient_on_image(dist: dict[pc.Point, float], grey_levels: ui.GreyImage) -> np.ndarray:
+def gradient_on_image(dist: dict[pc.Point, float], grey_levels: ui.GreyImage, obs: vis.Observer|None = None) -> np.ndarray:
     """Display the gradient on an image"""
+    debut = time.time()
     grad_x = gradient_x(dist, grey_levels)
+    print("grad_x", time.time()-debut)
+    debut = time.time()
     grad_y = gradient_y(dist, grey_levels)
+    print("grad_y", time.time()-debut)
+    debut = time.time()
     colored_map = np.zeros((grey_levels.height, grey_levels.width, 3), dtype=np.uint8)
     myMap = plt.get_cmap('GnBu')
     intensity = {}
@@ -134,8 +139,14 @@ def gradient_on_image(dist: dict[pc.Point, float], grey_levels: ui.GreyImage) ->
         intensity[point] = sqrt(abs(grad_x[point])+abs(grad_y[point]))
         if intensity[point] > max_intensity and intensity[point] < np.inf:
             max_intensity = intensity[point]
+    print("max_intensity", time.time()-debut)
+    debut = time.time()
     print("max intensity: ", max_intensity)
+    cpt = len(grad_x)
     for point in grad_x:
+        if obs is not None:
+            obs.notify_observer(cpt)
+        cpt -= 1
         if intensity[point]<np.inf:
             r = intensity[point]/max_intensity
             theta = (atan2(grad_y[point],grad_x[point])*180/np.pi+180)/360
@@ -143,7 +154,8 @@ def gradient_on_image(dist: dict[pc.Point, float], grey_levels: ui.GreyImage) ->
             color_list = [color[0], color[1], color[2]]
             for i in range (3):
                 color_list[i] = int(255*color_list[i]*r)
-            colored_map[point.x, point.y] = color_list
+            colored_map[point.y, point.x] = color_list
+    print("colored_map", time.time()-debut)
     return colored_map
 
 def valid_neighbours(grey_levels: ui.GreyImage, point:pc.Point, visited: dict[pc.Point, bool],
