@@ -36,8 +36,9 @@ class PriorityQueue_heap:
 def distances_costs(start: pc.Point, end: pc.Point, grey_levels: ui.GreyImage, obs: vis.Observer|None = None) -> tuple[dict[pc.Point, float], list[pc.Point]]:
     """Computes the list of shortest path costs from start until we reach the end point"""
     dist = {}
-    for point in grey_levels.graph.keys():
-        dist[point] = np.inf
+    for x in range(grey_levels.width):
+        for y in range(grey_levels.height):
+            dist[pc.Point(x,y)] = np.inf
     dist[start] = 0
     to_visit = PriorityQueue_heap([])
     to_visit.append(start, 0)
@@ -225,7 +226,7 @@ def affiche_descent(descent: list[pc.Point], img: ui.GreyImage) -> np.ndarray:
     for i in range(img.height):
         for j in range(img.width):
             p = pc.Point(i,j)
-            colored_map[i][j] = [img.graph[p], img.graph[p], img.graph[p]]
+            colored_map[i][j] = [img[p], img[p], img[p]]
     sum = 0
     for point in descent:
         sum += img.cost(pc.Point(289,136), point)
