@@ -238,12 +238,12 @@ class Menu(widgets.QGroupBox):
         """
         
         self.obs.add_observer(self._vue.bar)
-        im = ui.GreyImage(self._original_image_name)
+        im = self._original_image_grey_level
         self._vue.bar.reinitialise(im.width*im.height)
         self._vue.bar.show()
         print("Starting point set to:", start)
         print("Ending point set to:", end)
-        gradients_map_image = dijkstra.gradient_on_image(self._distances_costs, im)
+        gradients_map_image = dijkstra.gradient_on_image(self._distances_costs, im, self.obs)
         img = Image.fromarray(gradients_map_image)
         img.save(self._gradients_map_image_name)
         self._gradients_map_computed = True
@@ -302,4 +302,3 @@ if __name__ == "__main__":
     main_window = Window()
     main_window.showMaximized()
     sys.exit(application.exec())
-
