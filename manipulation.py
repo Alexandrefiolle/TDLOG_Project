@@ -69,4 +69,5 @@ class Distances:
         """Allows accessing the grey level of a point using indexing."""
         self.map[key.y][key.x] = value
 
-    
+    def __iter__(self):
+        return (pc.Point(x, y) for x in range(self.width) for y in range(self.height))
