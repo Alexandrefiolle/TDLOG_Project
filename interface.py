@@ -141,8 +141,10 @@ class Menu(widgets.QGroupBox):
         self.path_button.clicked.connect(self.path_button_was_clicked)
         self._vue = vue
         self._original_image_name = 'Carte.png'
+        self._original_image_grey_level = ui.GreyImage(self._original_image_name)
         self._distances_map_image_name = 'distances_map.png'
         self._distances_map_computed = False
+        self._distances_costs = None
         self._gradients_map_image_name = 'gradients_map.png'
         self._gradients_map_computed = False
         self._starting_point = None
@@ -198,10 +200,11 @@ class Menu(widgets.QGroupBox):
         self._vue.bar.reinitialise(start.norm(end))
         self._vue.bar.show()
         self.obs.add_observer(self._vue.bar)
-        im = ui.GreyImage(self._original_image_name)
+        im = self._original_image_grey_level
         print("Starting point set to:", start)
         print("Ending point set to:", end)
-        distances_map_image = dijkstra.distances_map(start, end, im, self.obs)
+        self._distances_costs = dijkstra.distances_costs(start, end, im, self.obs)
+        distances_map_image = dijkstra.coloration_map(self._distances_costs, im)
         img = Image.fromarray(distances_map_image)
         img.save(self._distances_map_image_name)
         self._distances_map_computed = True
@@ -235,13 +238,12 @@ class Menu(widgets.QGroupBox):
         """
         
         self.obs.add_observer(self._vue.bar)
-        im = ui.GreyImage(self._original_image_name)
+        im = self._original_image_grey_level
         self._vue.bar.reinitialise(im.width*im.height)
         self._vue.bar.show()
         print("Starting point set to:", start)
         print("Ending point set to:", end)
-        distances = dijkstra.distances_costs(start, end, im, self.obs)
-        gradients_map_image = dijkstra.gradient_on_image(distances, im)
+        gradients_map_image = dijkstra.gradient_on_image(self._distances_costs, im, self.obs)
         img = Image.fromarray(gradients_map_image)
         img.save(self._gradients_map_image_name)
         self._gradients_map_computed = True
@@ -300,4 +302,3 @@ if __name__ == "__main__":
     main_window = Window()
     main_window.showMaximized()
     sys.exit(application.exec())
-

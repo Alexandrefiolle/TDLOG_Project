@@ -67,10 +67,10 @@ def coloration_map(distances: ui.Distances, grey_levels: ui.GreyImage) -> np.nda
     colored_map = (myMap(distances.map)[:, :, :3] * 255).astype(np.uint8)
     return colored_map
 
-def gradient_point_y(point: pc.Point, dist: dict[pc.Point, float], grey_levels: ui.GreyImage) -> float:
+def gradient_point_x(point: pc.Point, dist: dict[pc.Point, float], grey_levels: ui.GreyImage) -> float:
     """Compute the gradient of a point of the distance_map"""
     p_north = pc.Point(point.x-1,point.y)
-    if point.x == grey_levels.height - 1:
+    if point.x == grey_levels.width - 1:
         p_south = point
     else : 
         p_south = pc.Point(point.x+1, point.y)
@@ -82,10 +82,10 @@ def gradient_point_y(point: pc.Point, dist: dict[pc.Point, float], grey_levels: 
         return dist[p_south] - dist[p_north]
     return (dist[p_south] - dist[p_north])/2
 
-def gradient_point_x(point: pc.Point, dist: dict[pc.Point, float], grey_levels: ui.GreyImage) -> float:
+def gradient_point_y(point: pc.Point, dist: dict[pc.Point, float], grey_levels: ui.GreyImage) -> float:
     """Compute the gradient of a point of the distance_map"""
     p_west = pc.Point(point.x, point.y-1)
-    if point.y == grey_levels.width - 1:
+    if point.y == grey_levels.height - 1:
         p_east = point
     else : 
         p_east = pc.Point(point.x, point.y+1)
@@ -100,7 +100,7 @@ def gradient_y(dist: dict[pc.Point, float], grey_levels: ui.GreyImage) -> dict[p
     image_gradient = {}
     for point in dist:
         if dist[point] < np.inf:
-            image_gradient[point] = gradient_point_x(point, dist, grey_levels)
+            image_gradient[point] = gradient_point_y(point, dist, grey_levels)
     return image_gradient
 
 def gradient_x(dist: dict[pc.Point, float], grey_levels: ui.GreyImage) -> dict[pc.Point, float]:
@@ -108,7 +108,7 @@ def gradient_x(dist: dict[pc.Point, float], grey_levels: ui.GreyImage) -> dict[p
     image_gradient = {}
     for point in dist:
         if dist[point] < np.inf:
-           image_gradient[point] = gradient_point_y(point, dist, grey_levels)
+           image_gradient[point] = gradient_point_x(point, dist, grey_levels)
     return image_gradient
 
 def gradient_on_image(dist: dict[pc.Point, float], grey_levels: ui.GreyImage, obs = None) -> np.ndarray:
