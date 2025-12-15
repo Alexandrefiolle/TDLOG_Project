@@ -117,31 +117,17 @@ def gradient_on_image(dist: dict[pc.Point, float], grey_levels: ui.GreyImage, ob
     
     grad_y = gradient_y(dist, grey_levels)
     
-    colored_map = np.zeros((grey_levels.height, grey_levels.width, 3), dtype=np.uint8)
     myMap = plt.get_cmap('GnBu')
-    intensity = {}
-    max_intensity = 0
-    for point in grad_x:
-        intensity[point] = sqrt(abs(grad_x[point])+abs(grad_y[point]))
-        if intensity[point] > max_intensity and intensity[point] < np.inf:
-            max_intensity = intensity[point]
-    
-    print("max intensity: ", max_intensity)
+    intensity = np.sqrt(np.abs(grad_x.map) + np.abs(grad_y.map))
+    np.putmask(intensity, np.isinf(intensity), 0)
+    intensity = intensity/np.max(intensity)
+    theta = np.arctan2(grad_x.map,grad_y.map)/(2*np.pi) + 0.5
+    colored_map = np.einsum("ij, ijk -> ijk", intensity, myMap(theta)[:, :, :3])
+
     cpt = grey_levels.width*grey_levels.height
-    for point in grad_x:
-        if obs is not None:
-            obs.notify_observer(cpt)
-        cpt -= 1
-        if intensity[point]<np.inf:
-            r = intensity[point]/max_intensity
-            theta = (atan2(grad_y[point],grad_x[point])*180/np.pi+180)/360
-            color = col.to_rgb(myMap(theta))
-            color_list = [color[0], color[1], color[2]]
-            for i in range (3):
-                color_list[i] = int(255*color_list[i]*r)
-            colored_map[point.y, point.x] = color_list
     
-    return colored_map
+    
+    return (colored_map * 255).astype(np.uint8)
 
 def valid_neighbours(grey_levels: ui.GreyImage, point:pc.Point, visited: dict[pc.Point, bool],
                     dist: dict[pc.Point, float], list_visited: list[pc.Point]) -> list[pc.Point]:
