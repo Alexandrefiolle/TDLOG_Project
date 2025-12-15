@@ -61,10 +61,10 @@ def coloration_map(distances: ui.Distances, grey_levels: ui.GreyImage) -> np.nda
     max_dist = np.max(distances.map, where=np.isfinite(distances.map), initial=0)
     min_dist = np.min(distances.map)
     print(max_dist)
-    distances.map = (distances.map - min_dist)/(max_dist - min_dist)
+    intensity = (distances.map - min_dist)/(max_dist - min_dist)
     myMap = plt.get_cmap('Spectral')
     myMap.set_over(color='black')
-    colored_map = (myMap(distances.map)[:, :, :3] * 255).astype(np.uint8)
+    colored_map = (myMap(intensity)[:, :, :3] * 255).astype(np.uint8)
     return colored_map
 
 def gradient_point_x(point: pc.Point, dist: dict[pc.Point, float], grey_levels: ui.GreyImage) -> float:
@@ -97,7 +97,7 @@ def gradient_point_y(point: pc.Point, dist: dict[pc.Point, float], grey_levels: 
 
 def gradient_y(dist: dict[pc.Point, float], grey_levels: ui.GreyImage) -> dict[pc.Point, float]:
     """compute the gradient on the distance map"""
-    image_gradient = {}
+    image_gradient = ui.Distances(grey_levels)
     for point in dist:
         if dist[point] < np.inf:
             image_gradient[point] = gradient_point_y(point, dist, grey_levels)
@@ -105,7 +105,7 @@ def gradient_y(dist: dict[pc.Point, float], grey_levels: ui.GreyImage) -> dict[p
 
 def gradient_x(dist: dict[pc.Point, float], grey_levels: ui.GreyImage) -> dict[pc.Point, float]:
     """compute the gradient on the distance map"""
-    image_gradient = {}
+    image_gradient = ui.Distances(grey_levels)
     for point in dist:
         if dist[point] < np.inf:
            image_gradient[point] = gradient_point_x(point, dist, grey_levels)
@@ -113,13 +113,10 @@ def gradient_x(dist: dict[pc.Point, float], grey_levels: ui.GreyImage) -> dict[p
 
 def gradient_on_image(dist: dict[pc.Point, float], grey_levels: ui.GreyImage, obs = None) -> np.ndarray:
     """Display the gradient on an image"""
-    debut = time.time()
     grad_x = gradient_x(dist, grey_levels)
-    print("grad_x", time.time()-debut)
-    debut = time.time()
+    
     grad_y = gradient_y(dist, grey_levels)
-    print("grad_y", time.time()-debut)
-    debut = time.time()
+    
     colored_map = np.zeros((grey_levels.height, grey_levels.width, 3), dtype=np.uint8)
     myMap = plt.get_cmap('GnBu')
     intensity = {}
@@ -128,10 +125,9 @@ def gradient_on_image(dist: dict[pc.Point, float], grey_levels: ui.GreyImage, ob
         intensity[point] = sqrt(abs(grad_x[point])+abs(grad_y[point]))
         if intensity[point] > max_intensity and intensity[point] < np.inf:
             max_intensity = intensity[point]
-    print("max_intensity", time.time()-debut)
-    debut = time.time()
+    
     print("max intensity: ", max_intensity)
-    cpt = len(grad_x)
+    cpt = grey_levels.width*grey_levels.height
     for point in grad_x:
         if obs is not None:
             obs.notify_observer(cpt)
@@ -144,7 +140,7 @@ def gradient_on_image(dist: dict[pc.Point, float], grey_levels: ui.GreyImage, ob
             for i in range (3):
                 color_list[i] = int(255*color_list[i]*r)
             colored_map[point.y, point.x] = color_list
-    print("colored_map", time.time()-debut)
+    
     return colored_map
 
 def valid_neighbours(grey_levels: ui.GreyImage, point:pc.Point, visited: dict[pc.Point, bool],
