@@ -239,7 +239,7 @@ class Menu(widgets.QGroupBox):
         
         self.obs.add_observer(self._vue.bar)
         im = self._original_image_grey_level
-        self._vue.bar.reinitialise(im.width*im.height)
+        self._vue.bar.reinitialise(2*im.width*im.height)
         self._vue.bar.show()
         print("Starting point set to:", start)
         print("Ending point set to:", end)

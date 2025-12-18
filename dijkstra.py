@@ -95,27 +95,35 @@ def gradient_point_y(point: pc.Point, dist: dict[pc.Point, float], grey_levels: 
         p_west = point
     return (dist[p_west] - dist[p_east])/2
 
-def gradient_y(dist: dict[pc.Point, float], grey_levels: ui.GreyImage) -> dict[pc.Point, float]:
+def gradient_y(dist: dict[pc.Point, float], grey_levels: ui.GreyImage, obs = None) -> dict[pc.Point, float]:
     """compute the gradient on the distance map"""
     image_gradient = ui.Distances(grey_levels)
+    cpt = grey_levels.width*grey_levels.height
     for point in dist:
+        cpt -= 1
+        if obs is not None:
+            obs.notify_observer(cpt)
         if dist[point] < np.inf:
             image_gradient[point] = gradient_point_y(point, dist, grey_levels)
     return image_gradient
 
-def gradient_x(dist: dict[pc.Point, float], grey_levels: ui.GreyImage) -> dict[pc.Point, float]:
+def gradient_x(dist: dict[pc.Point, float], grey_levels: ui.GreyImage, obs = None) -> dict[pc.Point, float]:
     """compute the gradient on the distance map"""
     image_gradient = ui.Distances(grey_levels)
+    cpt = grey_levels.width*grey_levels.height
     for point in dist:
+        cpt -= 1
+        if obs is not None:
+            obs.notify_observer(grey_levels.width*grey_levels.height + cpt)
         if dist[point] < np.inf:
            image_gradient[point] = gradient_point_x(point, dist, grey_levels)
     return image_gradient
 
 def gradient_on_image(dist: dict[pc.Point, float], grey_levels: ui.GreyImage, obs = None) -> np.ndarray:
     """Display the gradient on an image"""
-    grad_x = gradient_x(dist, grey_levels)
+    grad_x = gradient_x(dist, grey_levels, obs)
     
-    grad_y = gradient_y(dist, grey_levels)
+    grad_y = gradient_y(dist, grey_levels, obs)
     
     myMap = plt.get_cmap('GnBu')
     intensity = np.sqrt(np.abs(grad_x.map) + np.abs(grad_y.map))
@@ -124,7 +132,6 @@ def gradient_on_image(dist: dict[pc.Point, float], grey_levels: ui.GreyImage, ob
     theta = np.arctan2(grad_x.map,grad_y.map)/(2*np.pi) + 0.5
     colored_map = np.einsum("ij, ijk -> ijk", intensity, myMap(theta)[:, :, :3])
 
-    cpt = grey_levels.width*grey_levels.height
     
     
     return (colored_map * 255).astype(np.uint8)
