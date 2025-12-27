@@ -1,6 +1,7 @@
 "This file aims at creating a simple interface which allows the user to open and display an image."
 
 from __future__ import annotations 
+import numpy as np
 import sys
 import PyQt6
 from PyQt6.QtCore import Qt, QPoint
@@ -10,6 +11,7 @@ from PIL import Image
 import dijkstra
 import point_class as pc
 import manipulation as ui
+import edge_detection as edge
 
 class Chargement(widgets.QProgressBar):
 
@@ -139,6 +141,13 @@ class Menu(widgets.QGroupBox):
         self.path_button = widgets.QPushButton("Print the optimal path", self)
         self.path_button.setGeometry(10, 210, 150, 30)
         self.path_button.clicked.connect(self.path_button_was_clicked)
+        self.edge_detection_button = widgets.QPushButton("Edge detection", self)
+        self.edge_detection_button.setGeometry(10, 250, 150, 30)
+        self.edge_detection_button.clicked.connect(self.edge_detection_button_was_clicked)
+        self.next_edge_button = widgets.QPushButton("Next image →", self)
+        self.next_edge_button.setGeometry(10, 330, 180, 40) 
+        self.next_edge_button.clicked.connect(self.show_next_edge_image)
+        self.next_edge_button.hide()
         self._vue = vue
         self._original_image_name = 'Carte.png'
         self._original_image_grey_level = ui.GreyImage(self._original_image_name)
@@ -147,9 +156,19 @@ class Menu(widgets.QGroupBox):
         self._distances_costs = None
         self._gradients_map_image_name = 'gradients_map.png'
         self._gradients_map_computed = False
+        self._gradient_magnitude_name = 'gradient_magnitude.png'
+        self._smoothed_gradient_name = 'smoothed_gradient.png'
+        self._weight_map_name = 'weight_map.png'
+        self._edge_images_computed = False
+        self._smoothed_map = None
+        self._weight_map = None
+        self._weight_map_computed = False
+        self.current_edge_step = 0
+        self.edge_steps = []
         self._starting_point = None
         self._ending_point = None
         self._starting_and_ending_points_set = False
+        self._edge_detection = False
         self.obs = Observer()
     
     @property
@@ -174,6 +193,7 @@ class Menu(widgets.QGroupBox):
         file_name, _ = widgets.QFileDialog.getOpenFileName(self)
         self._vue.change_image(file_name)
         self._original_image_name = file_name
+        self._original_image_grey_level = ui.GreyImage(self._original_image_name)
         self._distances_map_computed = False
         self._gradients_map_computed = False
         self.erase_points_was_clicked()
@@ -203,7 +223,7 @@ class Menu(widgets.QGroupBox):
         im = self._original_image_grey_level
         print("Starting point set to:", start)
         print("Ending point set to:", end)
-        self._distances_costs = dijkstra.distances_costs(start, end, im, self.obs)
+        self._distances_costs = dijkstra.distances_costs(start, end, im, self._edge_detection, self.obs)
         distances_map_image = dijkstra.coloration_map(self._distances_costs, im)
         img = Image.fromarray(distances_map_image)
         img.save(self._distances_map_image_name)
@@ -266,6 +286,60 @@ class Menu(widgets.QGroupBox):
         """Handles the button click event to print the optimal path."""
         pass
 
+    def edge_detection_button_was_clicked(self) -> None:
+        """Handles the button click event to perform edge detection and display the three images sequentially."""
+        self._edge_detection = True
+        im = self._original_image_grey_level
+
+        if not self._edge_images_computed:
+            print("Computing edge detection maps...")
+            magnitude = edge.compute_gradient_magnitude(im)
+            smoothed = edge.smooth_gradient_magnitude(magnitude, sigma=1.5)  # Ajuste sigma si besoin
+            weight_map = edge.compute_edge_weight_map(smoothed, epsilon=0.1)
+
+            # Function to normalize and save images
+            def normalize_and_save(array: np.ndarray, filename: str):
+                if array.size == 0 or array.max() == 0:
+                    norm = np.zeros(array.shape, dtype=np.uint8)
+                else:
+                    norm = (array / array.max() * 255).astype(np.uint8)
+                img = Image.fromarray(norm)
+                img.save(filename)
+
+            normalize_and_save(magnitude, self._gradient_magnitude_name)
+            normalize_and_save(smoothed, self._smoothed_gradient_name)
+            normalize_and_save(weight_map, self._weight_map_name)
+
+            self._edge_images_computed = True
+            print("Edge detection maps computed and saved.")
+
+        # Préparation de la séquence d'affichage
+        self.current_edge_step = 0
+        self.edge_steps = [
+            (self._original_image_name, "Edge detection: 1. Original image"),
+            (self._smoothed_gradient_name, "Edge detection: 2. Smoothed gradient (Gσ * |∇f|)"),
+            (self._weight_map_name, "Edge detection: 3. Weight map W(x,y) = 1/(ε + smoothed)")
+        ]
+
+        # Afficher le bouton de navigation
+        self.next_edge_button.show()
+
+        # Lancer l'affichage de la première image
+        self.show_next_edge_image()
+
+    def show_next_edge_image(self):
+        """Prints the next image in the edge detection sequence."""
+        if self.current_edge_step < len(self.edge_steps):
+            filename, text = self.edge_steps[self.current_edge_step]
+            self._vue.texte.setText(text)
+            self._vue.print_stocked_image(filename)
+            self.current_edge_step += 1
+        else:
+            # End of the sequence
+            self._vue.texte.setText("Edge detection completed.\nYou can now select two points on a contour.")
+            self._vue.print_stocked_image(self._original_image_name)
+            self.next_edge_button.hide() 
+            self.current_edge_step = 0
 class Window(widgets.QMainWindow):
     """A simple window class to open and display an image."""
     def __init__(self) -> None:

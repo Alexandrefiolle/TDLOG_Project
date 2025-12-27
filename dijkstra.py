@@ -3,6 +3,7 @@
 
 import point_class as pc
 import manipulation as ui
+import edge_detection as edge
 from collections import deque
 import numpy as np
 import heapq
@@ -33,7 +34,7 @@ class PriorityQueue_heap:
     def size(self) -> int:
         return len(self._heap) 
         
-def distances_costs(start: pc.Point, end: pc.Point, grey_levels: ui.GreyImage, obs: vis.Observer|None = None) -> tuple[dict[pc.Point, float], list[pc.Point]]:
+def distances_costs(start: pc.Point, end: pc.Point, grey_levels: ui.GreyImage, edge_detection: bool = False, weight_map: np.ndarray|None = None, obs: vis.Observer|None = None) -> tuple[dict[pc.Point, float], list[pc.Point]]:
     """Computes the list of shortest path costs from start until we reach the end point"""
     dist = {}
     for point in grey_levels.graph.keys():
@@ -51,7 +52,10 @@ def distances_costs(start: pc.Point, end: pc.Point, grey_levels: ui.GreyImage, o
             break
         for neighbor in grey_levels.neighbors(candidate):
             assert neighbor.x < grey_levels.width and neighbor.y < grey_levels.height
-            cost = grey_levels.cost(start, neighbor, epsilon)
+            if edge_detection:
+                cost = edge.cost_edges_edge_detection(neighbor, dist, grey_levels, weight_map)
+            else:
+                cost = grey_levels.cost(start, neighbor, epsilon)
             if dist[neighbor] > dist[candidate] + cost:
                 dist[neighbor] = dist[candidate] + cost
                 to_visit.append(neighbor, dist[neighbor])
