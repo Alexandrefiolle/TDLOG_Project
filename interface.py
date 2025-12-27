@@ -86,13 +86,16 @@ class Vue(widgets.QGroupBox):
         self.setFixedWidth(1000)
         vertical = widgets.QVBoxLayout(self)
         self.texte = widgets.QLabel("Select a starting point", self)
-        self.texte.setSizePolicy(widgets.QSizePolicy.Policy.Minimum, widgets.QSizePolicy.Policy.Fixed)
+        self.texte.setSizePolicy(widgets.QSizePolicy.Policy.Minimum, 
+                                 widgets.QSizePolicy.Policy.Fixed)
         vertical.addWidget(self.texte)
         self.image = Fenetre(self)
         vertical.addWidget(self.image)
         img = gui.QPixmap("Carte.png")
         self.ratio = max(img.width()/1000, img.height()/700)
-        self.image.setPixmap(img.scaled(1000, 700, aspectRatioMode=Qt.AspectRatioMode.KeepAspectRatio, transformMode=Qt.TransformationMode.SmoothTransformation))
+        self.image.setPixmap(img.scaled(1000, 700, 
+                                        aspectRatioMode=Qt.AspectRatioMode.KeepAspectRatio, 
+                                        transformMode=Qt.TransformationMode.SmoothTransformation))
         self._menu = None
         self.bar = Chargement()
         self.bar.setFixedWidth(1000)
@@ -112,11 +115,15 @@ class Vue(widgets.QGroupBox):
 
     def change_image(self, path) -> None:
         """Changes the displayed image to the one located at the given path."""
-        self.image.setPixmap(gui.QPixmap(path).scaled(1000, 700, aspectRatioMode=Qt.AspectRatioMode.KeepAspectRatio, transformMode=Qt.TransformationMode.SmoothTransformation))
+        self.image.setPixmap(gui.QPixmap(path).scaled(1000, 700, 
+                                                      aspectRatioMode=Qt.AspectRatioMode.KeepAspectRatio, 
+                                                      transformMode=Qt.TransformationMode.SmoothTransformation))
     
     def print_stocked_image(self, image_name: str) -> None:
         """Displays the image currently stored in the view."""
-        self.image.setPixmap(gui.QPixmap(image_name).scaled(1000, 700, aspectRatioMode=Qt.AspectRatioMode.KeepAspectRatio, transformMode=Qt.TransformationMode.SmoothTransformation))
+        self.image.setPixmap(gui.QPixmap(image_name).scaled(1000, 700, 
+                                                            aspectRatioMode=Qt.AspectRatioMode.KeepAspectRatio, 
+                                                            transformMode=Qt.TransformationMode.SmoothTransformation))
         
         
 class Menu(widgets.QGroupBox):
@@ -158,11 +165,16 @@ class Menu(widgets.QGroupBox):
         self.edge_detection_button = widgets.QPushButton("Edge detection", self)
         self.edge_detection_button.setGeometry(10, 250, 150, 30)
         self.edge_detection_button.clicked.connect(self.edge_detection_button_was_clicked)
+        # Reset edge detection button
+        self.reset_edge_button = widgets.QPushButton("Reset edge detection", self)
+        self.reset_edge_button.setGeometry(10, 290, 150, 30)
+        self.reset_edge_button.clicked.connect(self.reset_edge_detection)
         # Next edge image button
         self.next_edge_button = widgets.QPushButton("Next image →", self)
         self.next_edge_button.setGeometry(10, 330, 180, 40) 
         self.next_edge_button.clicked.connect(self.show_next_edge_image)
         self.next_edge_button.hide()
+
         self._vue = vue
         # starting image
         self._original_image_name = 'Carte.png'
@@ -174,6 +186,8 @@ class Menu(widgets.QGroupBox):
         # gradients map
         self._gradients_map_image_name = 'gradients_map.png'
         self._gradients_map_computed = False
+        # optimal path
+        self._optimal_path_computed = False
         # edge detection images
         self._gradient_magnitude_name = 'gradient_magnitude.png'
         self._smoothed_gradient_name = 'smoothed_gradient.png'
@@ -192,6 +206,7 @@ class Menu(widgets.QGroupBox):
         # observer
         self.obs = Observer()
     
+    # Properties for starting and ending points
     @property
     def starting_point(self) -> pc.Point:
         """Returns the starting point for pathfinding."""
@@ -209,6 +224,7 @@ class Menu(widgets.QGroupBox):
         """Sets the ending point for pathfinding."""
         self._ending_point = point
 
+    # Select button functionality
     def select_button_was_clicked(self) -> None:
         """Handles the button click event to open a file dialog and display the selected image."""
         file_name, _ = widgets.QFileDialog.getOpenFileName(self)
@@ -217,10 +233,13 @@ class Menu(widgets.QGroupBox):
         self._original_image_grey_level = ui.GreyImage(self._original_image_name)
         self._distances_map_computed = False
         self._gradients_map_computed = False
+        self._optimal_path_computed = False
         self._edge_images_computed = False
         self.erase_points_was_clicked()
         self._vue.ratio = max(gui.QPixmap(file_name).width()/1000, gui.QPixmap(file_name).height()/700)
+        self._vue.texte.setText("Image has been selected. Select a starting point")
     
+    # Erase points button functionality
     def erase_points_was_clicked(self) -> None:
         """Handles the button click event to erase the selected starting and ending points."""
         self._vue.image.ps = None
@@ -233,10 +252,13 @@ class Menu(widgets.QGroupBox):
         self._vue.image.update()
         self._vue.texte.setText("Select a starting point")
 
+    # Original image button functionality
     def original_image_button_was_selected(self) -> None:
         """Handles the button click event to display the original image."""
         self._vue.print_stocked_image(self._original_image_name)
+        self._vue.texte.setText("Original image is displayed")
 
+    # Distances map button functionality
     def distances_map_creation(self, start: pc.Point, end: pc.Point) -> None:
         """Creates the distances map and stores it in the corresponding view."""
         self._vue.bar.reinitialise(start.norm(end))
@@ -272,7 +294,8 @@ class Menu(widgets.QGroupBox):
         else:
             self._vue.print_stocked_image(self._distances_map_image_name)
         """
-
+    
+    # Gradients map button functionality
     def gradients_map_creation(self, start: pc.Point, end: pc.Point) -> None:
         """
         Creates the gradients map and stores it in the corresponding view.
@@ -292,7 +315,6 @@ class Menu(widgets.QGroupBox):
         self._vue.bar.hide()
         self.obs.del_observer(self._vue.bar)
         
-
     def gradients_map_button_was_clicked(self) -> None:
         """Handles the button click event to display the gradients map."""
         if self._gradients_map_computed:
@@ -303,19 +325,22 @@ class Menu(widgets.QGroupBox):
         else:
             print("Please select starting and ending points by clicking on the image.")
     
+    # Path button functionality
     def path_button_was_clicked(self) -> None:
         """Handles the button click event to print the optimal path."""
         pass
-
+    
+    # Edge detection button functionality
     def edge_detection_button_was_clicked(self) -> None:
-        """Handles the button click event to perform edge detection and display the three images sequentially."""
+        """Handles the button click event to perform edge detection 
+        and display the three images sequentially."""
         self._edge_detection = True
         im = self._original_image_grey_level
 
         if not self._edge_images_computed:
             print("Computing edge detection maps...")
             magnitude = edge.compute_gradient_magnitude(im)
-            smoothed = edge.smooth_gradient_magnitude(magnitude, sigma=1.5)  # Ajuste sigma si besoin
+            smoothed = edge.smooth_gradient_magnitude(magnitude, sigma=1.5)
             weight_map = edge.compute_edge_weight_map(smoothed, epsilon=0.1)
     
             # Function to normalize and save images
@@ -355,7 +380,15 @@ class Menu(widgets.QGroupBox):
 
         # Lancer l'affichage de la première image
         self.show_next_edge_image()
+    
+    # Reset edge detection button functionality
+    def reset_edge_detection(self) -> None:
+        self._edge_detection = False
+        self._edge_images_computed = False
+        self._vue.texte.setText("Edge detection reset.")
+        self._vue.print_stocked_image(self._original_image_name)
 
+    # Next edge image button functionality
     def show_next_edge_image(self) -> None:
         """Prints the next image in the edge detection sequence."""
         if self.current_edge_step < len(self.edge_steps):
