@@ -15,14 +15,18 @@ import interface as vis
 epsilon = 2.0
 
 class PriorityQueue_heap:
+    """A priority queue implementation using a heap data structure."""
     def __init__(self, heap: list[pc.Point, float]) -> None:
+        """Initializes the priority queue with an heap."""
         self._heap = heap
     
-    def _find_higher_priority_point(self) -> pc.Point: 
+    def _find_higher_priority_point(self) -> pc.Point:
+        """Finds and returns the point with the highest priority (lowest cost) without removing it.""" 
         best_point = self._heap[0][1]
         return best_point
 
     def append(self, point: pc.Point, priority: float) -> None:
+        """Adds a new point with the given priority to the queue."""
         heapq.heappush(self._heap, (priority, point)) # this function adds the new value (priority, point) by preseving the heap structure
 
     def remove(self) -> pc.Point:
@@ -32,9 +36,12 @@ class PriorityQueue_heap:
         return best_point
     
     def size(self) -> int:
+        """Returns the number of points in the priority queue."""
         return len(self._heap) 
         
-def distances_costs(start: pc.Point, end: pc.Point, grey_levels: ui.GreyImage, edge_detection: bool = False, weight_map: np.ndarray|None = None, obs: vis.Observer|None = None) -> tuple[dict[pc.Point, float], list[pc.Point]]:
+def distances_costs(start: pc.Point, end: pc.Point, grey_levels: ui.GreyImage, 
+                    edge_detection: bool = False, weight_map: np.ndarray|None = None, 
+                    obs: vis.Observer|None = None) -> tuple[dict[pc.Point, float], list[pc.Point]]:
     """Computes the list of shortest path costs from start until we reach the end point"""
     dist = {}
     for point in grey_levels.graph.keys():
@@ -164,6 +171,7 @@ def gradient_on_image(dist: dict[pc.Point, float], grey_levels: ui.GreyImage, ob
 
 def valid_neighbours(grey_levels: ui.GreyImage, point:pc.Point, visited: dict[pc.Point, bool],
                     dist: dict[pc.Point, float], list_visited: list[pc.Point]) -> list[pc.Point]:
+    """Returns the valid neighbours of a given point m"""
     neighbours = [pc.Point(point.x-1,point.y), pc.Point(point.x,point.y+1), pc.Point(point.x+1,point.y), pc.Point(point.x,point.y-1)]
     for i in range(len(neighbours)):
         if neighbours[i] in list_visited:
@@ -180,6 +188,7 @@ def valid_neighbours(grey_levels: ui.GreyImage, point:pc.Point, visited: dict[pc
 def test_minimum_neighbours(point: pc.Point, grad_x: dict[pc.Point, float], grad_y: dict[pc.Point, float], 
                             grey_levels: ui.GreyImage, dist: dict[pc.Point, float], visited: dict[pc.Point, bool],
                             list_visited: list[pc.Point]) -> pc.Point:
+    """Tests the minimum neighbour according to the gradient direction"""
     neighbours = valid_neighbours(grey_levels, point, visited, dist, list_visited)
     mini = 0
     mini_point = None
@@ -197,7 +206,10 @@ def test_minimum_neighbours(point: pc.Point, grad_x: dict[pc.Point, float], grad
         mini_point = pc.Point(point.x-int(copysign(1,grad_y[point])), point.y)
     return mini_point
 
-def gradient_descent(dist: dict[pc.Point, float], grey_levels: ui.GreyImage, start_point: pc.Point, end_point: pc.Point, list_visited: list[pc.Point]) -> list[pc.Point]:
+def gradient_descent(dist: dict[pc.Point, float], grey_levels: ui.GreyImage, 
+                     start_point: pc.Point, end_point: pc.Point, 
+                     list_visited: list[pc.Point]) -> list[pc.Point]:
+    """Computes the gradient descent from end_point to start_point"""
     grad_x = gradient_x(dist, grey_levels)
     grad_y = gradient_y(dist, grey_levels)
     point = end_point
@@ -225,6 +237,7 @@ def gradient_descent(dist: dict[pc.Point, float], grey_levels: ui.GreyImage, sta
     return descent
 
 def affiche_descent(descent: list[pc.Point], img: ui.GreyImage) -> np.ndarray:
+    """Displays the descent path on the image"""
     colored_map = np.zeros((img.height, img.width, 3), dtype=np.uint8)
     for i in range(img.height):
         for j in range(img.width):
