@@ -14,57 +14,63 @@ import manipulation as ui
 import edge_detection as edge
 
 class Chargement(widgets.QProgressBar):
-
-    def __init__(self, v_init = 0):
+    """A progress bar class to indicate the loading status during computations."""
+    def __init__(self, v_init: int = 0) -> None:
+        """Initializes the progress bar with a maximum value."""
         super().__init__()
         self.maxi = v_init
         self.setValue(0)
 
-    def reinitialise(self, v_init):
+    def reinitialise(self, v_init: int) -> None:
+        """Reinitializes the progress bar with a new given maximum value."""
         self.maxi = v_init
         self.setValue(0)
 
-    def update(self, value):
+    def update(self, value: int) -> None:
+        """Updates the progress bar based on the current value."""
         if 100 - 100*value//self.maxi > self.value():
             self.setValue(int(100 - 100*value/self.maxi))
 
 class Fenetre(widgets.QLabel):
-
-    def __init__(self, parent):
+    """A window class to display an image and handle mouse click events"""
+    def __init__(self, parent: Vue) -> None:
+        """Initializes the window with a parent view."""
         super().__init__(parent)
         self.ps = None
         self.pe = None
 
-    def mousePressEvent(self, event):
+    def mousePressEvent(self, event: gui.QMouseEvent) -> None:
+        """Handles mouse press events to select starting and ending points on the image."""
         if self.underMouse():
             point = gui.QCursor.pos()
             print("clicked", point.x(), point.y())
             point = self.mapFromGlobal(point)
             print("mapped", point.x(), point.y())
             point = pc.Point(int(self.parent().ratio*point.x()), int(self.parent().ratio*point.y()))
-            if self.parent()._menu.starting_point is None:
+            if self.parent()._menu.starting_point is None: # first point
                 self.ps = self.mapFromGlobal(gui.QCursor.pos())
                 self.parent()._menu.starting_point = point
                 print("Starting point set to:", point)
                 self.parent().texte.setText("Select an ending point")
-            elif self.parent()._menu.ending_point is None:
+            elif self.parent()._menu.ending_point is None: # second point
                 self.pe = self.mapFromGlobal(gui.QCursor.pos())
                 self.parent()._menu.ending_point = point
                 print("Ending point set to:", point)
                 self.parent()._menu._starting_and_ending_points_set = True
                 self.parent().texte.setText("Compute a distance map")
-            else:
+            else: # both points are already set
                 print("Both starting and ending points are already set.")
             self.update()
     
-    def paintEvent(self, a0):
+    def paintEvent(self, a0:gui.QPaintEvent) -> None:
+        """Handles the paint event to draw the selected points on the image."""
         painter = gui.QPainter()
         painter.begin(self)
         painter.drawPixmap(QPoint(), self.pixmap())
-        if self.ps is not None:
+        if self.ps is not None: # first point
             painter.setBrush(gui.QBrush(gui.QColorConstants.Green))
             painter.drawEllipse(self.ps, 5, 5)
-        if self.pe is not None:
+        if self.pe is not None: # second point
             painter.setBrush(gui.QBrush(gui.QColorConstants.Red))
             painter.drawEllipse(self.pe, 5, 5)
         painter.end()
@@ -123,39 +129,52 @@ class Menu(widgets.QGroupBox):
         """Initializes the menu with buttons linked to various functionalities."""
         super().__init__(None)
         self.setFixedWidth(200)
+        # Buttons
+        # Selection button
         self.select_button = widgets.QPushButton("Select an image", self)
         self.select_button.setGeometry(10, 10, 150, 30)
         self.select_button.clicked.connect(self.select_button_was_clicked)
+        # Erase points button
         self.select_button_erase_points = widgets.QPushButton("Erase the points", self)
         self.select_button_erase_points.setGeometry(10, 50, 150, 30)
         self.select_button_erase_points.clicked.connect(self.erase_points_was_clicked)
+        # Original image button
         self.original_image_button = widgets.QPushButton("Original image", self)
         self.original_image_button.setGeometry(10, 90, 150, 30)
         self.original_image_button.clicked.connect(self.original_image_button_was_selected)
+        # Distances map button
         self.distances_map_button = widgets.QPushButton("Distances map", self)
         self.distances_map_button.setGeometry(10, 130, 150, 30)
         self.distances_map_button.clicked.connect(self.distances_map_button_was_selected)
+        # Gradients map button
         self.gradients_map_button = widgets.QPushButton("Gradients map", self)
         self.gradients_map_button.setGeometry(10, 170, 150, 30)
         self.gradients_map_button.clicked.connect(self.gradients_map_button_was_clicked)
+        # Path button
         self.path_button = widgets.QPushButton("Print the optimal path", self)
         self.path_button.setGeometry(10, 210, 150, 30)
         self.path_button.clicked.connect(self.path_button_was_clicked)
+        # Edge detection button
         self.edge_detection_button = widgets.QPushButton("Edge detection", self)
         self.edge_detection_button.setGeometry(10, 250, 150, 30)
         self.edge_detection_button.clicked.connect(self.edge_detection_button_was_clicked)
+        # Next edge image button
         self.next_edge_button = widgets.QPushButton("Next image →", self)
         self.next_edge_button.setGeometry(10, 330, 180, 40) 
         self.next_edge_button.clicked.connect(self.show_next_edge_image)
         self.next_edge_button.hide()
         self._vue = vue
+        # starting image
         self._original_image_name = 'Carte.png'
         self._original_image_grey_level = ui.GreyImage(self._original_image_name)
         self._distances_map_image_name = 'distances_map.png'
+        # distances map
         self._distances_map_computed = False
         self._distances_costs = None
+        # gradients map
         self._gradients_map_image_name = 'gradients_map.png'
         self._gradients_map_computed = False
+        # edge detection images
         self._gradient_magnitude_name = 'gradient_magnitude.png'
         self._smoothed_gradient_name = 'smoothed_gradient.png'
         self._weight_map_name = 'weight_map.png'
@@ -165,10 +184,12 @@ class Menu(widgets.QGroupBox):
         self._weight_map_computed = False
         self.current_edge_step = 0
         self.edge_steps = []
+        self._edge_detection = False
+        # starting and ending points
         self._starting_point = None
         self._ending_point = None
         self._starting_and_ending_points_set = False
-        self._edge_detection = False
+        # observer
         self.obs = Observer()
     
     @property
@@ -196,10 +217,12 @@ class Menu(widgets.QGroupBox):
         self._original_image_grey_level = ui.GreyImage(self._original_image_name)
         self._distances_map_computed = False
         self._gradients_map_computed = False
+        self._edge_images_computed = False
         self.erase_points_was_clicked()
         self._vue.ratio = max(gui.QPixmap(file_name).width()/1000, gui.QPixmap(file_name).height()/700)
     
     def erase_points_was_clicked(self) -> None:
+        """Handles the button click event to erase the selected starting and ending points."""
         self._vue.image.ps = None
         self._vue.image.pe = None
         self._starting_point = None
@@ -209,7 +232,6 @@ class Menu(widgets.QGroupBox):
         self._gradients_map_computed = False
         self._vue.image.update()
         self._vue.texte.setText("Select a starting point")
-
 
     def original_image_button_was_selected(self) -> None:
         """Handles the button click event to display the original image."""
@@ -256,7 +278,6 @@ class Menu(widgets.QGroupBox):
         Creates the gradients map and stores it in the corresponding view.
         Using the functions from dijkstra.py
         """
-        
         self.obs.add_observer(self._vue.bar)
         im = self._original_image_grey_level
         self._vue.bar.reinitialise(im.width*im.height)
@@ -296,7 +317,7 @@ class Menu(widgets.QGroupBox):
             magnitude = edge.compute_gradient_magnitude(im)
             smoothed = edge.smooth_gradient_magnitude(magnitude, sigma=1.5)  # Ajuste sigma si besoin
             weight_map = edge.compute_edge_weight_map(smoothed, epsilon=0.1)
-
+    
             # Function to normalize and save images
             def normalize_and_save(array: np.ndarray, filename: str):
                 if array.size == 0 or array.max() == 0:
@@ -305,10 +326,18 @@ class Menu(widgets.QGroupBox):
                     norm = (array / array.max() * 255).astype(np.uint8)
                 img = Image.fromarray(norm)
                 img.save(filename)
-
+        
+            def normalize_and_save_weight(array: np.ndarray, filename: str):
+                norm = array.astype(np.float32)
+                norm = np.log(norm + 0.01)    
+                norm = (norm - norm.min()) / (norm.max() - norm.min() + 1e-8) * 255
+                norm = norm.astype(np.uint8)
+                img = Image.fromarray(norm)
+                img.save(filename)
+            
             normalize_and_save(magnitude, self._gradient_magnitude_name)
             normalize_and_save(smoothed, self._smoothed_gradient_name)
-            normalize_and_save(weight_map, self._weight_map_name)
+            normalize_and_save_weight(weight_map, self._weight_map_name)
 
             self._edge_images_computed = True
             print("Edge detection maps computed and saved.")
@@ -327,7 +356,7 @@ class Menu(widgets.QGroupBox):
         # Lancer l'affichage de la première image
         self.show_next_edge_image()
 
-    def show_next_edge_image(self):
+    def show_next_edge_image(self) -> None:
         """Prints the next image in the edge detection sequence."""
         if self.current_edge_step < len(self.edge_steps):
             filename, text = self.edge_steps[self.current_edge_step]
@@ -356,23 +385,27 @@ class Window(widgets.QMainWindow):
         self.setCentralWidget(central)
  
 class Observer:
-
-    def __init__(self):
+    """A simple observer class to monitor progress updates."""
+    def __init__(self) -> None:
+        """Initializes the observer with an empty list of observers."""
         self.liste = list()
 
-    def add_observer(self, ob):
+    def add_observer(self, ob: 'Observer') -> None:
+        """Adds an observer to the list."""
         self.liste.append(ob)
 
-    def del_observer(self, ob):
+    def del_observer(self, ob: 'Observer'):
+        """Removes an observer from the list."""
         if ob in self.liste:
             self.liste.remove(ob)
 
-    def notify_observer(self, value):
+    def notify_observer(self, value: int) -> None:
+        """Notifies all observers with the given value."""
         for ob in self.liste:
             ob.update(value)
 
 if __name__ == "__main__":
     application = widgets.QApplication(sys.argv)
     main_window = Window()
-    main_window.showMaximized()
+    main_window.showMaximized() # Full screen
     sys.exit(application.exec())

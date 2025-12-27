@@ -90,7 +90,7 @@ def cost_edges_edge_detection(epsilon: float, neighbor: pc.Point, dist: dict[pc.
 
 
 # Fonction utilitaire pour tester rapidement les 3 étapes
-def demo_edge_weight_map(grey_img: ui.GreyImage, sigma: float = 1.0, epsilon: float = 0.1):
+def demo_edge_weight_map(grey_img: ui.GreyImage, sigma: float = GAUSSIAN_SIGMA, epsilon: float = EDGE_EPSILON) -> np.ndarray:
     """
     Fonction de test qui affiche les 3 images demandées dans la Figure 15.
     """
@@ -113,4 +113,4 @@ def demo_edge_weight_map(grey_img: ui.GreyImage, sigma: float = 1.0, epsilon: fl
     img_smooth.show(title="Smoothed Gradient Gσ * |∇f|")
     img_weight.show(title="Weight Map W(x,y)")
 
-    return weight_map  # pour utilisation ultérieure dans fast marching
+    return weight_map  # Return the weight map for further use in pathfinding
