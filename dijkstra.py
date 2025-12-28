@@ -185,6 +185,7 @@ def valid_neighbours(grey_levels: ui.GreyImage, point: pc.Point, visited: dict[p
 def test_minimum_neighbours(point: pc.Point, grad_x: dict[pc.Point, float], grad_y: dict[pc.Point, float], 
                             grey_levels: ui.GreyImage, dist: dict[pc.Point, float], visited: dict[pc.Point, bool],
                             list_visited: list[pc.Point], start_point: pc.Point) -> pc.Point:
+    """Tests the neighbours of a point and returns the neighbour with the minimum gradient value"""
     neighbours = valid_neighbours(grey_levels, point, visited, dist, list_visited)
     mini_point = None
     if len(neighbours)==1:
@@ -215,7 +216,11 @@ def test_minimum_neighbours(point: pc.Point, grad_x: dict[pc.Point, float], grad
                     mini_point = pc.Point(point.x, point.y- int(copysign(1,diff_y)))
     return mini_point
 
-def gradient_descent(distances: dict[pc.Point, float], grey_levels: ui.GreyImage, start_point: pc.Point, end_point: pc.Point, list_visited: list[pc.Point]) -> list[pc.Point]:
+def gradient_descent(distances: dict[pc.Point, float], grey_levels: ui.GreyImage, 
+                     start_point: pc.Point, end_point: pc.Point, 
+                     list_visited: list[pc.Point]) -> list[pc.Point]:
+    """Performs gradient descent on the distance map 
+    to find the shortest path from end_point to start_point"""
     grad_x = gradient_x(distances, grey_levels)
     grad_y = gradient_y(distances, grey_levels)
     point = end_point
@@ -247,6 +252,7 @@ def gradient_descent(distances: dict[pc.Point, float], grey_levels: ui.GreyImage
     return descent
 
 def affiche_descent(descent: list[pc.Point], img: ui.GreyImage) -> np.ndarray:
+    """Displays the descent path on the image"""
     #colored_map = np.zeros((img.height, img.width, 3), dtype=np.uint8)
     #print(img.width, img.height)
     #for i in range(img.width):
