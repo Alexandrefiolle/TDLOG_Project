@@ -53,7 +53,7 @@ def distances_costs(start: pc.Point, end: pc.Point, grey_levels: ui.GreyImage, o
             cost = grey_levels.cost(start, neighbor, epsilon)
             if dist[neighbor] > dist[candidate] + cost:
                 dist[neighbor] = dist[candidate] + cost
-                to_visit.append(neighbor, dist[neighbor])
+                to_visit.append(neighbor, dist[neighbor]+neighbor.norm(end))
     return dist
 
 def coloration_map(distances: ui.Distances, grey_levels: ui.GreyImage) -> np.ndarray:

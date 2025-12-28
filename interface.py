@@ -174,6 +174,7 @@ class Menu(widgets.QGroupBox):
         file_name, _ = widgets.QFileDialog.getOpenFileName(self)
         self._vue.change_image(file_name)
         self._original_image_name = file_name
+        self._original_image_grey_level = ui.GreyImage(self._original_image_name)
         self._distances_map_computed = False
         self._gradients_map_computed = False
         self.erase_points_was_clicked()
