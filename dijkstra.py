@@ -162,6 +162,7 @@ def test_minimum_neighbours(point: pc.Point, grad_x: dict[pc.Point, float], grad
                             grey_levels: ui.GreyImage, dist: dict[pc.Point, float], visited: dict[pc.Point, bool],
                             list_visited: list[pc.Point], start_point: pc.Point) -> pc.Point:
     neighbours = valid_neighbours(grey_levels, point, visited, dist, list_visited)
+    print(point, neighbours)
     mini_point = None
     if len(neighbours)==1:
         mini_point = neighbours[0]
@@ -169,7 +170,7 @@ def test_minimum_neighbours(point: pc.Point, grad_x: dict[pc.Point, float], grad
         if pc.Point(point.x-copysign(1,grad_x[point]), point.y) in neighbours:
             if (abs(grad_x[point]) < abs(grad_y[point]) or grad_y[point] == 0) :
                 mini_point = pc.Point(point.x-int(copysign(1,grad_x[point])), point.y)
-
+        
         if pc.Point(point.x, point.y-copysign(1,grad_y[point])) in neighbours:
             if (abs(grad_y[point]) < abs(grad_x[point]) or grad_x[point] == 0) :
                 mini_point = pc.Point(point.x, int(point.y-copysign(1,grad_y[point])))
@@ -177,15 +178,14 @@ def test_minimum_neighbours(point: pc.Point, grad_x: dict[pc.Point, float], grad
         if mini_point is None:
             diff_x = point.x - start_point.x
             diff_y = point.y - start_point.y 
-            r = random.randint(0, 1)
             if pc.Point(point.x-int(copysign(1,diff_x)), point.y) in neighbours:
                 if abs(diff_x) > abs(diff_y):
                     mini_point = pc.Point(point.x-int(copysign(1,diff_x)), point.y)
                 elif abs(diff_x) == abs(diff_y):
                     mini_point = pc.Point(point.x-int(copysign(1,diff_x)), point.y)
-                    
-            elif pc.Point(point.x, point.y-int(copysign(1,diff_y))) in neighbours:
-                if (abs(diff_y) > abs(diff_x)):
+            
+            if pc.Point(point.x, point.y-int(copysign(1,diff_y))) in neighbours:
+                if abs(diff_y) > abs(diff_x):
                     mini_point = pc.Point(point.x, point.y- int(copysign(1,diff_y)))
                 elif abs(diff_x) == abs(diff_y):
                     mini_point = pc.Point(point.x, point.y- int(copysign(1,diff_y)))
@@ -212,7 +212,7 @@ def gradient_descent(distances: dict[pc.Point, float], grey_levels: ui.GreyImage
             else:
                 visited[next_point] = True
                 descent.append(next_point)
-            #print(i, point, next_point)  
+            print(i, point, next_point)  
             cost_ += grey_levels.cost(point, next_point)
             list_cost.append(cost_)
             point = next_point
@@ -278,11 +278,11 @@ def amelioration_descent(distances: dict[pc.Point, float], grey_levels: ui.GreyI
                     
 
 if __name__ == "__main__":
-    #im = ui.GreyImage('EZEZEZEZ.png')
-    im = ui.GreyImage('Carte.png')
+    im = ui.GreyImage('EZEZEZEZ.png')
+    #im = ui.GreyImage('Carte.png')
     print(im.width, im.height)
-    start = pc.Point(446,332)
-    end = pc.Point(716,272)
+    start = pc.Point(165,85)
+    end = pc.Point(171,252)
     list_visited = []
     distances = distances_costs(start, end, im, list_visited)
     print("distances okay")
