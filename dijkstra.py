@@ -210,7 +210,7 @@ def test_minimum_neighbours(point: pc.Point, grad_x: dict[pc.Point, float], grad
                 elif abs(diff_x) == abs(diff_y):
                     mini_point = pc.Point(point.x-int(copysign(1,diff_x)), point.y)
                     
-            elif pc.Point(point.x, point.y-int(copysign(1,diff_y))) in neighbours:
+            if pc.Point(point.x, point.y-int(copysign(1,diff_y))) in neighbours:
                 if (abs(diff_y) > abs(diff_x)):
                     mini_point = pc.Point(point.x, point.y- int(copysign(1,diff_y)))
                 elif abs(diff_x) == abs(diff_y):
