@@ -42,7 +42,8 @@ class PriorityQueue_heap:
         return len(self._heap) 
         
 def distances_costs(start: pc.Point, end: pc.Point, grey_levels: ui.GreyImage, 
-                    edge_detection: bool = False, weight_map: np.ndarray|None = None, 
+                    list_visited: list[pc.Point], edge_detection: bool = False,
+                    weight_map: np.ndarray|None = None, 
                     obs: obs.Observer|None = None) -> tuple[dict[pc.Point, float], list[pc.Point]]:
     """Computes the list of shortest path costs from start until we reach the end point"""
     dist = {}
@@ -271,11 +272,13 @@ def distances_map(start: pc.Point, end: pc.Point, grey_levels: ui.GreyImage) -> 
     return coloration_map(distances_costs(start, end, grey_levels), grey_levels)
 
 if __name__ == "__main__":
-    #im = ui.GreyImage('EZEZEZEZ.png')
-    im = ui.GreyImage('Carte.png')
+    im = ui.GreyImage('EZEZEZEZ.png')
+    # im = ui.GreyImage('Carte.png')
     print(im.width, im.height)
-    start = pc.Point(446,332)
-    end = pc.Point(716,272)
+    # start = pc.Point(446,332)
+    # end = pc.Point(716,272)
+    start = pc.Point(165,85)
+    end = pc.Point(171,252)
     list_visited = []
     distances = distances_costs(start, end, im, list_visited)
     print("distances okay")

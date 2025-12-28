@@ -182,12 +182,15 @@ class Menu(widgets.QGroupBox):
         self._original_image_grey_level = ui.GreyImage(self._original_image_name)
         self._distances_map_image_name = 'distances_map.png'
         # distances map
+        self._list_visited = []
         self._distances_map_computed = False
         self._distances_costs = None
         # gradients map
         self._gradients_map_image_name = 'gradients_map.png'
+        self._grad_image = None
         self._gradients_map_computed = False
         # optimal path
+        self._optimal_path_image_name = 'optimal_path.png'
         self._optimal_path_computed = False
         # edge detection images
         self._gradient_magnitude_name = 'gradient_magnitude.png'
@@ -250,6 +253,7 @@ class Menu(widgets.QGroupBox):
         self._starting_and_ending_points_set = False
         self._distances_map_computed = False
         self._gradients_map_computed = False
+        self._optimal_path_computed = False
         self._vue.image.update()
         self._vue.texte.setText("Select a starting point")
 
@@ -268,7 +272,7 @@ class Menu(widgets.QGroupBox):
         im = self._original_image_grey_level
         print("Starting point set to:", start)
         print("Ending point set to:", end)
-        self._distances_costs = dijkstra.distances_costs(start, end, im, self._edge_detection, self.obs)
+        self._distances_costs = dijkstra.distances_costs(start, end, im, self._list_visited, self._edge_detection, self.obs)
         distances_map_image = dijkstra.coloration_map(self._distances_costs, im)
         img = Image.fromarray(distances_map_image)
         img.save(self._distances_map_image_name)
@@ -308,8 +312,8 @@ class Menu(widgets.QGroupBox):
         self._vue.bar.show()
         print("Starting point set to:", start)
         print("Ending point set to:", end)
-        gradients_map_image = dijkstra.gradient_on_image(self._distances_costs, im, self.obs)
-        img = Image.fromarray(gradients_map_image)
+        self._grad_image = dijkstra.gradient_on_image(self._distances_costs, im, self.obs)
+        img = Image.fromarray(self._grad_image)
         img.save(self._gradients_map_image_name)
         self._gradients_map_computed = True
         self._vue.texte.setText("You can now print the optimal path")
@@ -329,7 +333,18 @@ class Menu(widgets.QGroupBox):
     # Path button functionality
     def path_button_was_clicked(self) -> None:
         """Handles the button click event to print the optimal path."""
-        pass
+        if self._optimal_path_computed:
+            self._vue.print_stocked_image(self._optimal_path_image_name)
+        elif self._starting_and_ending_points_set:
+            im = self._original_image_grey_level
+            descent = dijkstra.gradient_descent(self._distances_costs, im, self._starting_point, self._ending_point, self._list_visited)
+            final_img = dijkstra.affiche_descent(descent, self._grad_image)
+            img = Image.fromarray(final_img)
+            img.save(self._optimal_path_image_name)
+            self._optimal_path_computed = True
+            self._vue.print_stocked_image(self._optimal_path_image_name)
+        else:
+            print("Please select starting and ending points by clicking on the image.")
     
     # Edge detection button functionality
     def edge_detection_button_was_clicked(self) -> None:
