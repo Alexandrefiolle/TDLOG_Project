@@ -12,6 +12,7 @@ import dijkstra
 import point_class as pc
 import manipulation as ui
 import edge_detection as edge
+import observer as obs
 
 class Chargement(widgets.QProgressBar):
     """A progress bar class to indicate the loading status during computations."""
@@ -204,7 +205,7 @@ class Menu(widgets.QGroupBox):
         self._ending_point = None
         self._starting_and_ending_points_set = False
         # observer
-        self.obs = Observer()
+        self.obs = obs.Observer()
     
     # Properties for starting and ending points
     @property
@@ -416,26 +417,7 @@ class Window(widgets.QMainWindow):
         horizontal.addWidget(self.vue)
         central.setLayout(horizontal)
         self.setCentralWidget(central)
- 
-class Observer:
-    """A simple observer class to monitor progress updates."""
-    def __init__(self) -> None:
-        """Initializes the observer with an empty list of observers."""
-        self.liste = list()
 
-    def add_observer(self, ob: 'Observer') -> None:
-        """Adds an observer to the list."""
-        self.liste.append(ob)
-
-    def del_observer(self, ob: 'Observer'):
-        """Removes an observer from the list."""
-        if ob in self.liste:
-            self.liste.remove(ob)
-
-    def notify_observer(self, value: int) -> None:
-        """Notifies all observers with the given value."""
-        for ob in self.liste:
-            ob.update(value)
 
 if __name__ == "__main__":
     application = widgets.QApplication(sys.argv)

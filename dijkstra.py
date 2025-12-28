@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as col
 from math import*
 import time
-import interface as vis
+import observer as obs
 epsilon = 2.0
 
 class PriorityQueue_heap:
@@ -41,7 +41,7 @@ class PriorityQueue_heap:
         
 def distances_costs(start: pc.Point, end: pc.Point, grey_levels: ui.GreyImage, 
                     edge_detection: bool = False, weight_map: np.ndarray|None = None, 
-                    obs: vis.Observer|None = None) -> tuple[dict[pc.Point, float], list[pc.Point]]:
+                    obs: obs.Observer|None = None) -> tuple[dict[pc.Point, float], list[pc.Point]]:
     """Computes the list of shortest path costs from start until we reach the end point"""
     dist = {}
     for point in grey_levels.graph.keys():
@@ -133,7 +133,7 @@ def gradient_x(dist: dict[pc.Point, float], grey_levels: ui.GreyImage) -> dict[p
            image_gradient[point] = gradient_point_x(point, dist, grey_levels)
     return image_gradient
 
-def gradient_on_image(dist: dict[pc.Point, float], grey_levels: ui.GreyImage, obs: vis.Observer|None = None) -> np.ndarray:
+def gradient_on_image(dist: dict[pc.Point, float], grey_levels: ui.GreyImage, obs: obs.Observer|None = None) -> np.ndarray:
     """Display the gradient on an image"""
     debut = time.time()
     grad_x = gradient_x(dist, grey_levels)
