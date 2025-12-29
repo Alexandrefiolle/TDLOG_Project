@@ -271,6 +271,42 @@ def distances_map(start: pc.Point, end: pc.Point, grey_levels: ui.GreyImage) -> 
     """Generates a colored distances map from start to end points based on grey levels."""
     return coloration_map(distances_costs(start, end, grey_levels), grey_levels)
 
+def amelioration_descent(distances: dict[pc.Point, float], grey_levels: ui.GreyImage, start_point: pc.Point, end_point: pc.Point, list_visited: list[pc.Point]) -> list[pc.Point]:
+    initial_descent = gradient_descent(distances, grey_levels, start_point, end_point, list_visited)
+    print("initial gradient done")
+    final_descent = [initial_descent[0]]
+    list_cost = [0]
+    cost_ = 0
+    for i in range(1, len(initial_descent)):
+        point = initial_descent[i]
+        cost = grey_levels.cost(point, final_descent[-1])
+        neighbours = grey_levels.neighbors(point)
+        for p in neighbours:
+            construct_descent = final_descent[:-1]
+            if p in construct_descent:
+                cost = grey_levels.cost(point, p)
+                cost_descent = 0
+                i_p = initial_descent.index(p)
+                i_ = i_p
+                while i_p < i:
+                    i_p += 1
+                    p_ = initial_descent[i_p]
+                    cost_descent += grey_levels.cost(p_, p)
+                if cost <= cost_descent:
+                    for k in range(i-1, i_, -1):
+                        if initial_descent[k] in final_descent:
+                            final_descent.remove(initial_descent[k])
+                            list_cost.pop(-1)
+                    break
+                else:
+                    cost = cost_descent
+        final_descent.append(point)
+        cost_ = list_cost[-1] + cost 
+        list_cost.append(cost_)
+    print("coût du nouveau chemin : ", list_cost[-1])
+    print(len(final_descent))
+    return final_descent
+
 if __name__ == "__main__":
     im = ui.GreyImage('EZEZEZEZ.png')
     # im = ui.GreyImage('Carte.png')
@@ -310,8 +346,9 @@ if __name__ == "__main__":
     """
     grad_image_ = ui.Image.fromarray(grad_image, 'RGB')
     grad_image_.show()
-    descent = gradient_descent(distances, im, start, end, list_visited)
-    final_img = affiche_descent(descent, grad_image)
-    print("a", im.cost(start,pc.Point(288,236))+im.cost(pc.Point(288,236),end))
-    final_img = ui.Image.fromarray(final_img, 'RGB')
-    final_img.show()
+    descent_amelioration = amelioration_descent(distances, im, start, end, list_visited)
+    final_img_a = affiche_descent(descent_amelioration, grad_image)
+    final_img_a = ui.Image.fromarray(final_img_a, 'RGB')
+    final_img_a.show()
+    
+    
