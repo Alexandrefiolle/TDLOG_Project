@@ -162,7 +162,6 @@ def test_minimum_neighbours(point: pc.Point, grad_x: dict[pc.Point, float], grad
                             grey_levels: ui.GreyImage, dist: dict[pc.Point, float], visited: dict[pc.Point, bool],
                             list_visited: list[pc.Point], start_point: pc.Point) -> pc.Point:
     neighbours = valid_neighbours(grey_levels, point, visited, dist, list_visited)
-    print(point, neighbours)
     mini_point = None
     if len(neighbours)==1:
         mini_point = neighbours[0]
@@ -212,7 +211,6 @@ def gradient_descent(distances: dict[pc.Point, float], grey_levels: ui.GreyImage
             else:
                 visited[next_point] = True
                 descent.append(next_point)
-            print(i, point, next_point)  
             cost_ += grey_levels.cost(point, next_point)
             list_cost.append(cost_)
             point = next_point
@@ -242,6 +240,7 @@ def distances_map(distances: dict[pc.Point, float], grey_levels: ui.GreyImage) -
 
 def amelioration_descent(distances: dict[pc.Point, float], grey_levels: ui.GreyImage, start_point: pc.Point, end_point: pc.Point, list_visited: list[pc.Point]) -> list[pc.Point]:
     initial_descent = gradient_descent(distances, grey_levels, start_point, end_point, list_visited)
+    print("initial gradient done")
     final_descent = [initial_descent[0]]
     list_cost = [0]
     cost_ = 0
@@ -262,9 +261,9 @@ def amelioration_descent(distances: dict[pc.Point, float], grey_levels: ui.GreyI
                     cost_descent += grey_levels.cost(p_, p)
                 if cost <= cost_descent:
                     for k in range(i-1, i_, -1):
-                        print(initial_descent[k])
-                        final_descent.pop(-1)
-                        list_cost.pop(-1)
+                        if initial_descent[k] in final_descent:
+                            final_descent.remove(initial_descent[k])
+                            list_cost.pop(-1)
                     break
                 else:
                     cost = cost_descent
@@ -273,15 +272,14 @@ def amelioration_descent(distances: dict[pc.Point, float], grey_levels: ui.GreyI
         list_cost.append(cost_)
     print("coût du nouveau chemin : ", list_cost[-1])
     print(len(final_descent))
-    print(final_descent)
     return final_descent
                     
 
 if __name__ == "__main__":
-    im = ui.GreyImage('EZEZEZEZ.png')
-    #im = ui.GreyImage('Carte.png')
+    #im = ui.GreyImage('EZEZEZEZ.png')
+    im = ui.GreyImage('Carte.png')
     print(im.width, im.height)
-    start = pc.Point(165,85)
+    start = pc.Point(605,85)
     end = pc.Point(171,252)
     list_visited = []
     distances = distances_costs(start, end, im, list_visited)
