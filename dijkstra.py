@@ -215,6 +215,8 @@ def test_minimum_neighbours(point: pc.Point, grad_x: dict[pc.Point, float], grad
                     mini_point = pc.Point(point.x, point.y- int(copysign(1,diff_y)))
                 elif abs(diff_x) == abs(diff_y):
                     mini_point = pc.Point(point.x, point.y- int(copysign(1,diff_y)))
+        if mini_point is None and len(neighbours) > 0:
+                mini_point = neighbours[0]
     return mini_point
 
 def gradient_descent(distances: dict[pc.Point, float], grey_levels: ui.GreyImage, 
