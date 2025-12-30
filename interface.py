@@ -337,7 +337,7 @@ class Menu(widgets.QGroupBox):
             self._vue.print_stocked_image(self._optimal_path_image_name)
         elif self._starting_and_ending_points_set:
             im = self._original_image_grey_level
-            descent = dijkstra.gradient_descent(self._distances_costs, im, self._starting_point, self._ending_point, self._list_visited)
+            descent = dijkstra.amelioration_descent(self._distances_costs, im, self._starting_point, self._ending_point, self._list_visited)
             final_img = dijkstra.affiche_descent(descent, self._grad_image)
             img = Image.fromarray(final_img)
             img.save(self._optimal_path_image_name)

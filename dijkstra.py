@@ -271,7 +271,9 @@ def distances_map(start: pc.Point, end: pc.Point, grey_levels: ui.GreyImage) -> 
     """Generates a colored distances map from start to end points based on grey levels."""
     return coloration_map(distances_costs(start, end, grey_levels), grey_levels)
 
-def amelioration_descent(distances: dict[pc.Point, float], grey_levels: ui.GreyImage, start_point: pc.Point, end_point: pc.Point, list_visited: list[pc.Point]) -> list[pc.Point]:
+def amelioration_descent(distances: dict[pc.Point, float], grey_levels: ui.GreyImage, 
+                         start_point: pc.Point, end_point: pc.Point, 
+                         list_visited: list[pc.Point]) -> list[pc.Point]:
     initial_descent = gradient_descent(distances, grey_levels, start_point, end_point, list_visited)
     print("initial gradient done")
     final_descent = [initial_descent[0]]
@@ -313,8 +315,8 @@ if __name__ == "__main__":
     print(im.width, im.height)
     # start = pc.Point(446,332)
     # end = pc.Point(716,272)
-    start = pc.Point(165,85)
-    end = pc.Point(171,252)
+    start = pc.Point(58,47)
+    end = pc.Point(165,159)
     list_visited = []
     distances = distances_costs(start, end, im, list_visited)
     print("distances okay")
