@@ -55,7 +55,7 @@ class Fenetre(widgets.QLabel):
                 else:
                     self.pe = self.mapFromGlobal(gui.QCursor.pos())  # second point
                 self.update()
-                self.parent()._menu._vue.texte.setText(f"{len(self.parent()._menu.contour_points)}/2 points sélectionnés pour le contour")
+                self.parent()._menu._vue.texte.setText(f"{len(self.parent()._menu.contour_points)}/2 points chosen for the contour")
                 return
             if self.parent()._menu.starting_point is None: # first point
                 self.ps = self.mapFromGlobal(gui.QCursor.pos())
@@ -423,6 +423,14 @@ class Menu(widgets.QGroupBox):
         self._edge_images_computed = False
         self._vue.texte.setText("Edge detection reset.")
         self._vue.print_stocked_image(self._original_image_name)
+        self.next_edge_button.hide()
+        self.contour_button.hide()
+        self.contour_mode = False
+        self.contour_points = []
+        self.current_edge_step = 0
+        self._weight_map_float = None
+        self._starting_and_ending_points_set = False
+        self.erase_points_was_clicked()
 
     # Next edge image button functionality
     def show_next_edge_image(self) -> None:
@@ -471,6 +479,8 @@ class Menu(widgets.QGroupBox):
         self._vue.texte.setText(f"Detected edge ! Length : {len(path)} pixels")
         # Reset contour mode
         self.contour_mode = False
+        self.contour_button.hide()
+        self.next_edge_button.hide()
 
     def reconstruct_path(self, dist: dict, current: pc.Point, start: pc.Point) -> list[pc.Point]:
         path = [current]
