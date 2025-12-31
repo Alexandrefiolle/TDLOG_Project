@@ -41,7 +41,7 @@ class PriorityQueue_heap:
         """Returns the number of points in the priority queue."""
         return len(self._heap) 
         
-def distances_costs(start: pc.Point, end: pc.Point, grey_levels: ui.GreyImage, 
+def distances_costs(start: pc.Point, end: pc.Point|None, grey_levels: ui.GreyImage, 
                     list_visited: list[pc.Point], edge_detection: bool = False,
                     weight_map: np.ndarray|None = None, 
                     obs: obs.Observer|None = None) -> tuple[dict[pc.Point, float], list[pc.Point]]:
@@ -55,14 +55,14 @@ def distances_costs(start: pc.Point, end: pc.Point, grey_levels: ui.GreyImage,
     while to_visit.size() > 0:
         candidate = to_visit.remove()
         list_visited.append(candidate)
-        if candidate == end: # On arrête dès qu'on a trouvé le point final
+        if end is not None and candidate == end: # On arrête dès qu'on a trouvé le point final
             print(candidate)
             print(candidate.norm(end))
             break
         for neighbor in grey_levels.neighbors(candidate):
             assert neighbor.x < grey_levels.width and neighbor.y < grey_levels.height
             if edge_detection:
-                cost = edge.cost_edges_edge_detection(neighbor, dist, grey_levels, weight_map)
+                cost = weight_map[neighbor.y, neighbor.x]
             else:
                 cost = grey_levels.cost(start, neighbor, epsilon)
             if dist[neighbor] > dist[candidate] + cost:
@@ -317,8 +317,8 @@ if __name__ == "__main__":
     print(im.width, im.height)
     # start = pc.Point(446,332)
     # end = pc.Point(716,272)
-    start = pc.Point(58,47)
-    end = pc.Point(165,159)
+    start = pc.Point(170,296)
+    end = pc.Point(53,51)
     list_visited = []
     distances = distances_costs(start, end, im, list_visited)
     print("distances okay")

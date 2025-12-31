@@ -48,6 +48,15 @@ class Fenetre(widgets.QLabel):
             point = self.mapFromGlobal(point)
             print("mapped", point.x(), point.y())
             point = pc.Point(int(self.parent().ratio*point.x()), int(self.parent().ratio*point.y()))
+            if self.parent()._menu.contour_mode:
+                self.parent()._menu.contour_points.append(point)
+                if len(self.parent()._menu.contour_points) == 1:
+                    self.ps = self.mapFromGlobal(gui.QCursor.pos())  # first point
+                else:
+                    self.pe = self.mapFromGlobal(gui.QCursor.pos())  # second point
+                self.update()
+                self.parent()._menu._vue.texte.setText(f"{len(self.parent()._menu.contour_points)}/2 points sélectionnés pour le contour")
+                return
             if self.parent()._menu.starting_point is None: # first point
                 self.ps = self.mapFromGlobal(gui.QCursor.pos())
                 self.parent()._menu.starting_point = point
@@ -175,6 +184,11 @@ class Menu(widgets.QGroupBox):
         self.next_edge_button.setGeometry(10, 330, 180, 40) 
         self.next_edge_button.clicked.connect(self.show_next_edge_image)
         self.next_edge_button.hide()
+        # edge button
+        self.contour_button = widgets.QPushButton("Draw the edge", self)
+        self.contour_button.setGeometry(10, 370, 180, 40)
+        self.contour_button.clicked.connect(self.trace_contour)
+        self.contour_button.hide()
 
         self._vue = vue
         # starting image
@@ -203,6 +217,11 @@ class Menu(widgets.QGroupBox):
         self.current_edge_step = 0
         self.edge_steps = []
         self._edge_detection = False
+        # edge contour tracing
+        self.contour_mode = False
+        self.contour_points = []
+        self._weight_map_float = None  # Carte W en float pour les calculs
+        self._contour_result_name = "contour_result.png"
         # starting and ending points
         self._starting_point = None
         self._ending_point = None
@@ -358,7 +377,8 @@ class Menu(widgets.QGroupBox):
             magnitude = edge.compute_gradient_magnitude(im)
             smoothed = edge.smooth_gradient_magnitude(magnitude, sigma=1.5)
             weight_map = edge.compute_edge_weight_map(smoothed, epsilon=0.1)
-    
+            self._weight_map_float = weight_map
+
             # Function to normalize and save images
             def normalize_and_save(array: np.ndarray, filename: str):
                 if array.size == 0 or array.max() == 0:
@@ -383,7 +403,7 @@ class Menu(widgets.QGroupBox):
             self._edge_images_computed = True
             print("Edge detection maps computed and saved.")
 
-        # Préparation de la séquence d'affichage
+        # Prepare for displaying edge detection images
         self.current_edge_step = 0
         self.edge_steps = [
             (self._original_image_name, "Edge detection: 1. Original image"),
@@ -391,10 +411,10 @@ class Menu(widgets.QGroupBox):
             (self._weight_map_name, "Edge detection: 3. Weight map W(x,y) = 1/(ε + smoothed)")
         ]
 
-        # Afficher le bouton de navigation
+        # Show the next edge image button
         self.next_edge_button.show()
 
-        # Lancer l'affichage de la première image
+        # Launch the display of the first image
         self.show_next_edge_image()
     
     # Reset edge detection button functionality
@@ -416,8 +436,69 @@ class Menu(widgets.QGroupBox):
             # End of the sequence
             self._vue.texte.setText("Edge detection completed.\nYou can now select two points on a contour.")
             self._vue.print_stocked_image(self._original_image_name)
-            self.next_edge_button.hide() 
+            self.next_edge_button.hide()
+            self.contour_button.show()
+            self.contour_mode = True
+            self.contour_points = []
             self.current_edge_step = 0
+    
+    # Contour tracing button functionality
+    def trace_contour(self) -> None:
+        if len(self.contour_points) != 2:
+            self._vue.texte.setText("Error: select exactly two points.")
+            return
+
+        start, goal = self.contour_points
+        im = self._original_image_grey_level
+        weight_map = self._weight_map_float
+
+        list_visited = []
+        # Distances calculation with edge detection
+        dist_dict = dijkstra.distances_costs(
+            start=start,
+            end=None,
+            grey_levels=im,
+            list_visited=list_visited,
+            edge_detection=True,
+            weight_map=weight_map
+        )
+        # Gradient descent from goal to start
+        path = self.reconstruct_path(dist_dict, goal, start)
+        # Saving image with contour
+        result_img = self.draw_contour(path, im)
+        result_img.save(self._contour_result_name)
+        self._vue.print_stocked_image(self._contour_result_name)
+        self._vue.texte.setText(f"Detected edge ! Length : {len(path)} pixels")
+        # Reset contour mode
+        self.contour_mode = False
+
+    def reconstruct_path(self, dist: dict, current: pc.Point, start: pc.Point) -> list[pc.Point]:
+        path = [current]
+        while current != start and dist[current] > 0:
+            neighbors = self._original_image_grey_level.neighbors(current)
+            best = min(neighbors, key=lambda n: dist.get(n, np.inf))
+            if dist[best] >= dist[current]:
+                break
+            current = best
+            path.append(current)
+        path.reverse()
+        return path
+
+    def draw_contour(self, path: list[pc.Point], grey_img: ui.GreyImage) -> Image.Image:
+        arr = grey_img.to_numpy_array()
+        # Convert to uint8 for RGB stacking
+        arr_uint8 = arr.astype(np.uint8)
+        rgb = np.stack([arr_uint8, arr_uint8, arr_uint8], axis=-1)  # shape (H, W, 3), uint8
+        
+        # red line drawing
+        for p in path:
+            for dx in [-2, -1, 0, 1, 2]:
+                for dy in [-2, -1, 0, 1, 2]:
+                    nx, ny = p.x + dx, p.y + dy
+                    if 0 <= nx < grey_img.width and 0 <= ny < grey_img.height:
+                        rgb[ny, nx] = [255, 0, 0]
+        
+        return Image.fromarray(rgb)
 class Window(widgets.QMainWindow):
     """A simple window class to open and display an image."""
     def __init__(self) -> None:
