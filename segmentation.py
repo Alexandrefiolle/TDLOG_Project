@@ -1,21 +1,15 @@
 import point_class as pc
 import manipulation as ui
-from collections import deque
 import numpy as np
-import heapq
-import matplotlib.pyplot as plt
-import matplotlib.colors as col
 from math import*
 import random
-import time
-import interface as vis
 import dijkstra as d
 
 def points(nb_points: int, height: int, width: int) -> list[pc.Point]:
     list_points = []
     for _ in range(nb_points):
-        x = random(0, width)
-        y = random(0, height)
+        x = random.randint(0, width)
+        y = random.randint(0, height)
         p = pc.Point(x, y)
         list_points.append(p)
     return list_points
@@ -39,22 +33,32 @@ def distances_costs(start: pc.Point, grey_levels: ui.GreyImage, list_visited: li
                 to_visit.append(neighbor, dist[neighbor])
     return dist
 
-def distances_map(list_point: list[pc.Points], im: ui.GreyImage) -> list[np.ndarray]:
+def distances_map(list_point: list[pc.Point], im: ui.GreyImage) -> list[np.ndarray]:
     list_distance_map = []
     for k in range(len(list_point)):
         dist = distances_costs(list_point[k], im, [])
-        dist_map = d.coloration_map(dist, im)
-        list_distance_map.append[dist_map]
+        dist_maps = d.coloration_map(dist, im)
+        list_distance_map.append(dist_maps)
     return list_distance_map
 
 if __name__ == "__main__":
     im = ui.GreyImage('EZEZEZEZ.png')
     #im = ui.GreyImage('Carte.png')
-    r = random(1,10)
+    print(im.height, im.width)
+    r = 1 #random.randint(1,10)
+    print("nb of points : ", r)
     list_point = points(r, im.height, im.width)
-    list_distance_map = distances_map(list_point, im)
+    list_point = [pc.Point(170,296)]
+    list_colored_map = distances_map(list_point, im)
     for k in range(r):
-        img = ui.Image.fromarray(list_distance_map[k], 'RGB')
+        print("point ", k, ": ", list_point[k])
+        print()
+        for i in range(10):
+            list_colored_map[k][min(list_point[k].y+i,593), list_point[k].x] = [0,0,0]
+            list_colored_map[k][list_point[k].y-i, list_point[k].x] = [0,0,0]
+            list_colored_map[k][list_point[k].y, min(list_point[k].x+i,1244)] = [0,0,0]
+            list_colored_map[k][list_point[k].y, list_point[k].x-i] = [0,0,0]
+        img = ui.Image.fromarray(list_colored_map[k], 'RGB')
         img.show()
 
         
