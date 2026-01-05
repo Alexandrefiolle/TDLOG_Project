@@ -44,7 +44,7 @@ class GreyImage:
         """Computes the cost induced two points of the image"""
         return epsilon + np.abs(self[m0] - self[m])
     
-class Distances:
+class NumpyDict:
     """A class representing a distance map."""
     def __init__(self, im : GreyImage) -> None:
         """initializes the distance map."""

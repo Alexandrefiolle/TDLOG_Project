@@ -19,7 +19,7 @@ def compute_gradient_magnitude(grey_img: ui.GreyImage) -> np.ndarray:
     Uses a simple 3x3 Sobel gradient. See https://fr.wikipedia.org/wiki/Filtre_de_Sobel
     Returns a 2D ndarray of the same size as the image, with floats.
     """
-    arr = grey_img.to_numpy_array()  # shape (height, width), values 0..255
+    arr = grey_img.image # shape (height, width), values 0..255
     arr = arr.astype(float)
 
     # Sobel kernels

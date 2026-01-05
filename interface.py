@@ -482,11 +482,11 @@ class Menu(widgets.QGroupBox):
         self.contour_button.hide()
         self.next_edge_button.hide()
 
-    def reconstruct_path(self, dist: dict, current: pc.Point, start: pc.Point) -> list[pc.Point]:
+    def reconstruct_path(self, dist: ui.NumpyDict, current: pc.Point, start: pc.Point) -> list[pc.Point]:
         path = [current]
         while current != start and dist[current] > 0:
             neighbors = self._original_image_grey_level.neighbors(current)
-            best = min(neighbors, key=lambda n: dist.get(n, np.inf))
+            best = min(neighbors, key=lambda n: dist[n])
             if dist[best] >= dist[current]:
                 break
             current = best
@@ -495,7 +495,7 @@ class Menu(widgets.QGroupBox):
         return path
 
     def draw_contour(self, path: list[pc.Point], grey_img: ui.GreyImage) -> Image.Image:
-        arr = grey_img.to_numpy_array()
+        arr = grey_img.image
         # Convert to uint8 for RGB stacking
         arr_uint8 = arr.astype(np.uint8)
         rgb = np.stack([arr_uint8, arr_uint8, arr_uint8], axis=-1)  # shape (H, W, 3), uint8
@@ -509,6 +509,7 @@ class Menu(widgets.QGroupBox):
                         rgb[ny, nx] = [255, 0, 0]
         
         return Image.fromarray(rgb)
+    
 class Window(widgets.QMainWindow):
     """A simple window class to open and display an image."""
     def __init__(self) -> None:

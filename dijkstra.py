@@ -46,7 +46,7 @@ def distances_costs(start: pc.Point, end: pc.Point|None, grey_levels: ui.GreyIma
                     weight_map: np.ndarray|None = None, 
                     obs: obs.Observer|None = None) -> tuple[dict[pc.Point, float], list[pc.Point]]:
     """Computes the list of shortest path costs from start until we reach the end point"""
-    dist = ui.Distances(grey_levels)
+    dist = ui.NumpyDict(grey_levels)
     dist[start] = 0
     to_visit = PriorityQueue_heap([])
     to_visit.append(start, 0)
@@ -64,13 +64,13 @@ def distances_costs(start: pc.Point, end: pc.Point|None, grey_levels: ui.GreyIma
             if edge_detection:
                 cost = weight_map[neighbor.y, neighbor.x]
             else:
-                cost = grey_levels.cost(start, neighbor, epsilon)
+                cost = grey_levels.cost(start, neighbor, epsilon)+neighbor.norm(end)
             if dist[neighbor] > dist[candidate] + cost:
                 dist[neighbor] = dist[candidate] + cost
-                to_visit.append(neighbor, dist[neighbor]+neighbor.norm(end))
+                to_visit.append(neighbor, dist[neighbor])
     return dist
 
-def coloration_map(distances: ui.Distances, grey_levels: ui.GreyImage) -> np.ndarray:
+def coloration_map(distances: ui.NumpyDict, grey_levels: ui.GreyImage) -> np.ndarray:
     """Colors the map according to the distances computed"""
     max_dist = np.max(distances.map, where=np.isfinite(distances.map), initial=0)
     min_dist = np.min(distances.map)
@@ -111,7 +111,7 @@ def gradient_point_y(point: pc.Point, distances: dict[pc.Point, float], grey_lev
 
 def gradient_y(dist: dict[pc.Point, float], grey_levels: ui.GreyImage, obs = None) -> dict[pc.Point, float]:
     """compute the gradient on the distance map"""
-    image_gradient = ui.Distances(grey_levels)
+    image_gradient = ui.NumpyDict(grey_levels)
     cpt = grey_levels.width*grey_levels.height
     for point in dist:
         cpt -= 1
@@ -123,7 +123,7 @@ def gradient_y(dist: dict[pc.Point, float], grey_levels: ui.GreyImage, obs = Non
 
 def gradient_x(dist: dict[pc.Point, float], grey_levels: ui.GreyImage, obs = None) -> dict[pc.Point, float]:
     """compute the gradient on the distance map"""
-    image_gradient = ui.Distances(grey_levels)
+    image_gradient = ui.NumpyDict(grey_levels)
     cpt = grey_levels.width*grey_levels.height
     for point in dist:
         cpt -= 1
