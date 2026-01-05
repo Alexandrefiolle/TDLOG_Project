@@ -26,6 +26,16 @@ class GreyImage:
         """Allows accessing the grey level of a point using indexing."""
         return self.image[key.y][key.x]
     
+    def to_numpy_array(self) -> np.ndarray:
+        """
+        Converts the grey-scale image to a NumPy array of shape (height, width)
+        with float values (useful for gradient calculations).
+        """
+        arr = np.zeros((self.height, self.width), dtype=np.float32)
+        for point, value in self.graph.items():
+            arr[point.y, point.x] = value
+        return arr
+    
     def neighbors(self, m: pc.Point) -> list[pc.Point]:
         """Returns the list of neighbors of a given point m"""
         neigh = []
