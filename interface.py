@@ -435,6 +435,7 @@ class Menu(widgets.QGroupBox):
         self._starting_and_ending_points_set = False
         self.erase_points_was_clicked()
         self.distances_map_button.setEnabled(True)
+        self.reset_edge_button.setEnabled(False)
 
     # Next edge image button functionality
     def show_next_edge_image(self) -> None:
