@@ -553,7 +553,6 @@ class Menu(widgets.QGroupBox):
         # Convert to uint8 for RGB stacking
         arr_uint8 = arr.astype(np.uint8)
         rgb = np.stack([arr_uint8, arr_uint8, arr_uint8], axis=-1)  # shape (H, W, 3), uint8
-        
         # red line drawing
         for p in path:
             for dx in [-2, -1, 0, 1, 2]:
@@ -561,9 +560,9 @@ class Menu(widgets.QGroupBox):
                     nx, ny = p.x + dx, p.y + dy
                     if 0 <= nx < grey_img.width and 0 <= ny < grey_img.height:
                         rgb[ny, nx] = [255, 0, 0]
-        
         return Image.fromarray(rgb)
     
+    # Image segmentation button functionality
     def segmentation_button_was_clicked(self) -> None:
         """Handles the button click event to perform image segmentation."""
         self._more_points_needed = True
@@ -587,7 +586,9 @@ class Menu(widgets.QGroupBox):
         self._vue.texte.setText("Image segmentation completed.")
         self._points_list = []
 
+    # Reset segmentation button functionality
     def reset_segmentation_button_was_clicked(self) -> None:
+        """Handles the button click event to reset the image segmentation."""
         self._segmentation_computed = False
         self._vue.print_stocked_image(self._original_image_name)
         self._vue.texte.setText("Segmentation reset. Select a starting point.")
