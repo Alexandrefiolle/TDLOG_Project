@@ -101,7 +101,7 @@ class Vue(widgets.QGroupBox):
         vertical.addWidget(self.texte)
         self.image = Fenetre(self)
         vertical.addWidget(self.image)
-        img = gui.QPixmap("Carte.png")
+        img = gui.QPixmap("images/Carte.png")
         self.ratio = max(img.width()/1000, img.height()/700)
         self.image.setPixmap(img.scaled(1000, 700, 
                                         aspectRatioMode=Qt.AspectRatioMode.KeepAspectRatio, 
@@ -192,7 +192,7 @@ class Menu(widgets.QGroupBox):
 
         self._vue = vue
         # starting image
-        self._original_image_name = 'Carte.png'
+        self._original_image_name = 'images/Carte.png'
         self._original_image_grey_level = ui.GreyImage(self._original_image_name)
         self._distances_map_image_name = 'distances_map.png'
         # distances map

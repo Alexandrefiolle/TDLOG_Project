@@ -54,6 +54,9 @@ class GreyImage:
         """Computes the cost induced two points of the image"""
         return epsilon + np.abs(self[m0] - self[m])
     
+    def __iter__(self):
+        return (pc.Point(x, y) for x in range(self.width) for y in range(self.height))
+    
 class Distances:
     """A class representing a distance map."""
     def __init__(self, im : GreyImage) -> None:

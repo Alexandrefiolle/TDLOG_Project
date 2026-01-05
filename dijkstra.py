@@ -209,7 +209,7 @@ def gradient_descent(distances: dict[pc.Point, float], grey_levels: ui.GreyImage
     descent = [point]
     i=0
     visited = {}
-    for p in grey_levels.graph:
+    for p in grey_levels:
         if distances[p] < np.inf:
             visited[p] = False
     visited[point] = True
