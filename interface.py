@@ -291,7 +291,7 @@ class Menu(widgets.QGroupBox):
         im = self._original_image_grey_level
         print("Starting point set to:", start)
         print("Ending point set to:", end)
-        self._distances_costs = dijkstra.distances_costs(start, end, im, self._list_visited, self._edge_detection, self.obs)
+        self._distances_costs = dijkstra.distances_costs(start, end, im, self._list_visited, self._edge_detection, obs=self.obs)
         distances_map_image = dijkstra.coloration_map(self._distances_costs, im)
         img = Image.fromarray(distances_map_image)
         img.save(self._distances_map_image_name)
