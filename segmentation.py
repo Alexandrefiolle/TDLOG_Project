@@ -16,9 +16,7 @@ def points(nb_points: int, height: int, width: int) -> list[pc.Point]:
 
 def distances_costs(start: pc.Point, grey_levels: ui.GreyImage, list_visited: list[pc.Point]) -> dict[pc.Point, float]:
     """Computes the list of shortest path costs from start until we reach the end point"""
-    dist = {}
-    for point in grey_levels.graph.keys():
-        dist[point] = np.inf
+    dist = ui.NumpyDict(grey_levels)
     dist[start] = 0
     to_visit = d.PriorityQueue_heap([])
     to_visit.append(start, 0)
@@ -64,7 +62,7 @@ def choice_segmentation_v1(list_point: list[pc.Point], list_distance_map: list[d
             
 if __name__ == "__main__":
     #im = ui.GreyImage('EZEZEZEZ.png')
-    im = ui.GreyImage('Carte.png')
+    im = ui.GreyImage('images/Carte.png')
     print("height: ", im.height, ", width : ", im.width)
     r = 3 #random.randint(3,10)
     print("nb of points : ", r)

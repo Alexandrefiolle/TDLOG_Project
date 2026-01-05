@@ -12,6 +12,7 @@ import point_class as pc
 import manipulation as ui
 import edge_detection as edge
 import observer as obs
+import segmentation as seg
 
 class Chargement(widgets.QProgressBar):
     """A progress bar class to indicate the loading status during computations."""
@@ -38,6 +39,7 @@ class Fenetre(widgets.QLabel):
         super().__init__(parent)
         self.ps = None
         self.pe = None
+        self.points = []
 
     def mousePressEvent(self, event: gui.QMouseEvent) -> None:
         """Handles mouse press events to select starting and ending points on the image."""
@@ -45,11 +47,12 @@ class Fenetre(widgets.QLabel):
             point = gui.QCursor.pos()
             point = self.mapFromGlobal(point)
             point = pc.Point(int(self.parent().ratio*point.x()), int(self.parent().ratio*point.y()))
-            if self.parent()._menu._more_points_needed:
+            if self.parent().menu._more_points_needed:
+                p = self.mapFromGlobal(gui.QCursor.pos())
+                self.points.append(p)
                 self.parent()._menu._points_list.append(point)
-                print(f"Point {len(self.parent()._menu._points_list)} for segmentation added at:", point)
-                self.parent()._menu._vue.texte.setText(f"{len(self.parent()._menu._points_list)} points chosen for segmentation. When all points are chosen, click the 'All points chosen' button.")
                 self.update()
+                self.parent()._menu._vue.texte.setText(f"{len(self.parent()._menu._points_list)} points chosen for segmentation.\nWhen all points are chosen, click the 'All points chosen' button.")
                 return
             if self.parent()._menu.contour_mode:
                 self.parent()._menu.contour_points.append(point)
@@ -85,6 +88,9 @@ class Fenetre(widgets.QLabel):
         if self.pe is not None: # second point
             painter.setBrush(gui.QBrush(gui.QColorConstants.Red))
             painter.drawEllipse(self.pe, 5, 5)
+        for p in self.points:
+            painter.setBrush(gui.QBrush(gui.QColorConstants.Blue))
+            painter.drawEllipse(p, 5, 5)
         painter.end()
 
 class Vue(widgets.QGroupBox):
@@ -187,21 +193,26 @@ class Menu(widgets.QGroupBox):
         self.reset_edge_button.setEnabled(False)
         # Next edge image button
         self.next_edge_button = widgets.QPushButton("Next image →", self)
-        self.next_edge_button.setGeometry(10, 370, 180, 40) 
+        self.next_edge_button.setGeometry(10, 410, 180, 40) 
         self.next_edge_button.clicked.connect(self.show_next_edge_image)
         self.next_edge_button.hide()
         # edge button
         self.contour_button = widgets.QPushButton("Draw the edge", self)
-        self.contour_button.setGeometry(10, 410, 180, 40)
+        self.contour_button.setGeometry(10, 450, 180, 40)
         self.contour_button.clicked.connect(self.trace_contour)
         self.contour_button.hide()
         # Image segmentation button 
         self.segmentation_button = widgets.QPushButton("Image segmentation", self)
         self.segmentation_button.setGeometry(10, 330, 150, 30)
         self.segmentation_button.clicked.connect(self.segmentation_button_was_clicked)
+        # Reset segmentation button
+        self.reset_segmentation_button = widgets.QPushButton("Reset segmentation", self)
+        self.reset_segmentation_button.setGeometry(10, 370, 150, 30)
+        self.reset_segmentation_button.clicked.connect(self.reset_segmentation_button_was_clicked)
+        self.reset_segmentation_button.setEnabled(False)
         # All points chosen
         self.all_points_chosen_button = widgets.QPushButton("All points chosen", self)
-        self.all_points_chosen_button.setGeometry(10, 370, 150, 30)
+        self.all_points_chosen_button.setGeometry(10, 410, 150, 30)
         self.all_points_chosen_button.clicked.connect(self.all_points_chosen_button_was_clicked)
         self.all_points_chosen_button.hide()
 
@@ -239,7 +250,7 @@ class Menu(widgets.QGroupBox):
         self._weight_map_float = None  # Carte W en float pour les calculs
         self._contour_result_name = "results/contour_result.png"
         # image segmentation
-        self._segmentation_image_name = 'segmentation.png'
+        self._segmentation_image_name = 'results/segmentation.png'
         self._more_points_needed = False
         self._segmentation_computed = False
         self._points_list = []
@@ -285,12 +296,16 @@ class Menu(widgets.QGroupBox):
             self.erase_points_was_clicked()
             self._vue.ratio = max(gui.QPixmap(file_name).width()/1000, gui.QPixmap(file_name).height()/700)
             self._vue.texte.setText("Image has been selected. Select a starting point")
+            self.distances_map_button.setEnabled(False)
+            self.gradients_map_button.setEnabled(False)
+            self.path_button.setEnabled(False)
     
     # Erase points button functionality
     def erase_points_was_clicked(self) -> None:
         """Handles the button click event to erase the selected starting and ending points."""
         self._vue.image.ps = None
         self._vue.image.pe = None
+        self._vue.image.points = []
         self._starting_point = None
         self._ending_point = None
         self._starting_and_ending_points_set = False
@@ -299,6 +314,9 @@ class Menu(widgets.QGroupBox):
         self._optimal_path_computed = False
         self._vue.image.update()
         self._vue.texte.setText("Select a starting point")
+        self.distances_map_button.setEnabled(False)
+        self.gradients_map_button.setEnabled(False)
+        self.path_button.setEnabled(False)
 
     # Original image button functionality
     def original_image_button_was_selected(self) -> None:
@@ -551,6 +569,7 @@ class Menu(widgets.QGroupBox):
         self._more_points_needed = True
         self._vue.texte.setText("Please choose segmentation points by clicking on the image.\nWhen all points are chosen, click the 'All points chosen' button.")
         self.all_points_chosen_button.show()
+        self.reset_segmentation_button.setEnabled(True)
     
     def all_points_chosen_button_was_clicked(self) -> None:
         """Handles the button click event when all segmentation points are chosen."""
@@ -560,13 +579,24 @@ class Menu(widgets.QGroupBox):
         self._more_points_needed = False
         im = self._original_image_grey_level
         print(f"Computing segmentation with {len(self._points_list)} points.")
-        list_distance_map, _ = segmentation.distances_map(self._points_list, im)
-        segmentation = segmentation.choice_segmentation_v1(self._points_list, list_distance_map, im)
+        list_distance_map, _ = seg.distances_map(self._points_list, im)
+        segmentation = seg.choice_segmentation_v1(self._points_list, list_distance_map, im)
         img = ui.Image.fromarray(segmentation, 'RGB')
         img.save(self._segmentation_image_name)
         self._vue.print_stocked_image(self._segmentation_image_name)
         self._vue.texte.setText("Image segmentation completed.")
         self._points_list = []
+
+    def reset_segmentation_button_was_clicked(self) -> None:
+        self._segmentation_computed = False
+        self._vue.print_stocked_image(self._original_image_name)
+        self._vue.texte.setText("Segmentation reset. Select a starting point.")
+        self.erase_points_was_clicked()
+        self._more_points_needed = False
+        self.all_points_chosen_button.hide()
+        self._points_list = []
+        self.reset_segmentation_button.setEnabled(False)
+            
     
 class Window(widgets.QMainWindow):
     """A simple window class to open and display an image."""
