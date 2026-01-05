@@ -43,7 +43,7 @@ def distances_map(list_point: list[pc.Point], im: ui.GreyImage) -> list[np.ndarr
         list_colored_map.append(dist_maps)
     return list_distance_map, list_colored_map
 
-def choice_segmentation_v1(list_point: list[pc.Point], list_distance_map: dict[pc.Point, float], 
+def choice_segmentation_v1(list_point: list[pc.Point], list_distance_map: list[dict[pc.Point, float]], 
                         grey_levels: ui.GreyImage) -> np.ndarray:
     colored_map = np.zeros((grey_levels.height, grey_levels.width, 3), dtype=np.uint8)
     colors = [[255, 0, 0], [0, 255, 0], [0, 0, 255], [0, 0, 0]]
