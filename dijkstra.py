@@ -61,11 +61,14 @@ def distances_costs(start: pc.Point, end: pc.Point|None, grey_levels: ui.GreyIma
             assert neighbor.x < grey_levels.width and neighbor.y < grey_levels.height
             if edge_detection:
                 cost = weight_map[neighbor.y, neighbor.x]
+                if dist[neighbor] > dist[candidate] + cost:
+                    dist[neighbor] = dist[candidate] + cost
+                    to_visit.append(neighbor, dist[neighbor])
             else:
-                cost = grey_levels.cost(start, neighbor, epsilon)+neighbor.norm(end)
-            if dist[neighbor] > dist[candidate] + cost:
-                dist[neighbor] = dist[candidate] + cost
-                to_visit.append(neighbor, dist[neighbor])
+                cost = grey_levels.cost(start, neighbor, epsilon)
+                if dist[neighbor] > dist[candidate] + cost:
+                    dist[neighbor] = dist[candidate] + cost
+                    to_visit.append(neighbor, dist[neighbor]+neighbor.norm(end))
     return dist
 
 def coloration_map(distances: ui.NumpyDict, grey_levels: ui.GreyImage) -> np.ndarray:
