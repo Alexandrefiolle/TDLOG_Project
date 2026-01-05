@@ -243,13 +243,14 @@ def gradient_descent(distances: dict[pc.Point, float], grey_levels: ui.GreyImage
 #def gradient_descent(distances: dict[pc.Point, float], grey_levels: ui.GreyImage, start_point: pc.Point, end_point: pc.Point, list_visited: list[pc.Point]) -> list[pc.Point]:
     """Performs gradient descent on the distance map 
     to find the shortest path from end_point to start_point"""
+    start = time.time()
     grad_x = gradient_x(distances, grey_levels)
     grad_y = gradient_y(distances, grey_levels)
     point = end_point
     descent = [point]
     i=0
     visited = {}
-    for p in grey_levels:
+    for p in grey_levels.graph:
         if distances[p] < np.inf:
             visited[p] = False
     visited[point] = True
@@ -270,6 +271,8 @@ def gradient_descent(distances: dict[pc.Point, float], grey_levels: ui.GreyImage
             i+=1
             assert(i<20000) # to be sure that the while loop is not infinite
     print("cout du chemin: ", list_cost[-1])
+    end = time.time()
+    print("temps d'execution : ", end-start)
     print(len(descent))
     return descent
 
@@ -332,7 +335,7 @@ if __name__ == "__main__":
     #im = ui.GreyImage('EZEZEZEZ.png')
     im = ui.GreyImage('Carte.png')
     print(im.width, im.height)
-    start = pc.Point(58,47)
+    start = pc.Point(200,47)
     end = pc.Point(300,159)
     list_visited = []
     distances = distances_costs(start, end, im, list_visited)
@@ -365,12 +368,16 @@ if __name__ == "__main__":
     """
     grad_image_ = ui.Image.fromarray(grad_image, 'RGB')
     grad_image_.show()
+    
     descent = gradient_descent(distances, im, start, end, list_visited)
-    """final_img = affiche_descent(descent, grad_image)
+    """
+    final_img = affiche_descent(descent, grad_image)
     final_img = ui.Image.fromarray(final_img, 'RGB')
-    final_img.show()"""
+    final_img.show()
+    """
     
     descent_amelioration = amelioration_descent(distances, im, start, end, list_visited)
     final_img_a = affiche_descent(descent_amelioration, grad_image)
     final_img_a = ui.Image.fromarray(final_img_a, 'RGB')
     final_img_a.show()
+    
