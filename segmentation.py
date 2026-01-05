@@ -36,17 +36,17 @@ def distances_costs(start: pc.Point, grey_levels: ui.GreyImage, list_visited: li
 def distances_map(list_point: list[pc.Point], im: ui.GreyImage) -> list[np.ndarray]:
     list_distance_map = []
     list_colored_map = []
-    for k in range(len(list_point)):
-        dist = distances_costs(list_point[k], im, [])
+    for p in list_point:
+        dist = distances_costs(p, im, [])
         dist_maps = d.coloration_map(dist, im)
         list_distance_map.append(dist)
         list_colored_map.append(dist_maps)
     return list_distance_map, list_colored_map
 
-def choice_segmentation(list_point: list[pc.Point], list_distance_map: dict[pc.Point, float], 
+def choice_segmentation_v1(list_point: list[pc.Point], list_distance_map: dict[pc.Point, float], 
                         grey_levels: ui.GreyImage) -> np.ndarray:
     colored_map = np.zeros((grey_levels.height, grey_levels.width, 3), dtype=np.uint8)
-    colors = [[255, 0, 0], [0, 255, 0], [0, 0, 255]]
+    colors = [[255, 0, 0], [0, 255, 0], [0, 0, 255], [0, 0, 0]]
     for y in range(grey_levels.height):
         for x in range(grey_levels.width):
             p = pc.Point(x,y)
@@ -56,33 +56,34 @@ def choice_segmentation(list_point: list[pc.Point], list_distance_map: dict[pc.P
                 if list_distance_map[k][p] < mini_dist:
                     k_inf = k
                     mini_dist = list_distance_map[k][p]
+                elif list_distance_map[k][p] == mini_dist:
+                    k_inf = len(colors) - 1
+                    mini_dist = list_distance_map[k][p]
             colored_map[y, x] = colors[k_inf]
     return colored_map
             
 if __name__ == "__main__":
-    im = ui.GreyImage('EZEZEZEZ.png')
-    #im = ui.GreyImage('Carte.png')
-    print(im.height, im.width)
-    r = 2 #random.randint(1,10)
+    #im = ui.GreyImage('EZEZEZEZ.png')
+    im = ui.GreyImage('Carte.png')
+    print("height: ", im.height, ", width : ", im.width)
+    r = 3 #random.randint(3,10)
     print("nb of points : ", r)
     list_point = points(r, im.height, im.width)
     list_distance_map, list_colored_map = distances_map(list_point, im)
-    segmentation = choice_segmentation(list_point, list_distance_map, im)
-    
+    segmentation = choice_segmentation_v1(list_point, list_distance_map, im)
     for k in range(r):
         print("point ", k+1, ": ", list_point[k])
-        print()
         for i in range(10):
             list_colored_map[k][min(list_point[k].y+i,592), list_point[k].x] = [0,0,0]
             list_colored_map[k][list_point[k].y-i, list_point[k].x] = [0,0,0]
             list_colored_map[k][list_point[k].y, min(list_point[k].x+i,1243)] = [0,0,0]
             list_colored_map[k][list_point[k].y, list_point[k].x-i] = [0,0,0]
-            segmentation[min(list_point[k].y+k,592), list_point[k].x] = [0,0,0]
-            segmentation[list_point[k].y-k, list_point[k].x] = [0,0,0]
-            segmentation[list_point[k].y, min(list_point[k].x+k,1243)] = [0,0,0]
-            segmentation[list_point[k].y, list_point[k].x-k] = [0,0,0]
+            segmentation[min(list_point[k].y+i,592), list_point[k].x] = [0,0,0]
+            segmentation[list_point[k].y-i, list_point[k].x] = [0,0,0]
+            segmentation[list_point[k].y, min(list_point[k].x+i,1243)] = [0,0,0]
+            segmentation[list_point[k].y, list_point[k].x-i] = [0,0,0]
         img = ui.Image.fromarray(list_colored_map[k], 'RGB')
         img.show()
     im_s = ui.Image.fromarray(segmentation, 'RGB')
     im_s.show()
-    
+
