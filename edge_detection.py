@@ -43,10 +43,6 @@ def compute_gradient_magnitude(grey_img: ui.GreyImage) -> np.ndarray:
     # Magnitude
     magnitude = np.sqrt(grad_x**2 + grad_y**2)
 
-    # TO REMOVE:
-    # Normalisation optionnelle pour visualisation (0..255)
-    # magnitude_vis = np.clip(magnitude / magnitude.max() * 255, 0, 255).astype(np.uint8) if magnitude.max() > 0 else magnitude.astype(np.uint8)
-
     return magnitude 
 
 
@@ -65,15 +61,6 @@ def compute_edge_weight_map(smoothed_magnitude: np.ndarray, epsilon: float = EDG
     The higher the value, the more we want to pass through this pixel (strong edge).
     """
     weight_map = 1.0 / (epsilon + smoothed_magnitude)
-    
-    # To REMOVE:
-    # Normalisation pour visualisation (optionnel)
-    #max_w = weight_map.max()
-    #if max_w > 0:
-    #    weight_map_vis = np.clip(weight_map / max_w * 255, 0, 255).astype(np.uint8)
-    #else:
-    #    weight_map_vis = weight_map.astype(np.uint8)
-    
     return weight_map
 
 def cost_edges_edge_detection(epsilon: float, neighbor: pc.Point, dist: dict[pc.Point, float], 
@@ -81,19 +68,15 @@ def cost_edges_edge_detection(epsilon: float, neighbor: pc.Point, dist: dict[pc.
     """
     Cost function to be used in distances_costs when edge_detection=True.
     """
-    # Variante simple : coût = 1 / W(neighbor) ≈ distance "optique"
-    # Mais comme on veut minimiser le chemin où W est grand (contours), on prend 1/W
     w = weight_map[neighbor.y, neighbor.x]
     if w <= 0:
-        return 1e10  # très grand coût si problème
+        return 1e10 
     return w
 
 
-# Fonction utilitaire pour tester rapidement les 3 étapes
+"""
 def demo_edge_weight_map(grey_img: ui.GreyImage, sigma: float = GAUSSIAN_SIGMA, epsilon: float = EDGE_EPSILON) -> np.ndarray:
-    """
-    Fonction de test qui affiche les 3 images demandées dans la Figure 15.
-    """
+    
     import interface as vis
 
     magnitude = compute_gradient_magnitude(grey_img)
@@ -114,3 +97,4 @@ def demo_edge_weight_map(grey_img: ui.GreyImage, sigma: float = GAUSSIAN_SIGMA, 
     img_weight.show(title="Weight Map W(x,y)")
 
     return weight_map  # Return the weight map for further use in pathfinding
+"""
