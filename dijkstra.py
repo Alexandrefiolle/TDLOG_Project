@@ -56,8 +56,6 @@ def distances_costs(start: pc.Point, end: pc.Point|None, grey_levels: ui.GreyIma
             obs.notify_observer(candidate.norm(end))
         list_visited.append(candidate)
         if end is not None and candidate == end: # On arrête dès qu'on a trouvé le point final
-            print(candidate)
-            print(candidate.norm(end))
             break
         for neighbor in grey_levels.neighbors(candidate):
             assert neighbor.x < grey_levels.width and neighbor.y < grey_levels.height
@@ -74,7 +72,6 @@ def coloration_map(distances: ui.NumpyDict, grey_levels: ui.GreyImage) -> np.nda
     """Colors the map according to the distances computed"""
     max_dist = np.max(distances.map, where=np.isfinite(distances.map), initial=0)
     min_dist = np.min(distances.map)
-    print(max_dist)
     intensity = (distances.map - min_dist)/(max_dist - min_dist)
     myMap = plt.get_cmap('Spectral')
     myMap.set_over(color='black')
@@ -145,9 +142,6 @@ def gradient_on_image(dist: dict[pc.Point, float], grey_levels: ui.GreyImage, ob
     intensity = intensity/np.max(intensity)
     theta = np.arctan2(grad_x.map,grad_y.map)/(2*np.pi) + 0.5
     colored_map = np.einsum("ij, ijk -> ijk", intensity, myMap(theta)[:, :, :3])
-
-    
-    
     return (colored_map * 255).astype(np.uint8)
 
 def valid_neighbours(grey_levels: ui.GreyImage, point: pc.Point, visited: dict[pc.Point, bool],
@@ -159,7 +153,6 @@ def valid_neighbours(grey_levels: ui.GreyImage, point: pc.Point, visited: dict[p
         if p in list_visited: #if neighbours[i] in list_visited: #
             if visited[p] == False:
                 valid_neighbours.append(p)
-    #print(neighbours, valid_neighbours)
     return valid_neighbours
     
 def test_minimum_neighbours(point: pc.Point, grad_x: dict[pc.Point, float], grad_y: dict[pc.Point, float], 

@@ -3,7 +3,6 @@
 from __future__ import annotations 
 import numpy as np
 import sys
-import PyQt6
 from PyQt6.QtCore import Qt, QPoint
 import PyQt6.QtWidgets as widgets
 import PyQt6.QtGui as gui
@@ -44,9 +43,7 @@ class Fenetre(widgets.QLabel):
         """Handles mouse press events to select starting and ending points on the image."""
         if self.underMouse():
             point = gui.QCursor.pos()
-            print("clicked", point.x(), point.y())
             point = self.mapFromGlobal(point)
-            print("mapped", point.x(), point.y())
             point = pc.Point(int(self.parent().ratio*point.x()), int(self.parent().ratio*point.y()))
             if self.parent()._menu.contour_mode:
                 self.parent()._menu.contour_points.append(point)
@@ -60,16 +57,14 @@ class Fenetre(widgets.QLabel):
             if self.parent()._menu.starting_point is None: # first point
                 self.ps = self.mapFromGlobal(gui.QCursor.pos())
                 self.parent()._menu.starting_point = point
-                print("Starting point set to:", point)
                 self.parent().texte.setText("Select an ending point")
             elif self.parent()._menu.ending_point is None: # second point
                 self.pe = self.mapFromGlobal(gui.QCursor.pos())
                 self.parent()._menu.ending_point = point
-                print("Ending point set to:", point)
                 self.parent()._menu._starting_and_ending_points_set = True
                 self.parent().texte.setText("Compute a distance map")
             else: # both points are already set
-                print("Both starting and ending points are already set.")
+                self.parent().texte.setText("Both starting and ending points are already set.")
             self.update()
     
     def paintEvent(self, a0:gui.QPaintEvent) -> None:
@@ -289,8 +284,6 @@ class Menu(widgets.QGroupBox):
         self._vue.bar.show()
         self.obs.add_observer(self._vue.bar)
         im = self._original_image_grey_level
-        print("Starting point set to:", start)
-        print("Ending point set to:", end)
         self._distances_costs = dijkstra.distances_costs(start, end, im, self._list_visited, self._edge_detection, obs=self.obs)
         distances_map_image = dijkstra.coloration_map(self._distances_costs, im)
         img = Image.fromarray(distances_map_image)
@@ -308,16 +301,7 @@ class Menu(widgets.QGroupBox):
             self.distances_map_creation(self._starting_point, self._ending_point)
             self._vue.print_stocked_image(self._distances_map_image_name)
         else:
-            print("Please select starting and ending points by clicking on the image.")
-        """
-        if not self._distances_map_computed:
-            start = pc.Point(10,10)
-            end = pc.Point(400,400)
-            self.distances_map_creation(start, end)
-            self._vue.print_stocked_image(self._distances_map_image_name)
-        else:
-            self._vue.print_stocked_image(self._distances_map_image_name)
-        """
+            self._vue.texte.setText("Please select starting and ending points by clicking on the image.")
     
     # Gradients map button functionality
     def gradients_map_creation(self, start: pc.Point, end: pc.Point) -> None:
@@ -329,8 +313,6 @@ class Menu(widgets.QGroupBox):
         im = self._original_image_grey_level
         self._vue.bar.reinitialise(2*im.width*im.height)
         self._vue.bar.show()
-        print("Starting point set to:", start)
-        print("Ending point set to:", end)
         self._grad_image = dijkstra.gradient_on_image(self._distances_costs, im, self.obs)
         img = Image.fromarray(self._grad_image)
         img.save(self._gradients_map_image_name)
@@ -347,7 +329,7 @@ class Menu(widgets.QGroupBox):
             self.gradients_map_creation(self._starting_point, self._ending_point)
             self._vue.print_stocked_image(self._gradients_map_image_name)
         else:
-            print("Please select starting and ending points by clicking on the image.")
+            self._vue.texte.setText("Please select starting and ending points by clicking on the image.")
     
     # Path button functionality
     def path_button_was_clicked(self) -> None:
@@ -363,7 +345,7 @@ class Menu(widgets.QGroupBox):
             self._optimal_path_computed = True
             self._vue.print_stocked_image(self._optimal_path_image_name)
         else:
-            print("Please select starting and ending points by clicking on the image.")
+            self._vue.texte.setText("Please select starting and ending points by clicking on the image.")
     
     # Edge detection button functionality
     def edge_detection_button_was_clicked(self) -> None:
@@ -401,7 +383,6 @@ class Menu(widgets.QGroupBox):
             normalize_and_save_weight(weight_map, self._weight_map_name)
 
             self._edge_images_computed = True
-            print("Edge detection maps computed and saved.")
 
         # Prepare for displaying edge detection images
         self.current_edge_step = 0
