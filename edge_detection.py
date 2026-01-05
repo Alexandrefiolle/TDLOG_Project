@@ -7,13 +7,14 @@ from scipy.ndimage import gaussian_filter
 from math import sqrt
 import point_class as pc
 import manipulation as ui
+import observer as obs
 
 # Default parameters
 EDGE_EPSILON = 0.1      # ε to avoid division by zero in weight map
 GAUSSIAN_SIGMA = 1.0    # σ for Gaussian smoothing
 
 
-def compute_gradient_magnitude(grey_img: ui.GreyImage) -> np.ndarray:
+def compute_gradient_magnitude(grey_img: ui.GreyImage, obs:obs.Observer|None = None) -> np.ndarray:
     """
     Point 1 : Compute the gradient magnitude image |∇f| (image IG in the subject)
     Uses a simple 3x3 Sobel gradient. See https://fr.wikipedia.org/wiki/Filtre_de_Sobel
@@ -35,8 +36,12 @@ def compute_gradient_magnitude(grey_img: ui.GreyImage) -> np.ndarray:
     grad_y = np.zeros_like(arr)
 
     h, w = arr.shape
+    cpt = h*w
     for y in range(1, h-1):
         for x in range(1, w-1):
+            cpt -= 1
+            if obs is not None:
+                obs.notify_observer(cpt)
             grad_x[y, x] = np.sum(arr[y-1:y+2, x-1:x+2] * sobel_x)
             grad_y[y, x] = np.sum(arr[y-1:y+2, x-1:x+2] * sobel_y)
 

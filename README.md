@@ -43,7 +43,7 @@ Above is the image.
 ---
 
 ### Example
-![Carte](Carte.png)
+![Carte](images/Carte.png)
 
 *Figure — potential map (`Carte.png`)*
 
