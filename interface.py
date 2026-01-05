@@ -63,6 +63,7 @@ class Fenetre(widgets.QLabel):
                 self.parent()._menu.ending_point = point
                 self.parent()._menu._starting_and_ending_points_set = True
                 self.parent().texte.setText("Compute a distance map")
+                self.parent()._menu.distances_map_button.setEnabled(True)
             else: # both points are already set
                 self.parent().texte.setText("Both starting and ending points are already set.")
             self.update()
@@ -158,14 +159,17 @@ class Menu(widgets.QGroupBox):
         self.distances_map_button = widgets.QPushButton("Distances map", self)
         self.distances_map_button.setGeometry(10, 130, 150, 30)
         self.distances_map_button.clicked.connect(self.distances_map_button_was_selected)
+        self.distances_map_button.setEnabled(False)
         # Gradients map button
         self.gradients_map_button = widgets.QPushButton("Gradients map", self)
         self.gradients_map_button.setGeometry(10, 170, 150, 30)
         self.gradients_map_button.clicked.connect(self.gradients_map_button_was_clicked)
+        self.gradients_map_button.setEnabled(False)
         # Path button
         self.path_button = widgets.QPushButton("Print the optimal path", self)
         self.path_button.setGeometry(10, 210, 150, 30)
         self.path_button.clicked.connect(self.path_button_was_clicked)
+        self.path_button.setEnabled(False)
         # Edge detection button
         self.edge_detection_button = widgets.QPushButton("Edge detection", self)
         self.edge_detection_button.setGeometry(10, 250, 150, 30)
@@ -174,6 +178,7 @@ class Menu(widgets.QGroupBox):
         self.reset_edge_button = widgets.QPushButton("Reset edge detection", self)
         self.reset_edge_button.setGeometry(10, 290, 150, 30)
         self.reset_edge_button.clicked.connect(self.reset_edge_detection)
+        self.reset_edge_button.setEnabled(False)
         # Next edge image button
         self.next_edge_button = widgets.QPushButton("Next image →", self)
         self.next_edge_button.setGeometry(10, 330, 180, 40) 
@@ -299,12 +304,14 @@ class Menu(widgets.QGroupBox):
         """Handles the button click event to display the distances map."""
         if self._distances_map_computed:
             self._vue.print_stocked_image(self._distances_map_image_name)
+            self.gradients_map_button.setEnabled(True)
         elif self._starting_and_ending_points_set:
             self.distances_map_creation(self._starting_point, self._ending_point)
             self._vue.print_stocked_image(self._distances_map_image_name)
+            self.gradients_map_button.setEnabled(True)
         else:
             self._vue.texte.setText("Please select starting and ending points by clicking on the image.")
-    
+
     # Gradients map button functionality
     def gradients_map_creation(self, start: pc.Point, end: pc.Point) -> None:
         """
@@ -323,13 +330,16 @@ class Menu(widgets.QGroupBox):
         self._vue.bar.hide()
         self.obs.del_observer(self._vue.bar)
         
+        
     def gradients_map_button_was_clicked(self) -> None:
         """Handles the button click event to display the gradients map."""
         if self._gradients_map_computed:
             self._vue.print_stocked_image(self._gradients_map_image_name)
+            self.path_button.setEnabled(True)
         elif self._starting_and_ending_points_set:
             self.gradients_map_creation(self._starting_point, self._ending_point)
             self._vue.print_stocked_image(self._gradients_map_image_name)
+            self.path_button.setEnabled(True)
         else:
             self._vue.texte.setText("Please select starting and ending points by clicking on the image.")
     
@@ -355,10 +365,18 @@ class Menu(widgets.QGroupBox):
         and display the three images sequentially."""
         self._edge_detection = True
         im = self._original_image_grey_level
+        self.distances_map_button.setEnabled(False)
+        self.gradients_map_button.setEnabled(False)
+        self.path_button.setEnabled(False)
+        self.reset_edge_button.setEnabled(True)
+        self.erase_points_was_clicked()
 
         if not self._edge_images_computed:
             print("Computing edge detection maps...")
-            magnitude = edge.compute_gradient_magnitude(im)
+            self.obs.add_observer(self._vue.bar)
+            self._vue.bar.reinitialise(im.width*im.height)
+            self._vue.bar.show()
+            magnitude = edge.compute_gradient_magnitude(im, self.obs)
             smoothed = edge.smooth_gradient_magnitude(magnitude, sigma=1.5)
             weight_map = edge.compute_edge_weight_map(smoothed, epsilon=0.1)
             self._weight_map_float = weight_map
@@ -385,6 +403,8 @@ class Menu(widgets.QGroupBox):
             normalize_and_save_weight(weight_map, self._weight_map_name)
 
             self._edge_images_computed = True
+            self._vue.bar.hide()
+            self.obs.del_observer(self._vue.bar)
 
         # Prepare for displaying edge detection images
         self.current_edge_step = 0
@@ -414,6 +434,7 @@ class Menu(widgets.QGroupBox):
         self._weight_map_float = None
         self._starting_and_ending_points_set = False
         self.erase_points_was_clicked()
+        self.distances_map_button.setEnabled(True)
 
     # Next edge image button functionality
     def show_next_edge_image(self) -> None:
