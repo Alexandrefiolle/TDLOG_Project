@@ -189,22 +189,22 @@ class Menu(widgets.QGroupBox):
         # starting image
         self._original_image_name = 'images/Carte.png'
         self._original_image_grey_level = ui.GreyImage(self._original_image_name)
-        self._distances_map_image_name = 'distances_map.png'
+        self._distances_map_image_name = 'results/distances_map.png'
         # distances map
         self._list_visited = []
         self._distances_map_computed = False
         self._distances_costs = None
         # gradients map
-        self._gradients_map_image_name = 'gradients_map.png'
+        self._gradients_map_image_name = 'results/gradients_map.png'
         self._grad_image = None
         self._gradients_map_computed = False
         # optimal path
-        self._optimal_path_image_name = 'optimal_path.png'
+        self._optimal_path_image_name = 'results/optimal_path.png'
         self._optimal_path_computed = False
         # edge detection images
-        self._gradient_magnitude_name = 'gradient_magnitude.png'
-        self._smoothed_gradient_name = 'smoothed_gradient.png'
-        self._weight_map_name = 'weight_map.png'
+        self._gradient_magnitude_name = 'results/gradient_magnitude.png'
+        self._smoothed_gradient_name = 'results/smoothed_gradient.png'
+        self._weight_map_name = 'results/weight_map.png'
         self._edge_images_computed = False
         self._smoothed_map = None
         self._weight_map = None
@@ -216,7 +216,7 @@ class Menu(widgets.QGroupBox):
         self.contour_mode = False
         self.contour_points = []
         self._weight_map_float = None  # Carte W en float pour les calculs
-        self._contour_result_name = "contour_result.png"
+        self._contour_result_name = "results/contour_result.png"
         # starting and ending points
         self._starting_point = None
         self._ending_point = None
@@ -246,16 +246,18 @@ class Menu(widgets.QGroupBox):
     def select_button_was_clicked(self) -> None:
         """Handles the button click event to open a file dialog and display the selected image."""
         file_name, _ = widgets.QFileDialog.getOpenFileName(self)
-        self._vue.change_image(file_name)
-        self._original_image_name = file_name
-        self._original_image_grey_level = ui.GreyImage(self._original_image_name)
-        self._distances_map_computed = False
-        self._gradients_map_computed = False
-        self._optimal_path_computed = False
-        self._edge_images_computed = False
-        self.erase_points_was_clicked()
-        self._vue.ratio = max(gui.QPixmap(file_name).width()/1000, gui.QPixmap(file_name).height()/700)
-        self._vue.texte.setText("Image has been selected. Select a starting point")
+        print(file_name)
+        if file_name != "":
+            self._vue.change_image(file_name)
+            self._original_image_name = file_name
+            self._original_image_grey_level = ui.GreyImage(self._original_image_name)
+            self._distances_map_computed = False
+            self._gradients_map_computed = False
+            self._optimal_path_computed = False
+            self._edge_images_computed = False
+            self.erase_points_was_clicked()
+            self._vue.ratio = max(gui.QPixmap(file_name).width()/1000, gui.QPixmap(file_name).height()/700)
+            self._vue.texte.setText("Image has been selected. Select a starting point")
     
     # Erase points button functionality
     def erase_points_was_clicked(self) -> None:
