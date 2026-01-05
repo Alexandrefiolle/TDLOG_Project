@@ -9,14 +9,9 @@ class GreyImage:
     def __init__(self, file_path : str) -> None:
         """Loads the image from the given file path and initializes the graph representation."""
         im = Image.open(file_path)
-        image = np.array(im.convert('L'), dtype=np.int16)
-        self._height = image.shape[0]
-        self._width = image.shape[1]
-        self._graph: dict[pc.Point, int] = {}
-        for x in range(self._width):
-            for y in range(self._height):
-                p = pc.Point(x,y)
-                self._graph[p] = image[y][x]
+        self.image = np.array(im.convert('L'), dtype=np.int16)
+        self._height = self.image.shape[0]
+        self._width = self.image.shape[1]
 
     @property
     def height(self) -> int:
@@ -26,24 +21,10 @@ class GreyImage:
     def width(self) -> int:
         """Returns the width of the image."""
         return self._width
-    @property
-    def graph(self) -> dict[pc.Point, int]:
-        """Returns the graph representation of the image."""
-        return self._graph
     
     def __getitem__(self, key: pc.Point) -> int:
         """Allows accessing the grey level of a point using indexing."""
-        return self._graph[key]
-    
-    def to_numpy_array(self) -> np.ndarray:
-        """
-        Converts the grey-scale image to a NumPy array of shape (height, width)
-        with float values (useful for gradient calculations).
-        """
-        arr = np.zeros((self.height, self.width), dtype=np.float32)
-        for point, value in self.graph.items():
-            arr[point.y, point.x] = value
-        return arr
+        return self.image[key.y][key.x]
     
     def neighbors(self, m: pc.Point) -> list[pc.Point]:
         """Returns the list of neighbors of a given point m"""
@@ -62,3 +43,31 @@ class GreyImage:
     def cost(self, m0: pc.Point, m: pc.Point, epsilon: float=1) -> float:
         """Computes the cost induced two points of the image"""
         return epsilon + np.abs(self[m0] - self[m])
+    
+class NumpyDict:
+    """A class representing a distance map."""
+    def __init__(self, im : GreyImage) -> None:
+        """initializes the distance map."""
+        self.map = np.full_like(im.image, np.inf, dtype=np.float64)
+        self._height = self.map.shape[0]
+        self._width = self.map.shape[1]
+
+    @property
+    def height(self) -> int:
+        """Returns the height of the image."""
+        return self._height
+    @property
+    def width(self) -> int:
+        """Returns the width of the image."""
+        return self._width
+    
+    def __getitem__(self, key: pc.Point) -> int:
+        """Allows accessing the grey level of a point using indexing."""
+        return self.map[key.y][key.x]
+    
+    def __setitem__(self, key: pc.Point, value) -> int:
+        """Allows accessing the grey level of a point using indexing."""
+        self.map[key.y][key.x] = value
+
+    def __iter__(self):
+        return (pc.Point(x, y) for x in range(self.width) for y in range(self.height))

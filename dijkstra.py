@@ -46,14 +46,14 @@ def distances_costs(start: pc.Point, end: pc.Point|None, grey_levels: ui.GreyIma
                     weight_map: np.ndarray|None = None, 
                     obs: obs.Observer|None = None) -> tuple[dict[pc.Point, float], list[pc.Point]]:
     """Computes the list of shortest path costs from start until we reach the end point"""
-    dist = {}
-    for point in grey_levels.graph.keys():
-        dist[point] = np.inf
+    dist = ui.NumpyDict(grey_levels)
     dist[start] = 0
     to_visit = PriorityQueue_heap([])
     to_visit.append(start, 0)
     while to_visit.size() > 0:
         candidate = to_visit.remove()
+        if obs is not None:
+            obs.notify_observer(candidate.norm(end))
         list_visited.append(candidate)
         if end is not None and candidate == end: # On arrête dès qu'on a trouvé le point final
             print(candidate)
@@ -64,31 +64,21 @@ def distances_costs(start: pc.Point, end: pc.Point|None, grey_levels: ui.GreyIma
             if edge_detection:
                 cost = weight_map[neighbor.y, neighbor.x]
             else:
-                cost = grey_levels.cost(start, neighbor, epsilon)
+                cost = grey_levels.cost(start, neighbor, epsilon)+neighbor.norm(end)
             if dist[neighbor] > dist[candidate] + cost:
                 dist[neighbor] = dist[candidate] + cost
                 to_visit.append(neighbor, dist[neighbor])
     return dist
 
-def coloration_map(distances: dict[pc.Point, float], grey_levels: ui.GreyImage) -> np.ndarray:
+def coloration_map(distances: ui.NumpyDict, grey_levels: ui.GreyImage) -> np.ndarray:
     """Colors the map according to the distances computed"""
-    max_dist = 0
-    for distance in distances.values():
-        if distance < np.inf and distance>max_dist:
-            max_dist = distance
-    min_dist = min(distances.values())
+    max_dist = np.max(distances.map, where=np.isfinite(distances.map), initial=0)
+    min_dist = np.min(distances.map)
     print(max_dist)
-    colored_map = np.zeros((grey_levels.height, grey_levels.width, 3), dtype=np.uint8)
+    intensity = (distances.map - min_dist)/(max_dist - min_dist)
     myMap = plt.get_cmap('Spectral')
-    for point, distance in distances.items():
-        assert(point.y < grey_levels.height and point.x < grey_levels.width)
-        if distance < np.inf:
-            intensity = (distance - min_dist) / (max_dist - min_dist)
-            color = col.to_rgb(myMap(intensity))
-            color_list = [color[0], color[1], color[2]]
-            for i in range (3):
-                color_list[i] = int(255*color_list[i])
-            colored_map[point.y, point.x] = color_list
+    myMap.set_over(color='black')
+    colored_map = (myMap(intensity)[:, :, :3] * 255).astype(np.uint8)
     return colored_map
 
 def gradient_point_x(point: pc.Point, distances: dict[pc.Point, float], grey_levels: ui.GreyImage) -> float:
@@ -119,57 +109,46 @@ def gradient_point_y(point: pc.Point, distances: dict[pc.Point, float], grey_lev
         p_west = point
     return (distances[p_west] - distances[p_east])/2
 
-def gradient_y(dist: dict[pc.Point, float], grey_levels: ui.GreyImage) -> dict[pc.Point, float]:
+def gradient_y(dist: dict[pc.Point, float], grey_levels: ui.GreyImage, obs = None) -> dict[pc.Point, float]:
     """compute the gradient on the distance map"""
-    image_gradient = {}
+    image_gradient = ui.NumpyDict(grey_levels)
+    cpt = grey_levels.width*grey_levels.height
     for point in dist:
+        cpt -= 1
+        if obs is not None:
+            obs.notify_observer(cpt)
         if dist[point] < np.inf:
             image_gradient[point] = gradient_point_y(point, dist, grey_levels)
     return image_gradient
 
-def gradient_x(dist: dict[pc.Point, float], grey_levels: ui.GreyImage) -> dict[pc.Point, float]:
+def gradient_x(dist: dict[pc.Point, float], grey_levels: ui.GreyImage, obs = None) -> dict[pc.Point, float]:
     """compute the gradient on the distance map"""
-    image_gradient = {}
+    image_gradient = ui.NumpyDict(grey_levels)
+    cpt = grey_levels.width*grey_levels.height
     for point in dist:
+        cpt -= 1
+        if obs is not None:
+            obs.notify_observer(grey_levels.width*grey_levels.height + cpt)
         if dist[point] < np.inf:
            image_gradient[point] = gradient_point_x(point, dist, grey_levels)
     return image_gradient
 
 def gradient_on_image(dist: dict[pc.Point, float], grey_levels: ui.GreyImage, obs: obs.Observer|None = None) -> np.ndarray:
     """Display the gradient on an image"""
-    debut = time.time()
-    grad_x = gradient_x(dist, grey_levels)
-    print("grad_x", time.time()-debut)
-    debut = time.time()
-    grad_y = gradient_y(dist, grey_levels)
-    print("grad_y", time.time()-debut)
-    debut = time.time()
-    colored_map = np.zeros((grey_levels.height, grey_levels.width, 3), dtype=np.uint8)
+    grad_x = gradient_x(dist, grey_levels, obs)
+    
+    grad_y = gradient_y(dist, grey_levels, obs)
+    
     myMap = plt.get_cmap('GnBu')
-    intensity = {}
-    max_intensity = 0
-    for point in grad_x:
-        intensity[point] = sqrt(abs(grad_x[point])+abs(grad_y[point]))
-        if intensity[point] > max_intensity and intensity[point] < np.inf:
-            max_intensity = intensity[point]
-    print("max_intensity", time.time()-debut)
-    debut = time.time()
-    print("max intensity: ", max_intensity)
-    cpt = len(grad_x)
-    for point in grad_x:
-        if obs is not None:
-            obs.notify_observer(cpt)
-        cpt -= 1
-        if intensity[point]<np.inf:
-            r = intensity[point]/max_intensity
-            theta = (atan2(grad_y[point],grad_x[point])*180/np.pi+180)/360
-            color = col.to_rgb(myMap(theta))
-            color_list = [color[0], color[1], color[2]]
-            for i in range (3):
-                color_list[i] = int(255*color_list[i]*r)
-            colored_map[point.y, point.x] = color_list
-    print("colored_map", time.time()-debut)
-    return colored_map
+    intensity = np.sqrt(np.abs(grad_x.map) + np.abs(grad_y.map))
+    np.putmask(intensity, np.isinf(intensity), 0)
+    intensity = intensity/np.max(intensity)
+    theta = np.arctan2(grad_x.map,grad_y.map)/(2*np.pi) + 0.5
+    colored_map = np.einsum("ij, ijk -> ijk", intensity, myMap(theta)[:, :, :3])
+
+    
+    
+    return (colored_map * 255).astype(np.uint8)
 
 def valid_neighbours(grey_levels: ui.GreyImage, point: pc.Point, visited: dict[pc.Point, bool],
                     dist: dict[pc.Point, float], list_visited: list[pc.Point]) -> list[pc.Point]:
@@ -230,7 +209,7 @@ def gradient_descent(distances: dict[pc.Point, float], grey_levels: ui.GreyImage
     descent = [point]
     i=0
     visited = {}
-    for p in grey_levels.graph:
+    for p in grey_levels:
         if distances[p] < np.inf:
             visited[p] = False
     visited[point] = True

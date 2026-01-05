@@ -101,7 +101,7 @@ class Vue(widgets.QGroupBox):
         vertical.addWidget(self.texte)
         self.image = Fenetre(self)
         vertical.addWidget(self.image)
-        img = gui.QPixmap("Carte.png")
+        img = gui.QPixmap("images/Carte.png")
         self.ratio = max(img.width()/1000, img.height()/700)
         self.image.setPixmap(img.scaled(1000, 700, 
                                         aspectRatioMode=Qt.AspectRatioMode.KeepAspectRatio, 
@@ -192,7 +192,7 @@ class Menu(widgets.QGroupBox):
 
         self._vue = vue
         # starting image
-        self._original_image_name = 'Carte.png'
+        self._original_image_name = 'images/Carte.png'
         self._original_image_grey_level = ui.GreyImage(self._original_image_name)
         self._distances_map_image_name = 'distances_map.png'
         # distances map
@@ -291,7 +291,7 @@ class Menu(widgets.QGroupBox):
         im = self._original_image_grey_level
         print("Starting point set to:", start)
         print("Ending point set to:", end)
-        self._distances_costs = dijkstra.distances_costs(start, end, im, self._list_visited, self._edge_detection, self.obs)
+        self._distances_costs = dijkstra.distances_costs(start, end, im, self._list_visited, self._edge_detection, obs=self.obs)
         distances_map_image = dijkstra.coloration_map(self._distances_costs, im)
         img = Image.fromarray(distances_map_image)
         img.save(self._distances_map_image_name)
@@ -327,7 +327,7 @@ class Menu(widgets.QGroupBox):
         """
         self.obs.add_observer(self._vue.bar)
         im = self._original_image_grey_level
-        self._vue.bar.reinitialise(im.width*im.height)
+        self._vue.bar.reinitialise(2*im.width*im.height)
         self._vue.bar.show()
         print("Starting point set to:", start)
         print("Ending point set to:", end)
@@ -482,11 +482,11 @@ class Menu(widgets.QGroupBox):
         self.contour_button.hide()
         self.next_edge_button.hide()
 
-    def reconstruct_path(self, dist: dict, current: pc.Point, start: pc.Point) -> list[pc.Point]:
+    def reconstruct_path(self, dist: ui.NumpyDict, current: pc.Point, start: pc.Point) -> list[pc.Point]:
         path = [current]
         while current != start and dist[current] > 0:
             neighbors = self._original_image_grey_level.neighbors(current)
-            best = min(neighbors, key=lambda n: dist.get(n, np.inf))
+            best = min(neighbors, key=lambda n: dist[n])
             if dist[best] >= dist[current]:
                 break
             current = best
@@ -495,7 +495,7 @@ class Menu(widgets.QGroupBox):
         return path
 
     def draw_contour(self, path: list[pc.Point], grey_img: ui.GreyImage) -> Image.Image:
-        arr = grey_img.to_numpy_array()
+        arr = grey_img.image
         # Convert to uint8 for RGB stacking
         arr_uint8 = arr.astype(np.uint8)
         rgb = np.stack([arr_uint8, arr_uint8, arr_uint8], axis=-1)  # shape (H, W, 3), uint8
@@ -509,6 +509,7 @@ class Menu(widgets.QGroupBox):
                         rgb[ny, nx] = [255, 0, 0]
         
         return Image.fromarray(rgb)
+    
 class Window(widgets.QMainWindow):
     """A simple window class to open and display an image."""
     def __init__(self) -> None:
