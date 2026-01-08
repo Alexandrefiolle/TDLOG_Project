@@ -217,7 +217,6 @@ def gradient_descent(distances: dict[pc.Point, float], grey_levels: ui.GreyImage
         if distances[p] < np.inf:
             visited[p] = False
     visited[current] = True
-    print(grad_x[end_point], grad_y[end_point])
     while current != start_point and distances[current] > 0:
         #print(grad_x[current], grad_y[current])
         neighbors = grey_levels.neighbors(current)
@@ -258,7 +257,7 @@ def distances_map(start: pc.Point, end: pc.Point, grey_levels: ui.GreyImage) -> 
 def amelioration_descent(distances: dict[pc.Point, float], grey_levels: ui.GreyImage, 
                          start_point: pc.Point, end_point: pc.Point, 
                          list_visited: list[pc.Point]) -> list[pc.Point]:
-    
+    print("start gradient descent")
     initial_descent = gradient_descent(distances, grey_levels, start_point, end_point, list_visited)
     print("initial gradient done")
     final_descent = [initial_descent[0]]
