@@ -193,14 +193,34 @@ class Menu(widgets.QGroupBox):
         self.reset_edge_button.setEnabled(False)
         # Next edge image button
         self.next_edge_button = widgets.QPushButton("Next image →", self)
-        self.next_edge_button.setGeometry(10, 410, 180, 40) 
+        self.next_edge_button.setGeometry(10, 410, 150, 30) 
         self.next_edge_button.clicked.connect(self.show_next_edge_image)
         self.next_edge_button.hide()
         # edge button
         self.contour_button = widgets.QPushButton("Draw the edge", self)
-        self.contour_button.setGeometry(10, 450, 180, 40)
-        self.contour_button.clicked.connect(self.trace_contour)
+        self.contour_button.setGeometry(10, 410, 150, 30)
+        self.contour_button.clicked.connect(self.contour_button_was_clicked)
         self.contour_button.hide()
+        # gradient magnitude_button
+        self.gradient_magnitude_button = widgets.QPushButton("Gradient Magnitude", self)
+        self.gradient_magnitude_button.setGeometry(10, 410, 150, 30)
+        self.gradient_magnitude_button.clicked.connect(self.gradient_magnitude_button_was_clicked)
+        self.gradient_magnitude_button.hide() 
+        # smoothed_gradient_button
+        self.smoothed_gradient_button = widgets.QPushButton("Smoothed Gradient", self)
+        self.smoothed_gradient_button.setGeometry(10, 450, 150, 30)
+        self.smoothed_gradient_button.clicked.connect(self.smoothed_gradient_button_was_clicked)
+        self.smoothed_gradient_button.hide()
+        # weight_map_button
+        self.weight_map_button = widgets.QPushButton("Weight Map", self)
+        self.weight_map_button.setGeometry(10, 490, 150, 30)
+        self.weight_map_button.clicked.connect(self.weight_map_button_was_clicked)
+        self.weight_map_button.hide()
+        # contour_button
+        self.print_contour_button = widgets.QPushButton("Map with contour", self)
+        self.print_contour_button.setGeometry(10, 530, 150, 30)
+        self.print_contour_button.clicked.connect(self.print_contour_button_was_clicked)
+        self.print_contour_button.hide()
         # Image segmentation button 
         self.segmentation_button = widgets.QPushButton("Image segmentation", self)
         self.segmentation_button.setGeometry(10, 330, 150, 30)
@@ -483,8 +503,11 @@ class Menu(widgets.QGroupBox):
         self._weight_map_float = None
         self._starting_and_ending_points_set = False
         self.erase_points_was_clicked()
-        self.distances_map_button.setEnabled(True)
         self.reset_edge_button.setEnabled(False)
+        self.gradient_magnitude_button.hide()
+        self.smoothed_gradient_button.hide()
+        self.weight_map_button.hide()
+        self.print_contour_button.hide()
 
     # Next edge image button functionality
     def show_next_edge_image(self) -> None:
@@ -505,7 +528,7 @@ class Menu(widgets.QGroupBox):
             self.current_edge_step = 0
     
     # Contour tracing button functionality
-    def trace_contour(self) -> None:
+    def contour_button_was_clicked(self) -> None:
         if len(self.contour_points) != 2:
             self._vue.texte.setText("Error: select exactly two points.")
             return
@@ -534,7 +557,11 @@ class Menu(widgets.QGroupBox):
         # Reset contour mode
         self.contour_mode = False
         self.contour_button.hide()
-        self.next_edge_button.hide()
+        # Activate visualization of edge detection images again
+        self.gradient_magnitude_button.show()
+        self.smoothed_gradient_button.show()
+        self.weight_map_button.show()
+        self.print_contour_button.show()
 
     def reconstruct_path(self, dist: ui.NumpyDict, current: pc.Point, start: pc.Point) -> list[pc.Point]:
         path = [current]
@@ -561,6 +588,30 @@ class Menu(widgets.QGroupBox):
                     if 0 <= nx < grey_img.width and 0 <= ny < grey_img.height:
                         rgb[ny, nx] = [255, 0, 0]
         return Image.fromarray(rgb)
+    
+    # Gradient magnitude button functionality
+    def gradient_magnitude_button_was_clicked(self) -> None:
+        """Handles the button click event to display the gradient magnitude image."""
+        self._vue.print_stocked_image(self._gradient_magnitude_name)
+        self._vue.texte.setText("Gradient Magnitude image is displayed.")
+    
+    # Smoothed gradient button functionality
+    def smoothed_gradient_button_was_clicked(self) -> None:
+        """Handles the button click event to display the smoothed gradient image."""
+        self._vue.print_stocked_image(self._smoothed_gradient_name)
+        self._vue.texte.setText("Smoothed Gradient image is displayed.")
+    
+    # Weight map button functionality
+    def weight_map_button_was_clicked(self) -> None:
+        """Handles the button click event to display the weight map image."""
+        self._vue.print_stocked_image(self._weight_map_name)
+        self._vue.texte.setText("Weight Map image is displayed.")
+    
+    # Contour button functionality
+    def print_contour_button_was_clicked(self) -> None:
+        """Handles the button click event to display the contour image."""
+        self._vue.print_stocked_image(self._contour_result_name)
+        self._vue.texte.setText("Contour image is displayed.")
     
     # Image segmentation button functionality
     def segmentation_button_was_clicked(self) -> None:
