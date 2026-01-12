@@ -321,7 +321,6 @@ def compute_gradient_magnitude(grey_img: ui.GreyImage) -> np.ndarray:
         for x in range(1, w-1):
             grad_x[y, x] = np.sum(arr[y-1:y+2, x-1:x+2] * sobel_x)
             grad_y[y, x] = np.sum(arr[y-1:y+2, x-1:x+2] * sobel_y)
-
     
     return grad_x,grad_y 
 
@@ -421,11 +420,11 @@ def gradient_descent_Sobel(grey_levels: ui.GreyImage, start_point: pc.Point, end
 
 
 if __name__ == "__main__":
-    im = ui.GreyImage('EZEZEZEZ.png')
-    #im = ui.GreyImage('Carte.png')
+    #im = ui.GreyImage('EZEZEZEZ.png')
+    im = ui.GreyImage('Carte.png')
     print(im.width, im.height)
-    start = pc.Point(56,42)
-    end = pc.Point(1178,419)
+    start = pc.Point(0,0)
+    end = pc.Point(im.width-1,im.height-1)
     list_visited = []
     distances = distances_costs(start, end, im, list_visited)
     distances = distances_costs(start, end, im, list_visited)

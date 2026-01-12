@@ -38,9 +38,7 @@ def distances_map(list_point: list[pc.Point], im: ui.GreyImage) -> list[np.ndarr
     list_colored_map = []
     for p in list_point:
         dist = distances_costs(p, im, [])
-        dist_maps = d.coloration_map(dist, im)
         list_distance_map.append(dist)
-        list_colored_map.append(dist_maps)
     return list_distance_map, list_colored_map
 
 def choice_segmentation_v1(list_point: list[pc.Point], list_distance_map: dict[pc.Point, float], 
