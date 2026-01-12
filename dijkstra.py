@@ -326,7 +326,7 @@ def compute_gradient_magnitude(grey_img: ui.GreyImage) -> np.ndarray:
     # TO REMOVE:
     # Normalisation optionnelle pour visualisation (0..255)
     # magnitude_vis = np.clip(magnitude / magnitude.max() * 255, 0, 255).astype(np.uint8) if magnitude.max() > 0 else magnitude.astype(np.uint8)
-    print(grad_x.shape)
+ 
     return grad_x,grad_y 
 
 def gradient_descent_Sobel(grey_levels: ui.GreyImage, start_point: pc.Point, end_point: pc.Point) -> list[pc.Point]:
@@ -335,21 +335,51 @@ def gradient_descent_Sobel(grey_levels: ui.GreyImage, start_point: pc.Point, end
         diff_x = start_point.x - point.x
         diff_y = start_point.y - point.y
         mini_point = None
-        p = [pc.Point(point.x+int(copysign(1,diff_x)), point.y),pc.Point(point.x, point.y+int(copysign(1,diff_y)))]
-        if (p[0] in neighbors and visited[p[0]] == False) and (p[1] in neighbors and visited[p[1]] == False):
-            if abs(grad_y[p[1].y, p[1].x]) > abs(grad_x[p[0].y, p[0].x]):
-                mini_point = p[0]
-            elif abs(grad_y[p[1].y, p[1].x]) < abs(grad_x[p[0].y, p[0].x]):
-                mini_point = p[1]
-            else:
-                if diff_x < diff_y:
-                    mini_point = p[1]
-                else : 
-                    mini_point = p[0]
-        elif p[0] in neighbors and visited[p[0]] == False and (p[1] not in neighbors or visited[p[1]] == True):
-            mini_point = p[0]
-        elif (p[0] not in grey_levels.graph or visited[p[0]] == True) and p[1] in grey_levels.graph and visited[p[1]] == False:
-            mini_point = p[1]
+        #p = [pc.Point(point.x+int(copysign(1,diff_x)), point.y),pc.Point(point.x, point.y+int(copysign(1,diff_y)))]
+        #if (p[0] in neighbors and visited[p[0]] == False) and (p[1] in neighbors and visited[p[1]] == False):
+        #    if abs(grad_y[p[1].y, p[1].x]) > abs(grad_x[p[0].y, p[0].x]):
+        #        mini_point = p[0]
+        #    elif abs(grad_y[p[1].y, p[1].x]) < abs(grad_x[p[0].y, p[0].x]):
+        #        mini_point = p[1]
+        #    else:
+        #        if diff_x < diff_y:
+        #            mini_point = p[1]
+        #        else : 
+        #            mini_point = p[0]
+        #elif p[0] in neighbors and visited[p[0]] == False and (p[1] not in neighbors or visited[p[1]] == True):
+        #    mini_point = p[0]
+        #elif (p[0] not in grey_levels.graph or visited[p[0]] == True) and p[1] in grey_levels.graph and visited[p[1]] == False:
+        #    mini_point = p[1]
+        mini_point = None
+        neighbours_new = []
+        for i in range(len(neighbors)):
+            if neighbors[i] in list_visited:
+                if visited[neighbors[i]] == False:
+                    neighbours_new.append(neighbors[i])
+        if len(neighbours_new) == 1:
+            mini_point = neighbours_new[0]
+        if pc.Point(point.x-copysign(1,grad_x[point.y, point.x]), point.y) in neighbours_new :
+                if (abs(grad_x[point.y, point.x]) < abs(grad_y[point.y, point.x]) or grad_y[point.y, point.x] == 0) :
+                        mini_point = pc.Point(point.x-int(copysign(1,grad_x[point.y, point.x])), point.y)
+                
+        if pc.Point(point.x, point.y-copysign(1,grad_y[point.y, point.x])) in neighbours_new :
+                if (abs(grad_y[point.y, point.x]) < abs(grad_x[point.y, point.x]) or grad_x[point.y, point.x] == 0) :
+                    mini_point = pc.Point(point.x, int(point.y-copysign(1,grad_y[point.y, point.x])))
+                
+        if mini_point is None:
+            diff_x = point.x - start_point.x
+            diff_y = point.y - start_point.y 
+            if pc.Point(point.x-int(copysign(1,diff_x)), point.y) in neighbours_new :
+                    if abs(diff_x) > abs(diff_y):
+                        mini_point = pc.Point(point.x-int(copysign(1,diff_x)), point.y)
+                    elif abs(diff_x) == abs(diff_y):
+                        mini_point = pc.Point(point.x-int(copysign(1,diff_x)), point.y)
+            
+            if pc.Point(point.x, point.y-int(copysign(1,diff_y))) in neighbours_new :
+                    if abs(diff_y) > abs(diff_x):
+                        mini_point = pc.Point(point.x, point.y- int(copysign(1,diff_y)))
+                    elif abs(diff_x) == abs(diff_y):
+                        mini_point = pc.Point(point.x, point.y- int(copysign(1,diff_y)))
         return mini_point
     
     start = time.time()
@@ -373,18 +403,49 @@ def gradient_descent_Sobel(grey_levels: ui.GreyImage, start_point: pc.Point, end
             current = best
             path.append(current)
     path.reverse()
+    final_descent = [path[0]]
+    list_cost = [0]
+    cost_ = 0
+    for i in range(1, len(path)):
+        point = path[i]
+        cost = grey_levels.cost(point, final_descent[-1])
+        neighbours = grey_levels.neighbors(point)
+        for p in neighbours:
+            construct_descent = final_descent[:-1]
+            if p in construct_descent:
+                cost = grey_levels.cost(point, p)
+                cost_descent = 0
+                i_p = path.index(p)
+                i_ = i_p
+                while i_p < i:
+                    i_p += 1
+                    p_ = path[i_p]
+                    cost_descent += grey_levels.cost(p_, p)
+                if cost <= cost_descent:
+                    for k in range(i-1, i_, -1):
+                        if path[k] in final_descent:
+                            final_descent.remove(path[k])
+                            list_cost.pop(-1)
+                    break
+                else:
+                    cost = cost_descent
+        final_descent.append(point)
+        cost_ = list_cost[-1] + cost 
+        list_cost.append(cost_)
+    print("coût du nouveau chemin : ", list_cost[-1])
+    print("longueur du chemin final : ", len(final_descent))
     end = time.time()
     print("temps d'execution : ", end-start)
     print("longueur du chemin initial", len(path))
-    return path
+    return final_descent
 
 
 if __name__ == "__main__":
-    #im = ui.GreyImage('EZEZEZEZ.png')
-    im = ui.GreyImage('Carte.png')
+    im = ui.GreyImage('EZEZEZEZ.png')
+    #im = ui.GreyImage('Carte.png')
     print(im.width, im.height)
-    start = pc.Point(1,1)
-    end = pc.Point(200,300)
+    start = pc.Point(56,42)
+    end = pc.Point(1178,419)
     #start = pc.Point(170,296)
     #end = pc.Point(53,51)
     list_visited = []
@@ -424,7 +485,7 @@ if __name__ == "__main__":
     #final_img_a = ui.Image.fromarray(final_img_a, 'RGB')
     #final_img_a.show()
     print("Sobel")
-    descent_sobel = gradient_descent_Sobel(distances, im, start, end)
+    descent_sobel = gradient_descent_Sobel(im, start, end)
     print("end Sobel")
     final_img_s = affiche_descent(descent_sobel, final_img_a, 1)
     final_img_s = ui.Image.fromarray(final_img_s, 'RGB')
