@@ -329,7 +329,7 @@ def compute_gradient_magnitude(grey_img: ui.GreyImage) -> np.ndarray:
     print(grad_x.shape)
     return grad_x,grad_y 
 
-def gradient_descent_Sobel(distances, grey_levels: ui.GreyImage, start_point: pc.Point, end_point: pc.Point) -> list[pc.Point]:
+def gradient_descent_Sobel(grey_levels: ui.GreyImage, start_point: pc.Point, end_point: pc.Point) -> list[pc.Point]:
     start = time.time()
     def mini(neighbors, grad_x, grad_y, point: pc.Point, start_point: pc.Point, visited: list[pc.Point]) -> pc.Point:
         diff_x = start_point.x - point.x
@@ -346,12 +346,10 @@ def gradient_descent_Sobel(distances, grey_levels: ui.GreyImage, start_point: pc
                     mini_point = p[1]
                 else : 
                     mini_point = p[0]
-            print(mini_point)
         elif p[0] in neighbors and visited[p[0]] == False and (p[1] not in neighbors or visited[p[1]] == True):
             mini_point = p[0]
         elif (p[0] not in grey_levels.graph or visited[p[0]] == True) and p[1] in grey_levels.graph and visited[p[1]] == False:
             mini_point = p[1]
-        print(p, neighbors, mini_point)
         return mini_point
     
     start = time.time()
@@ -379,7 +377,6 @@ def gradient_descent_Sobel(distances, grey_levels: ui.GreyImage, start_point: pc
     print("temps d'execution : ", end-start)
     print("longueur du chemin initial", len(path))
     return path
-
 
 
 if __name__ == "__main__":
