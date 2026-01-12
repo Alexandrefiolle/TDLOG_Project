@@ -286,6 +286,131 @@ def amelioration_descent(distances: dict[pc.Point, float], grey_levels: ui.GreyI
     print(len(final_descent))
     return final_descent
 
+def compute_gradient_magnitude(grey_img: ui.GreyImage) -> np.ndarray:
+    """
+    Point 1 : Compute the gradient magnitude image |∇f| (image IG in the subject)
+    Uses a simple 3x3 Sobel gradient. See https://fr.wikipedia.org/wiki/Filtre_de_Sobel
+    Returns a 2D ndarray of the same size as the image, with floats.
+    """
+    arr = grey_img.to_numpy_array()  # shape (height, width), values 0..255
+    arr = arr.astype(float)
+
+    # Sobel kernels
+    sobel_x = np.array([[-1, 0, 1],
+                        [-2, 0, 2],
+                        [-1, 0, 1]], dtype=float)
+
+    sobel_y = np.array([[-1, -2, -1],
+                        [ 0,  0,  0],
+                        [ 1,  2,  1]], dtype=float)
+
+    grad_x = np.zeros_like(arr)
+    grad_y = np.zeros_like(arr)
+
+    h, w = arr.shape
+    for y in range(1, h-1):
+        for x in range(1, w-1):
+            grad_x[y, x] = np.sum(arr[y-1:y+2, x-1:x+2] * sobel_x)
+            grad_y[y, x] = np.sum(arr[y-1:y+2, x-1:x+2] * sobel_y)
+
+    
+    return grad_x,grad_y 
+
+def gradient_descent_Sobel(grey_levels: ui.GreyImage, start_point: pc.Point, end_point: pc.Point) -> list[pc.Point]:
+    start = time.time()
+    def mini(neighbors, grad_x, grad_y, point: pc.Point, start_point: pc.Point, visited: list[pc.Point]) -> pc.Point:
+        diff_x = start_point.x - point.x
+        diff_y = start_point.y - point.y
+        mini_point = None
+        neighbours_new = []
+        for i in range(len(neighbors)):
+            if neighbors[i] in list_visited:
+                if visited[neighbors[i]] == False:
+                    neighbours_new.append(neighbors[i])
+        if len(neighbours_new) == 1:
+            mini_point = neighbours_new[0]
+        if pc.Point(point.x-copysign(1,grad_x[point.y, point.x]), point.y) in neighbours_new :
+                if (abs(grad_x[point.y, point.x]) < abs(grad_y[point.y, point.x]) or grad_y[point.y, point.x] == 0) :
+                        mini_point = pc.Point(point.x-int(copysign(1,grad_x[point.y, point.x])), point.y)
+                
+        if pc.Point(point.x, point.y-copysign(1,grad_y[point.y, point.x])) in neighbours_new :
+                if (abs(grad_y[point.y, point.x]) < abs(grad_x[point.y, point.x]) or grad_x[point.y, point.x] == 0) :
+                    mini_point = pc.Point(point.x, int(point.y-copysign(1,grad_y[point.y, point.x])))
+                
+        if mini_point is None:
+            diff_x = point.x - start_point.x
+            diff_y = point.y - start_point.y 
+            if pc.Point(point.x-int(copysign(1,diff_x)), point.y) in neighbours_new :
+                    if abs(diff_x) > abs(diff_y):
+                        mini_point = pc.Point(point.x-int(copysign(1,diff_x)), point.y)
+                    elif abs(diff_x) == abs(diff_y):
+                        mini_point = pc.Point(point.x-int(copysign(1,diff_x)), point.y)
+            
+            if pc.Point(point.x, point.y-int(copysign(1,diff_y))) in neighbours_new :
+                    if abs(diff_y) > abs(diff_x):
+                        mini_point = pc.Point(point.x, point.y- int(copysign(1,diff_y)))
+                    elif abs(diff_x) == abs(diff_y):
+                        mini_point = pc.Point(point.x, point.y- int(copysign(1,diff_y)))
+        return mini_point
+    
+    start = time.time()
+    current = end_point
+    path = [current]
+    grad_x,grad_y = compute_gradient_magnitude(grey_levels)
+    visited = {}
+    for p in grey_levels.graph:
+        visited[p] = False
+    visited[current] = True
+    while current != start_point:
+        #print(grad_x[current], grad_y[current])
+        neighbors = grey_levels.neighbors(current)
+        best = mini(neighbors, grad_x, grad_y, current, start_point, visited)
+        #print(neighbors, best, current)
+        if best is None:
+            path.pop()
+            current = path[-1]
+        else:
+            visited[best] = True
+            current = best
+            path.append(current)
+    path.reverse()
+    final_descent = [path[0]]
+    list_cost = [0]
+    cost_ = 0
+    for i in range(1, len(path)):
+        point = path[i]
+        cost = grey_levels.cost(point, final_descent[-1])
+        neighbours = grey_levels.neighbors(point)
+        for p in neighbours:
+            construct_descent = final_descent[:-1]
+            if p in construct_descent:
+                cost = grey_levels.cost(point, p)
+                cost_descent = 0
+                i_p = path.index(p)
+                i_ = i_p
+                while i_p < i:
+                    i_p += 1
+                    p_ = path[i_p]
+                    cost_descent += grey_levels.cost(p_, p)
+                if cost <= cost_descent:
+                    for k in range(i-1, i_, -1):
+                        if path[k] in final_descent:
+                            final_descent.remove(path[k])
+                            list_cost.pop(-1)
+                    break
+                else:
+                    cost = cost_descent
+        final_descent.append(point)
+        cost_ = list_cost[-1] + cost 
+        list_cost.append(cost_)
+    print("coût du nouveau chemin : ", list_cost[-1])
+    print("longueur du chemin final : ", len(final_descent))
+    end = time.time()
+    print("temps d'execution : ", end-start)
+    print("longueur du chemin initial", len(path))
+    return final_descent
+
+
 if __name__ == "__main__":
     im = ui.GreyImage('EZEZEZEZ.png')
     # im = ui.GreyImage('Carte.png')
@@ -327,7 +452,13 @@ if __name__ == "__main__":
     grad_image_.show()
     descent_amelioration = amelioration_descent(distances, im, start, end, list_visited)
     final_img_a = affiche_descent(descent_amelioration, grad_image)
-    final_img_a = ui.Image.fromarray(final_img_a, 'RGB')
-    final_img_a.show()
+    #final_img_a = ui.Image.fromarray(final_img_a, 'RGB')
+    #final_img_a.show()
+    print("Sobel")
+    descent_sobel = gradient_descent_Sobel(im, start, end)
+    print("end Sobel")
+    final_img_s = affiche_descent(descent_sobel, final_img_a, 1)
+    final_img_s = ui.Image.fromarray(final_img_s, 'RGB')
+    final_img_s.show()
     
     
