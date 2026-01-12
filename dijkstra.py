@@ -204,7 +204,6 @@ def mini(neighbours, grad_x, grad_y, point: pc.Point, start_point: pc.Point, vis
                     mini_point = pc.Point(point.x, point.y- int(copysign(1,diff_y)))
                 elif abs(diff_x) == abs(diff_y):
                     mini_point = pc.Point(point.x, point.y- int(copysign(1,diff_y)))
-    #print(mini_point, point)
     return mini_point
 
 def gradient_descent(distances: dict[pc.Point, float], grey_levels: ui.GreyImage, start_point: pc.Point, end_point: pc.Point, list_visited: list[pc.Point]) -> list[pc.Point]:
@@ -323,10 +322,7 @@ def compute_gradient_magnitude(grey_img: ui.GreyImage) -> np.ndarray:
             grad_x[y, x] = np.sum(arr[y-1:y+2, x-1:x+2] * sobel_x)
             grad_y[y, x] = np.sum(arr[y-1:y+2, x-1:x+2] * sobel_y)
 
-    # TO REMOVE:
-    # Normalisation optionnelle pour visualisation (0..255)
-    # magnitude_vis = np.clip(magnitude / magnitude.max() * 255, 0, 255).astype(np.uint8) if magnitude.max() > 0 else magnitude.astype(np.uint8)
- 
+    
     return grad_x,grad_y 
 
 def gradient_descent_Sobel(grey_levels: ui.GreyImage, start_point: pc.Point, end_point: pc.Point) -> list[pc.Point]:
@@ -334,22 +330,6 @@ def gradient_descent_Sobel(grey_levels: ui.GreyImage, start_point: pc.Point, end
     def mini(neighbors, grad_x, grad_y, point: pc.Point, start_point: pc.Point, visited: list[pc.Point]) -> pc.Point:
         diff_x = start_point.x - point.x
         diff_y = start_point.y - point.y
-        mini_point = None
-        #p = [pc.Point(point.x+int(copysign(1,diff_x)), point.y),pc.Point(point.x, point.y+int(copysign(1,diff_y)))]
-        #if (p[0] in neighbors and visited[p[0]] == False) and (p[1] in neighbors and visited[p[1]] == False):
-        #    if abs(grad_y[p[1].y, p[1].x]) > abs(grad_x[p[0].y, p[0].x]):
-        #        mini_point = p[0]
-        #    elif abs(grad_y[p[1].y, p[1].x]) < abs(grad_x[p[0].y, p[0].x]):
-        #        mini_point = p[1]
-        #    else:
-        #        if diff_x < diff_y:
-        #            mini_point = p[1]
-        #        else : 
-        #            mini_point = p[0]
-        #elif p[0] in neighbors and visited[p[0]] == False and (p[1] not in neighbors or visited[p[1]] == True):
-        #    mini_point = p[0]
-        #elif (p[0] not in grey_levels.graph or visited[p[0]] == True) and p[1] in grey_levels.graph and visited[p[1]] == False:
-        #    mini_point = p[1]
         mini_point = None
         neighbours_new = []
         for i in range(len(neighbors)):
@@ -446,8 +426,6 @@ if __name__ == "__main__":
     print(im.width, im.height)
     start = pc.Point(56,42)
     end = pc.Point(1178,419)
-    #start = pc.Point(170,296)
-    #end = pc.Point(53,51)
     list_visited = []
     distances = distances_costs(start, end, im, list_visited)
     distances = distances_costs(start, end, im, list_visited)
