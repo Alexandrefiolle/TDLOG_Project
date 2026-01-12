@@ -13,7 +13,7 @@ from math import*
 import random
 import time
 import observer as obs
-epsilon = 2.0
+epsilon = 2.
 
 # Implementation d'une file de priorié
 class PriorityQueue_heap:
@@ -56,8 +56,6 @@ def distances_costs(start: pc.Point, end: pc.Point|None, grey_levels: ui.GreyIma
         candidate = to_visit.remove()
         list_visited.append(candidate)
         if end is not None and candidate == end: # On arrête dès qu'on a trouvé le point final
-            print(candidate)
-            print(candidate.norm(end))
             break
         for neighbor in grey_levels.neighbors(candidate):
             assert neighbor.x < grey_levels.width and neighbor.y < grey_levels.height
@@ -68,7 +66,6 @@ def distances_costs(start: pc.Point, end: pc.Point|None, grey_levels: ui.GreyIma
             if dist[neighbor] > dist[candidate] + cost:
                 dist[neighbor] = dist[candidate] + cost
                 to_visit.append(neighbor, dist[neighbor])
-    print(dist[end])
     return dist
 
 def coloration_map(distances: dict[pc.Point, float], grey_levels: ui.GreyImage) -> np.ndarray:
@@ -78,7 +75,6 @@ def coloration_map(distances: dict[pc.Point, float], grey_levels: ui.GreyImage) 
         if distance < np.inf and distance>max_dist:
             max_dist = distance
     min_dist = min(distances.values())
-    print(max_dist)
     colored_map = np.zeros((grey_levels.height, grey_levels.width, 3), dtype=np.uint8)
     myMap = plt.get_cmap('Spectral')
     for point, distance in distances.items():
@@ -155,7 +151,6 @@ def gradient_on_image(dist: dict[pc.Point, float], grey_levels: ui.GreyImage, ob
             max_intensity = intensity[point]
     print("max_intensity", time.time()-debut)
     debut = time.time()
-    print("max intensity: ", max_intensity)
     cpt = len(grad_x)
     for point in grad_x:
         if obs is not None:
@@ -259,9 +254,7 @@ def distances_map(start: pc.Point, end: pc.Point, grey_levels: ui.GreyImage) -> 
 def amelioration_descent(distances: dict[pc.Point, float], grey_levels: ui.GreyImage, 
                          start_point: pc.Point, end_point: pc.Point, 
                          list_visited: list[pc.Point]) -> list[pc.Point]:
-    print("start gradient descent")
     initial_descent = gradient_descent(distances, grey_levels, start_point, end_point, list_visited)
-    print("initial gradient done")
     final_descent = [initial_descent[0]]
     list_cost = [0]
     cost_ = 0
@@ -411,11 +404,11 @@ def gradient_descent_Sobel(grey_levels: ui.GreyImage, start_point: pc.Point, end
         final_descent.append(point)
         cost_ = list_cost[-1] + cost 
         list_cost.append(cost_)
-    print("coût du nouveau chemin : ", list_cost[-1])
-    print("longueur du chemin final : ", len(final_descent))
+    print("coût du nouveau chemin Sobel: ", list_cost[-1])
+    print("longueur du chemin final Sobel: ", len(final_descent))
     end = time.time()
-    print("temps d'execution : ", end-start)
-    print("longueur du chemin initial", len(path))
+    print("temps d'execution Sobel: ", end-start)
+    print("longueur du chemin initial Sobel : ", len(path))
     return final_descent
 
 
@@ -423,14 +416,12 @@ if __name__ == "__main__":
     #im = ui.GreyImage('EZEZEZEZ.png')
     im = ui.GreyImage('Carte.png')
     print(im.width, im.height)
-    start = pc.Point(0,0)
-    end = pc.Point(im.width-1,im.height-1)
+    start = pc.Point(100,100)
+    end = pc.Point(267,249)
     list_visited = []
     distances = distances_costs(start, end, im, list_visited)
     distances = distances_costs(start, end, im, list_visited)
-    print("distances okay", distances[end])
     colored_map = coloration_map(distances, im)
-    print("coloration map okay")
     colored_map[start.y, start.x] = [255,0,0]
     for k in range(10):
         colored_map[min(start.y+k,700), start.x] = [0,0,0]
@@ -444,7 +435,6 @@ if __name__ == "__main__":
     img = ui.Image.fromarray(colored_map, 'RGB')
     #img.show()
     grad_image = gradient_on_image(distances, im)
-    print("grad image okay")
     for k in range(10):
         grad_image[min(start.y+k,700), start.x] = [0,0,0]
         grad_image[start.y-k, start.x] = [0,0,0]
@@ -461,9 +451,7 @@ if __name__ == "__main__":
     final_img_a = affiche_descent(descent_amelioration, grad_image)
     #final_img_a = ui.Image.fromarray(final_img_a, 'RGB')
     #final_img_a.show()
-    print("Sobel")
     descent_sobel = gradient_descent_Sobel(im, start, end)
-    print("end Sobel")
     final_img_s = affiche_descent(descent_sobel, final_img_a, 1)
     final_img_s = ui.Image.fromarray(final_img_s, 'RGB')
     final_img_s.show()
