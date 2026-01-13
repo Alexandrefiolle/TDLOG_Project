@@ -27,9 +27,25 @@ class Chargement(widgets.QProgressBar):
         self.maxi = v_init
         self.setValue(0)
 
+    def set_multiple(self, nb_steps : int) -> None:
+        """Show the current step on the progress bar"""
+        self.nb_steps = nb_steps
+        self.step = 1
+        self.setFormat(f"1/{nb_steps} : %p%  ")
+
+    def change_step(self) -> None:
+        self.step += 1
+        self.setFormat(f"{self.step}/{self.nb_steps} : %p%  ")
+
+    def set_single(self) -> None:
+        self.setFormat("%p%")
+
     def update(self, value: int) -> None:
         """Updates the progress bar based on the current value."""
-        if 100 - 100*value//self.maxi > self.value():
+        if value < 0:
+            self.change_step()
+            self.reinitialise(-value)
+        elif 100 - 100*value//self.maxi > self.value():
             self.setValue(int(100 - 100*value/self.maxi))
 
 class Fenetre(widgets.QLabel):
@@ -117,7 +133,7 @@ class Vue(widgets.QGroupBox):
         self._menu = None
         self.bar = Chargement()
         self.bar.setFixedWidth(1000)
-        self.bar.setSizePolicy(widgets.QSizePolicy.Policy.Minimum, widgets.QSizePolicy.Policy.Fixed)
+        self.bar.setSizePolicy(widgets.QSizePolicy.Policy.Fixed, widgets.QSizePolicy.Policy.Fixed)
         vertical.addWidget(self.bar)
         self.bar.hide()
 
@@ -750,16 +766,24 @@ class Menu(widgets.QGroupBox):
         if len(self._points_list) < 2:
             print("Please choose at least two points for segmentation.")
             return
+        self.obs.add_observer(self._vue.bar)
+        im = self._original_image_grey_level
+        self._vue.bar.reinitialise(im.width*im.height)
+        self._vue.bar.set_multiple(len(self._points_list)+1)
+        self._vue.bar.show()
         self._more_points_needed = False
         im = self._original_image_grey_level
         print(f"Computing segmentation with {len(self._points_list)} points.")
-        list_distance_map, _ = seg.distances_map(self._points_list, im)
-        segmentation = seg.choice_segmentation_v1(self._points_list, list_distance_map, im)
+        list_distance_map, _ = seg.distances_map(self._points_list, im, self.obs)
+        segmentation = seg.choice_segmentation_v1(self._points_list, list_distance_map, im, self.obs)
         img = ui.Image.fromarray(segmentation, 'RGB')
         img.save(self._segmentation_image_name)
         self._vue.print_stocked_image(self._segmentation_image_name)
         self._vue.texte.setText("Image segmentation completed.")
         self._points_list = []
+        self._vue.bar.hide()
+        self._vue.bar.set_single()
+        self.obs.del_observer(self._vue.bar)
 
     # Reset segmentation button functionality
     def reset_segmentation_button_was_clicked(self) -> None:

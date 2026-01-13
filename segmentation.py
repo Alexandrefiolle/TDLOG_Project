@@ -4,6 +4,7 @@ import numpy as np
 from math import*
 import random
 import dijkstra as d
+import observer as obs
 
 def points(nb_points: int, height: int, width: int) -> list[pc.Point]:
     list_points = []
@@ -14,15 +15,18 @@ def points(nb_points: int, height: int, width: int) -> list[pc.Point]:
         list_points.append(p)
     return list_points
 
-def distances_costs(start: pc.Point, grey_levels: ui.GreyImage, list_visited: list[pc.Point]) -> dict[pc.Point, float]:
+def distances_costs(start: pc.Point, grey_levels: ui.GreyImage, obs : obs.Observer|None = None) -> dict[pc.Point, float]:
     """Computes the list of shortest path costs from start until we reach the end point"""
     dist = ui.NumpyDict(grey_levels)
     dist[start] = 0
     to_visit = d.PriorityQueue_heap([])
     to_visit.append(start, 0)
+    set_visited = set()
     while to_visit.size() > 0:
         candidate = to_visit.remove()
-        list_visited.append(candidate)
+        if obs is not None:
+            obs.notify_observer(grey_levels.width*grey_levels.height - len(set_visited))
+        set_visited.add(candidate)
         for neighbor in grey_levels.neighbors(candidate):
             assert neighbor.x < grey_levels.width and neighbor.y < grey_levels.height
             cost = grey_levels.cost(start, neighbor, d.epsilon)
@@ -31,23 +35,28 @@ def distances_costs(start: pc.Point, grey_levels: ui.GreyImage, list_visited: li
                 to_visit.append(neighbor, dist[neighbor])
     return dist
 
-def distances_map(list_point: list[pc.Point], im: ui.GreyImage) -> list[np.ndarray]:
+def distances_map(list_point: list[pc.Point], im: ui.GreyImage, obs : obs.Observer|None = None) -> list[np.ndarray]:
     list_distance_map = []
     list_colored_map = []
     for p in list_point:
-        dist = distances_costs(p, im, [])
+        dist = distances_costs(p, im, obs)
         dist_maps = d.coloration_map(dist, im)
         list_distance_map.append(dist)
         list_colored_map.append(dist_maps)
-        print("Distance map computed for point ", p)
+        if obs is not None:
+            obs.notify_observer(-im.width*im.height)
     return list_distance_map, list_colored_map
 
 def choice_segmentation_v1(list_point: list[pc.Point], list_distance_map: list[dict[pc.Point, float]], 
-                        grey_levels: ui.GreyImage) -> np.ndarray:
+                        grey_levels: ui.GreyImage, obs:obs.Observer|None = None) -> np.ndarray:
     colored_map = np.zeros((grey_levels.height, grey_levels.width, 3), dtype=np.uint8)
     colors = [[255, 0, 0], [0, 255, 0], [0, 0, 255], [0, 0, 0], [255, 255, 0], [0, 255, 255], [255, 0, 255], [192, 192, 192]]
+    cpt = grey_levels.width*grey_levels.height
     for y in range(grey_levels.height):
         for x in range(grey_levels.width):
+            if obs is not None:
+                cpt -= 1
+                obs.notify_observer(cpt)
             p = pc.Point(x,y)
             mini_dist = np.inf
             k_inf = 0
