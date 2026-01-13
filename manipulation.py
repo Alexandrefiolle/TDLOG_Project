@@ -74,3 +74,11 @@ class NumpyDict:
 
     def __iter__(self):
         return (pc.Point(x, y) for x in range(self.width) for y in range(self.height))
+    
+    def __sub__(self, other):
+        assert self._height == other._height and self._width == other._width, "Dimensions must match for subtraction."
+        result = NumpyDict.__new__(NumpyDict)
+        result.map = self.map - other.map
+        result._height = self._height
+        result._width = self._width
+        return result

@@ -199,28 +199,33 @@ class Menu(widgets.QGroupBox):
         # edge button
         self.contour_button = widgets.QPushButton("Draw the edge", self)
         self.contour_button.setGeometry(10, 410, 150, 30)
-        self.contour_button.clicked.connect(self.contour_button_was_clicked)
+        self.contour_button.clicked.connect(self.contour_button_was_clicked_2)
         self.contour_button.hide()
         # gradient magnitude_button
         self.gradient_magnitude_button = widgets.QPushButton("Gradient Magnitude", self)
-        self.gradient_magnitude_button.setGeometry(10, 410, 150, 30)
+        self.gradient_magnitude_button.setGeometry(10, 450, 150, 30)
         self.gradient_magnitude_button.clicked.connect(self.gradient_magnitude_button_was_clicked)
         self.gradient_magnitude_button.hide() 
         # smoothed_gradient_button
         self.smoothed_gradient_button = widgets.QPushButton("Smoothed Gradient", self)
-        self.smoothed_gradient_button.setGeometry(10, 450, 150, 30)
+        self.smoothed_gradient_button.setGeometry(10, 490, 150, 30)
         self.smoothed_gradient_button.clicked.connect(self.smoothed_gradient_button_was_clicked)
         self.smoothed_gradient_button.hide()
         # weight_map_button
         self.weight_map_button = widgets.QPushButton("Weight Map", self)
-        self.weight_map_button.setGeometry(10, 490, 150, 30)
+        self.weight_map_button.setGeometry(10, 530, 150, 30)
         self.weight_map_button.clicked.connect(self.weight_map_button_was_clicked)
         self.weight_map_button.hide()
         # contour_button
         self.print_contour_button = widgets.QPushButton("Map with contour", self)
-        self.print_contour_button.setGeometry(10, 530, 150, 30)
+        self.print_contour_button.setGeometry(10, 570, 150, 30)
         self.print_contour_button.clicked.connect(self.print_contour_button_was_clicked)
         self.print_contour_button.hide()
+        # new_contour_button
+        self.new_contour_button = widgets.QPushButton("New contour", self)
+        self.new_contour_button.setGeometry(10, 610, 150, 30)
+        self.new_contour_button.clicked.connect(self.new_contour_button_was_clicked)
+        self.new_contour_button.hide()
         # Image segmentation button 
         self.segmentation_button = widgets.QPushButton("Image segmentation", self)
         self.segmentation_button.setGeometry(10, 330, 150, 30)
@@ -319,6 +324,8 @@ class Menu(widgets.QGroupBox):
             self.distances_map_button.setEnabled(False)
             self.gradients_map_button.setEnabled(False)
             self.path_button.setEnabled(False)
+            self.reset_edge_detection()
+            self.reset_segmentation_button_was_clicked()
     
     # Erase points button functionality
     def erase_points_was_clicked(self) -> None:
@@ -508,6 +515,7 @@ class Menu(widgets.QGroupBox):
         self.smoothed_gradient_button.hide()
         self.weight_map_button.hide()
         self.print_contour_button.hide()
+        self.new_contour_button.hide()
 
     # Next edge image button functionality
     def show_next_edge_image(self) -> None:
@@ -562,6 +570,111 @@ class Menu(widgets.QGroupBox):
         self.smoothed_gradient_button.show()
         self.weight_map_button.show()
         self.print_contour_button.show()
+    
+    def contour_button_was_clicked_2(self) -> None:
+        if len(self.contour_points) != 2:
+            self._vue.texte.setText("Error: select exactly two points.")
+            return
+        
+        start, goal = self.contour_points
+        im = self._original_image_grey_level
+        weight_map = self._weight_map_float
+        
+        list_visited_start = []
+        list_visited_end = []
+        
+        # Calcul des distances depuis les deux points
+        dist_dict_start = dijkstra.distances_costs(
+            start=start,
+            end=None,
+            grey_levels=im,
+            list_visited=list_visited_start,
+            edge_detection=True,
+            weight_map=weight_map
+        )
+        dist_dict_end = dijkstra.distances_costs(
+            start=goal,
+            end=None,
+            grey_levels=im,
+            list_visited=list_visited_end,
+            edge_detection=True,
+            weight_map=weight_map
+        )
+        
+        # Trouver les points équidistants avec un seuil plus large
+        difference_dict = dist_dict_start - dist_dict_end
+        tolerance = 1e-3
+        equidistance_points = [p for p in difference_dict if abs(difference_dict[p]) < tolerance]
+        
+        # MÉTHODE : Trouver les points équidistants les plus éloignés de start et goal
+        def euclidean_distance(p1, p2):
+            return ((p1.x - p2.x)**2 + (p1.y - p2.y)**2)**0.5
+        
+        def min_distance_to_start_goal(p):
+            """Distance minimale entre le point p et {start, goal}"""
+            dist_to_start = euclidean_distance(p, start)
+            dist_to_goal = euclidean_distance(p, goal)
+            return min(dist_to_start, dist_to_goal)
+        
+        # Trier les points équidistants par leur distance minimale à start/goal (ordre décroissant)
+        # On veut les points les PLUS ÉLOIGNÉS de start et goal
+        equidistance_points_sorted = sorted(equidistance_points, 
+                                        key=min_distance_to_start_goal, 
+                                        reverse=True)
+        
+        # Prendre le premier point (le plus éloigné)
+        point1 = equidistance_points_sorted[0]
+        
+        # Prendre le deuxième point qui est également éloigné de start/goal
+        # ET éloigné spatialement de point1 pour assurer qu'ils sont sur des côtés opposés
+        point2 = max(equidistance_points_sorted[1:], 
+                    key=lambda p: min(euclidean_distance(p, point1), 
+                                    min_distance_to_start_goal(p)))
+        
+        print(f"\nSelected points:")
+        print(f"  Point 1: ({point1.x}, {point1.y})")
+        print(f"    - Distance to start: {euclidean_distance(point1, start):.2f}")
+        print(f"    - Distance to goal: {euclidean_distance(point1, goal):.2f}")
+        print(f"    - Dijkstra distance: {dist_dict_start[point1]:.2f}")
+        print(f"  Point 2: ({point2.x}, {point2.y})")
+        print(f"    - Distance to start: {euclidean_distance(point2, start):.2f}")
+        print(f"    - Distance to goal: {euclidean_distance(point2, goal):.2f}")
+        print(f"    - Dijkstra distance: {dist_dict_start[point2]:.2f}")
+        print(f"  Distance between point1 and point2: {euclidean_distance(point1, point2):.2f}")
+        
+        # CRÉER LE CONTOUR FERMÉ
+        # Chemin 1 : start → point1
+        path_start_to_p1 = self.reconstruct_path(dist_dict_start, point1, start)
+        
+        # Chemin 2 : point1 → goal
+        path_p1_to_goal = self.reconstruct_path(dist_dict_end, point1, goal)
+        
+        # Chemin 3 : goal → point2
+        path_goal_to_p2 = self.reconstruct_path(dist_dict_end, point2, goal)
+        
+        # Chemin 4 : point2 → start
+        path_p2_to_start = self.reconstruct_path(dist_dict_start, point2, start)
+        
+        # Assembler le contour fermé
+        complete_contour = (path_start_to_p1 +           # start → point1
+                        path_p1_to_goal[::-1] +       # point1 → goal
+                        path_goal_to_p2 +             # goal → point2
+                        path_p2_to_start[::-1])       # point2 → start
+        
+        # Sauvegarder l'image avec le contour
+        result_img = self.draw_contour(complete_contour, im)
+        result_img.save(self._contour_result_name)
+        self._vue.print_stocked_image(self._contour_result_name)
+        self._vue.texte.setText(f"Detected edge ! Length : {len(complete_contour)} pixels")
+        
+        # Reset contour mode
+        self.contour_mode = False
+        # self.contour_button.hide()
+        self.gradient_magnitude_button.show()
+        self.smoothed_gradient_button.show()
+        self.weight_map_button.show()
+        self.print_contour_button.show()
+        self.new_contour_button.show()
 
     def reconstruct_path(self, dist: ui.NumpyDict, current: pc.Point, start: pc.Point) -> list[pc.Point]:
         path = [current]
@@ -612,6 +725,17 @@ class Menu(widgets.QGroupBox):
         """Handles the button click event to display the contour image."""
         self._vue.print_stocked_image(self._contour_result_name)
         self._vue.texte.setText("Contour image is displayed.")
+    
+    # New contour button functionality
+    def new_contour_button_was_clicked(self) -> None:
+        """Handles the button click event to reset the contour tracing."""
+        self.contour_mode = True
+        self.contour_points = []
+        self._vue.texte.setText("Select two points on a contour to trace it.")
+        self._edge_images_computed = False
+        self._vue.print_stocked_image(self._original_image_name)
+        self._starting_and_ending_points_set = False
+        self.erase_points_was_clicked()
     
     # Image segmentation button functionality
     def segmentation_button_was_clicked(self) -> None:

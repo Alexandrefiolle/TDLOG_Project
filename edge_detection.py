@@ -79,6 +79,7 @@ def cost_edges_edge_detection(epsilon: float, neighbor: pc.Point, dist: dict[pc.
     return w
 
 
+
 """
 def demo_edge_weight_map(grey_img: ui.GreyImage, sigma: float = GAUSSIAN_SIGMA, epsilon: float = EDGE_EPSILON) -> np.ndarray:
     
