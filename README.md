@@ -127,3 +127,50 @@ The user will only use the interface, the code is a black box. To use it, it suf
 ```
 python interface.py
 ```
+
+## Application 1 - Contour detection
+
+### Link with fast marching 
+Printing a red curve on a contour between two points on this contour can be reformulated as a shortest path problem, but with an "unusual" weight function to compute distances. Thus, fast marching may address this problem. 
+
+### Applications
+
+Contour detection is a problem with a wide range of applications. Let us enumerate some of them:
+- Medical imaging: it checks the contours of the organs (e.g. brain) and can be used for the detection of tumors, can also be used on blood vessels
+- Building detection in 3D computer vision
+- Robotics: to force a robot to follow a line
+- ...
+
+### Steps 
+
+1) Gradients: we compute gradients on the original map to get a measure of variations of grey levels. Intuitively, a high gradient embodies a large variation of color, which can suggest the presence of a contour. 
+
+2) Gaussian filter: this blurred a bit the picture, and aims at discarding the noise existing in some points. The different areas are then more continuous, so the contours are better visible.
+
+3) Inversion: let us recall that fast marching minimizes the cost, and we were looking for higher gradients, thus for lower inverses of gradients. 
+
+It explains the final weight function:
+
+$$W(x,y)=\frac{1}{\varepsilon + G\sigma * G(x,y)}$$
+
+4) Path on a contour: when we choose two points on a (same) contour, it is always less costly to remain on the contour (since the cost is close to 0), then we get a section of the contour. 
+
+5) Getting the whole contour: heuristically, we add smartly two points on the contour, that are well spread, so that tracing the paths between the points and their "following" (given an orientation) enables to recover the whole contour.
+
+### Example
+
+Let us consider this medical image:
+
+![Carte](images/readme_example_medical.jpg)
+
+*Figure — distances map (`readme_example_medical.jpg`)*
+
+The result is:
+
+![Carte](Readme_pictures/readme_contour_detection.png)
+
+*Figure — distances map (`readme_contour_detection.png`)*
+
+### How it works with the interface?
+
+## Application 2 - Image segmentation
