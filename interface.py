@@ -62,7 +62,10 @@ class Fenetre(widgets.QLabel):
         if self.underMouse():
             point = gui.QCursor.pos()
             point = self.mapFromGlobal(point)
+            if point.x() < 0 or point.x() >= self.pixmap().width() or point.y() < 0 or point.y() >= self.pixmap().height():
+                return
             point = pc.Point(int(self.parent().ratio*point.x()), int(self.parent().ratio*point.y()))
+            
             if self.parent().menu._more_points_needed:
                 p = self.mapFromGlobal(gui.QCursor.pos())
                 self.points.append(p)
@@ -70,7 +73,7 @@ class Fenetre(widgets.QLabel):
                 self.update()
                 self.parent()._menu._vue.texte.setText(f"{len(self.parent()._menu._points_list)} points chosen for segmentation.\nWhen all points are chosen, click the 'All points chosen' button.")
                 return
-            if self.parent()._menu.contour_mode:
+            elif self.parent()._menu.contour_mode and len(self.parent()._menu.contour_points)<2:
                 self.parent()._menu.contour_points.append(point)
                 if len(self.parent()._menu.contour_points) == 1:
                     self.ps = self.mapFromGlobal(gui.QCursor.pos())  # first point
@@ -79,7 +82,7 @@ class Fenetre(widgets.QLabel):
                 self.update()
                 self.parent()._menu._vue.texte.setText(f"{len(self.parent()._menu.contour_points)}/2 points chosen for the contour")
                 return
-            if self.parent()._menu.starting_point is None: # first point
+            elif self.parent()._menu.starting_point is None: # first point
                 self.ps = self.mapFromGlobal(gui.QCursor.pos())
                 self.parent()._menu.starting_point = point
                 self.parent().texte.setText("Select an ending point")
@@ -360,6 +363,7 @@ class Menu(widgets.QGroupBox):
         self.distances_map_button.setEnabled(False)
         self.gradients_map_button.setEnabled(False)
         self.path_button.setEnabled(False)
+        self.contour_points = list()
 
     # Original image button functionality
     def original_image_button_was_selected(self) -> None:
@@ -588,7 +592,7 @@ class Menu(widgets.QGroupBox):
         self.print_contour_button.show()
     
     def contour_button_was_clicked_2(self) -> None:
-        if len(self.contour_points) != 2:
+        if len(self.contour_points) < 2:
             self._vue.texte.setText("Error: select exactly two points.")
             return
         
