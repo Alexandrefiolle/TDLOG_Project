@@ -599,6 +599,11 @@ class Menu(widgets.QGroupBox):
         list_visited_start = []
         list_visited_end = []
         
+        self.obs.add_observer(self._vue.bar)
+        im = self._original_image_grey_level
+        self._vue.bar.reinitialise(im.width*im.height)
+        self._vue.bar.set_multiple(2)
+        self._vue.bar.show()
         # Calcul des distances depuis les deux points
         dist_dict_start = dijkstra.distances_costs(
             start=start,
@@ -606,16 +611,22 @@ class Menu(widgets.QGroupBox):
             grey_levels=im,
             list_visited=list_visited_start,
             edge_detection=True,
-            weight_map=weight_map
+            weight_map=weight_map,
+            obs=self.obs
         )
+        self.obs.notify_observer(-im.width*im.height)
         dist_dict_end = dijkstra.distances_costs(
             start=goal,
             end=None,
             grey_levels=im,
             list_visited=list_visited_end,
             edge_detection=True,
-            weight_map=weight_map
+            weight_map=weight_map,
+            obs=self.obs
         )
+        self._vue.bar.hide()
+        self._vue.bar.set_single()
+        self.obs.del_observer(self._vue.bar)
         
         # Trouver les points équidistants avec un seuil plus large
         difference_dict = dist_dict_start - dist_dict_end
@@ -772,7 +783,6 @@ class Menu(widgets.QGroupBox):
         self._vue.bar.set_multiple(len(self._points_list)+1)
         self._vue.bar.show()
         self._more_points_needed = False
-        im = self._original_image_grey_level
         print(f"Computing segmentation with {len(self._points_list)} points.")
         list_distance_map, _ = seg.distances_map(self._points_list, im, self.obs)
         segmentation = seg.choice_segmentation_v1(self._points_list, list_distance_map, im, self.obs)

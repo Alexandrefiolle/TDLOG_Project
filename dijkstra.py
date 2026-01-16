@@ -53,7 +53,10 @@ def distances_costs(start: pc.Point, end: pc.Point|None, grey_levels: ui.GreyIma
     while to_visit.size() > 0:
         candidate = to_visit.remove()
         if obs is not None:
-            obs.notify_observer(candidate.norm(end))
+            if end is not None:
+                obs.notify_observer(candidate.norm(end))
+            else:
+                obs.notify_observer(grey_levels.height*grey_levels.width - len(list_visited))
         list_visited.append(candidate)
         if end is not None and candidate == end: # On arrête dès qu'on a trouvé le point final
             break
