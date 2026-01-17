@@ -411,7 +411,6 @@ def gradient_descent_Sobel(grey_levels: ui.GreyImage, start_point: pc.Point, end
     print("longueur du chemin initial Sobel : ", len(path))
     return final_descent
 
-
 if __name__ == "__main__":
     #im = ui.GreyImage('EZEZEZEZ.png')
     im = ui.GreyImage('Carte.png')

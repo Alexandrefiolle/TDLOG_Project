@@ -4,6 +4,10 @@ import numpy as np
 from math import*
 import random
 import dijkstra as d
+from multiprocessing import Pool
+import random
+import time
+
 
 def points(nb_points: int, height: int, width: int) -> list[pc.Point]:
     list_points = []
@@ -33,12 +37,18 @@ def distances_costs(start: pc.Point, grey_levels: ui.GreyImage, list_visited: li
                 to_visit.append(neighbor, dist[neighbor])
     return dist
 
+def compute_distance_for_point(args):
+    p, im = args
+    dist = distances_costs(p, im, [])
+    return dist
+
 def distances_map(list_point: list[pc.Point], im: ui.GreyImage) -> list[np.ndarray]:
-    list_distance_map = []
+    args = [(p, im) for p in list_point]
+    
+    with Pool() as pool:
+        list_distance_map = pool.map(compute_distance_for_point, args)
+    
     list_colored_map = []
-    for p in list_point:
-        dist = distances_costs(p, im, [])
-        list_distance_map.append(dist)
     return list_distance_map, list_colored_map
 
 def choice_segmentation_v1(list_point: list[pc.Point], list_distance_map: dict[pc.Point, float], 
@@ -61,6 +71,7 @@ def choice_segmentation_v1(list_point: list[pc.Point], list_distance_map: dict[p
     return colored_map
             
 if __name__ == "__main__":
+    start = time.time()
     #im = ui.GreyImage('EZEZEZEZ.png')
     im = ui.GreyImage('Carte.png')
     print("height: ", im.height, ", width : ", im.width)
@@ -69,19 +80,7 @@ if __name__ == "__main__":
     list_point = points(r, im.height, im.width)
     list_distance_map, list_colored_map = distances_map(list_point, im)
     segmentation = choice_segmentation_v1(list_point, list_distance_map, im)
-    for k in range(r):
-        print("point ", k+1, ": ", list_point[k])
-        for i in range(10):
-            list_colored_map[k][min(list_point[k].y+i,592), list_point[k].x] = [0,0,0]
-            list_colored_map[k][list_point[k].y-i, list_point[k].x] = [0,0,0]
-            list_colored_map[k][list_point[k].y, min(list_point[k].x+i,1243)] = [0,0,0]
-            list_colored_map[k][list_point[k].y, list_point[k].x-i] = [0,0,0]
-            segmentation[min(list_point[k].y+i,592), list_point[k].x] = [0,0,0]
-            segmentation[list_point[k].y-i, list_point[k].x] = [0,0,0]
-            segmentation[list_point[k].y, min(list_point[k].x+i,1243)] = [0,0,0]
-            segmentation[list_point[k].y, list_point[k].x-i] = [0,0,0]
-        img = ui.Image.fromarray(list_colored_map[k], 'RGB')
-        img.show()
     im_s = ui.Image.fromarray(segmentation, 'RGB')
     im_s.show()
+    print(time.time() - start)
 
