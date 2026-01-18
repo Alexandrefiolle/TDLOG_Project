@@ -295,7 +295,7 @@ def compute_gradient_magnitude(grey_img: ui.GreyImage) -> np.ndarray:
     Uses a simple 3x3 Sobel gradient. See https://fr.wikipedia.org/wiki/Filtre_de_Sobel
     Returns a 2D ndarray of the same size as the image, with floats.
     """
-    arr = grey_img.to_numpy_array()  # shape (height, width), values 0..255
+    arr = grey_img.image  # shape (height, width), values 0..255
     arr = arr.astype(float)
 
     # Sobel kernels
@@ -327,7 +327,7 @@ def gradient_descent_Sobel(grey_levels: ui.GreyImage, start_point: pc.Point, end
         mini_point = None
         neighbours_new = []
         for i in range(len(neighbors)):
-            if neighbors[i] in list_visited:
+            if neighbors[i] in visited:
                 if visited[neighbors[i]] == False:
                     neighbours_new.append(neighbors[i])
         if len(neighbours_new) == 1:
@@ -361,7 +361,7 @@ def gradient_descent_Sobel(grey_levels: ui.GreyImage, start_point: pc.Point, end
     path = [current]
     grad_x,grad_y = compute_gradient_magnitude(grey_levels)
     visited = {}
-    for p in grey_levels.graph:
+    for p in grey_levels:
         visited[p] = False
     visited[current] = True
     while current != start_point:
