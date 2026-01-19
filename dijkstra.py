@@ -232,7 +232,7 @@ def gradient_descent(distances: dict[pc.Point, float], grey_levels: ui.GreyImage
     print(len(descent))
     return descent
 
-def affiche_descent(descent: list[pc.Point], img: ui.GreyImage) -> np.ndarray:
+def affiche_descent(descent: list[pc.Point], img: ui.GreyImage, Sobel: int = 0) -> np.ndarray:
     """Displays the descent path on the image"""
     #colored_map = np.zeros((img.height, img.width, 3), dtype=np.uint8)
     #print(img.width, img.height)
@@ -242,8 +242,10 @@ def affiche_descent(descent: list[pc.Point], img: ui.GreyImage) -> np.ndarray:
     #        colored_map[j][i] = [img.graph[p], img.graph[p], img.graph[p]]
     #sum = 0
     for point in descent:
-    #    sum += img.cost(pc.Point(289,136), point)
-        img[point.y][point.x] = [255, 0, 0]
+        if Sobel == 0:
+            img[point.y, point.x] = [255, 0, 0]
+        else:
+            img[point.y, point.x] = [255, 255, 255]
     #print(sum)
     return img
 
@@ -415,7 +417,7 @@ def gradient_descent_Sobel(grey_levels: ui.GreyImage, start_point: pc.Point, end
 
 
 if __name__ == "__main__":
-    im = ui.GreyImage('EZEZEZEZ.png')
+    im = ui.GreyImage('images/EZEZEZEZ.png')
     # im = ui.GreyImage('Carte.png')
     print(im.width, im.height)
     # start = pc.Point(446,332)
