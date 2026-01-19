@@ -376,6 +376,7 @@ class Menu(widgets.QGroupBox):
         self.sobel_gradients_map_button.setEnabled(False)
         self.path_button.setEnabled(False)
         self.contour_points = list()
+        self._vue.print_stocked_image(self._original_image_name)
 
     # Original image button functionality
     def original_image_button_was_selected(self) -> None:
@@ -453,13 +454,14 @@ class Menu(widgets.QGroupBox):
     
     def sobel_gradients_map_button_was_clicked(self) -> None:
         """Handles the button click event to display the Sobel gradients map."""
-        if self._gradients_map_computed:
+        if self._sobel_gradients_map_computed:
             self._vue.print_stocked_image(self._sobel_gradients_map_image_name)
             return
         im = self._original_image_grey_level
         sobel_grad = dijkstra.gradient_descent_Sobel(im, self._starting_point, self._ending_point)
-        img = dijkstra.affiche_descent(sobel_grad, im)
-        img_pil = Image.fromarray(img)
+        base = np.stack([im.image, im.image, im.image], axis=-1).astype(np.uint8)
+        img = dijkstra.affiche_descent(sobel_grad, base, 1)
+        img_pil = Image.fromarray(img.astype(np.uint8))
         img_pil.save(self._sobel_gradients_map_image_name)
         self._sobel_gradients_map_computed = True
         self._vue.print_stocked_image(self._sobel_gradients_map_image_name)
