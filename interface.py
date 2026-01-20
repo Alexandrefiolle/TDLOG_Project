@@ -457,8 +457,11 @@ class Menu(widgets.QGroupBox):
         if self._sobel_gradients_map_computed:
             self._vue.print_stocked_image(self._sobel_gradients_map_image_name)
             return
+        self.obs.add_observer(self._vue.bar)
         im = self._original_image_grey_level
-        sobel_grad = dijkstra.gradient_descent_Sobel(im, self._starting_point, self._ending_point)
+        self._vue.bar.reinitialise(self._starting_point.norm(self._ending_point))
+        self._vue.bar.show()
+        sobel_grad = dijkstra.gradient_descent_Sobel(im, self._starting_point, self._ending_point, self.obs)
         base = np.stack([im.image, im.image, im.image], axis=-1).astype(np.uint8)
         img = dijkstra.affiche_descent(sobel_grad, base, 1)
         img_pil = Image.fromarray(img.astype(np.uint8))
@@ -466,6 +469,8 @@ class Menu(widgets.QGroupBox):
         self._sobel_gradients_map_computed = True
         self._vue.print_stocked_image(self._sobel_gradients_map_image_name)
         self._vue.texte.setText("Sobel gradients optimal path is displayed.")
+        self._vue.bar.hide()
+        self.obs.del_observer(self._vue.bar)
 
     # Path button functionality
     def path_button_was_clicked(self) -> None:
