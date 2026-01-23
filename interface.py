@@ -817,7 +817,7 @@ class Menu(widgets.QGroupBox):
             return
         self.obs.add_observer(self._vue.bar)
         im = self._original_image_grey_level
-        self._vue.bar.reinitialise(len(self._points_list))
+        self._vue.bar.reinitialise(len(self._points_list)+1)
         self._vue.bar.set_multiple(2)
         self._vue.bar.show()
         self._more_points_needed = False
