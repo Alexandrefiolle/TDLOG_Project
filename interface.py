@@ -72,7 +72,7 @@ class Fenetre(widgets.QLabel):
                 self.points.append(p)
                 self.parent()._menu._points_list.append(point)
                 self.update()
-                self.parent()._menu._vue.texte.setText(f"{len(self.parent()._menu._points_list)} points chosen for segmentation.\nWhen all points are chosen, click the 'All points chosen' button.")
+                self.parent()._menu._vue.texte.setText(f"<h1>{len(self.parent()._menu._points_list)} points chosen for segmentation.\nWhen all points are chosen, click the 'All points chosen' button.</h1>")
                 return
             elif self.parent()._menu.contour_mode and len(self.parent()._menu.contour_points)<2:
                 self.parent()._menu.contour_points.append(point)
@@ -81,21 +81,21 @@ class Fenetre(widgets.QLabel):
                 else:
                     self.pe = self.mapFromGlobal(gui.QCursor.pos())  # second point
                 self.update()
-                self.parent()._menu._vue.texte.setText(f"{len(self.parent()._menu.contour_points)}/2 points chosen for the contour")
+                self.parent()._menu._vue.texte.setText(f"<h1>{len(self.parent()._menu.contour_points)}/2 points chosen for the contour</h1>")
                 return
             elif self.parent()._menu.starting_point is None: # first point
                 self.ps = self.mapFromGlobal(gui.QCursor.pos())
                 self.parent()._menu.starting_point = point
-                self.parent().texte.setText("Select an ending point")
+                self.parent().texte.setText("<h1>Select an ending point</h1>")
             elif self.parent()._menu.ending_point is None: # second point
                 self.pe = self.mapFromGlobal(gui.QCursor.pos())
                 self.parent()._menu.ending_point = point
                 self.parent()._menu._starting_and_ending_points_set = True
-                self.parent().texte.setText("Compute a distance map")
+                self.parent().texte.setText("<h1>Compute a distance map</h1>")
                 self.parent()._menu.distances_map_button.setEnabled(True)
                 self.parent()._menu.sobel_gradients_map_button.setEnabled(True)
             else: # both points are already set
-                self.parent().texte.setText("Both starting and ending points are already set.")
+                self.parent().texte.setText("<h1>Both starting and ending points are already set.</h1>")
             self.update()
     
     def paintEvent(self, a0:gui.QPaintEvent) -> None:
@@ -124,7 +124,7 @@ class Vue(widgets.QGroupBox):
         super().__init__(None)
         self.setFixedWidth(1000)
         vertical = widgets.QVBoxLayout(self)
-        self.texte = widgets.QLabel("Select a starting point", self)
+        self.texte = widgets.QLabel("<h1>Select a starting point</h1>", self)
         self.texte.setSizePolicy(widgets.QSizePolicy.Policy.Minimum, 
                                  widgets.QSizePolicy.Policy.Fixed)
         vertical.addWidget(self.texte)
@@ -350,7 +350,7 @@ class Menu(widgets.QGroupBox):
             self._edge_images_computed = False
             self.erase_points_was_clicked()
             self._vue.ratio = max(gui.QPixmap(file_name).width()/1000, gui.QPixmap(file_name).height()/700)
-            self._vue.texte.setText("Image has been selected. Select a starting point")
+            self._vue.texte.setText("<h1>Image has been selected. Select a starting point</h1>")
             self.distances_map_button.setEnabled(False)
             self.gradients_map_button.setEnabled(False)
             self.sobel_gradients_map_button.setEnabled(False)
@@ -371,7 +371,7 @@ class Menu(widgets.QGroupBox):
         self._gradients_map_computed = False
         self._optimal_path_computed = False
         self._vue.image.update()
-        self._vue.texte.setText("Select a starting point")
+        self._vue.texte.setText("<h1>Select a starting point</h1>")
         self.distances_map_button.setEnabled(False)
         self.gradients_map_button.setEnabled(False)
         self.sobel_gradients_map_button.setEnabled(False)
@@ -383,7 +383,7 @@ class Menu(widgets.QGroupBox):
     def original_image_button_was_selected(self) -> None:
         """Handles the button click event to display the original image."""
         self._vue.print_stocked_image(self._original_image_name)
-        self._vue.texte.setText("Original image is displayed")
+        self._vue.texte.setText("<h1>Original image is displayed</h1>")
 
     # Distances map button functionality
     def distances_map_creation(self, start: pc.Point, end: pc.Point) -> None:
@@ -397,7 +397,7 @@ class Menu(widgets.QGroupBox):
         img = Image.fromarray(distances_map_image)
         img.save(self._distances_map_image_name)
         self._distances_map_computed = True
-        self._vue.texte.setText("Compute a gradient map")
+        self._vue.texte.setText("<h1>Compute a gradient map</h1>")
         self._vue.bar.hide()
         self.obs.del_observer(self._vue.bar)
 
@@ -436,7 +436,7 @@ class Menu(widgets.QGroupBox):
         img = Image.fromarray(self._grad_image)
         img.save(self._gradients_map_image_name)
         self._gradients_map_computed = True
-        self._vue.texte.setText("You can now print the optimal path")
+        self._vue.texte.setText("<h1>You can now print the optimal path</h1>")
         self._vue.bar.hide()
         self.obs.del_observer(self._vue.bar)
         
@@ -451,7 +451,7 @@ class Menu(widgets.QGroupBox):
             self._vue.print_stocked_image(self._gradients_map_image_name)
             self.path_button.setEnabled(True)
         else:
-            self._vue.texte.setText("Please select starting and ending points by clicking on the image.")
+            self._vue.texte.setText("<h1>Please select starting and ending points by clicking on the image.</h1>")
     
     def sobel_gradients_map_button_was_clicked(self) -> None:
         """Handles the button click event to display the Sobel gradients map."""
@@ -469,7 +469,7 @@ class Menu(widgets.QGroupBox):
         img_pil.save(self._sobel_gradients_map_image_name)
         self._sobel_gradients_map_computed = True
         self._vue.print_stocked_image(self._sobel_gradients_map_image_name)
-        self._vue.texte.setText("Sobel gradients optimal path is displayed.")
+        self._vue.texte.setText("<h1>Sobel gradients optimal path is displayed.</h1>")
         self._vue.bar.hide()
         self.obs.del_observer(self._vue.bar)
 
@@ -487,7 +487,7 @@ class Menu(widgets.QGroupBox):
             self._optimal_path_computed = True
             self._vue.print_stocked_image(self._optimal_path_image_name)
         else:
-            self._vue.texte.setText("Please select starting and ending points by clicking on the image.")
+            self._vue.texte.setText("<h1>Please select starting and ending points by clicking on the image.</h1>")
     
     # Edge detection button functionality
     def edge_detection_button_was_clicked(self) -> None:
@@ -539,9 +539,9 @@ class Menu(widgets.QGroupBox):
         # Prepare for displaying edge detection images
         self.current_edge_step = 0
         self.edge_steps = [
-            (self._original_image_name, "Edge detection: 1. Original image"),
-            (self._smoothed_gradient_name, "Edge detection: 2. Smoothed gradient (Gσ * |∇f|)"),
-            (self._weight_map_name, "Edge detection: 3. Weight map W(x,y) = 1/(ε + smoothed)")
+            (self._original_image_name, "<h1>Edge detection: 1. Original image</h1>"),
+            (self._smoothed_gradient_name, "<h1>Edge detection: 2. Smoothed gradient (Gσ * |∇f|)</h1>"),
+            (self._weight_map_name, "<h1>Edge detection: 3. Weight map W(x,y) = 1/(ε + smoothed)</h1>")
         ]
 
         # Show the next edge image button
@@ -554,7 +554,7 @@ class Menu(widgets.QGroupBox):
     def reset_edge_detection(self) -> None:
         self._edge_detection = False
         self._edge_images_computed = False
-        self._vue.texte.setText("Edge detection reset.")
+        self._vue.texte.setText("<h1>Edge detection reset.</h1>")
         self._vue.print_stocked_image(self._original_image_name)
         self.next_edge_button.hide()
         self.contour_button.hide()
@@ -581,7 +581,7 @@ class Menu(widgets.QGroupBox):
             self.current_edge_step += 1
         else:
             # End of the sequence
-            self._vue.texte.setText("Edge detection completed.\nYou can now select two points on a contour.")
+            self._vue.texte.setText("<h1>Edge detection completed.\nYou can now select two points on a contour.</h1>")
             self._vue.print_stocked_image(self._original_image_name)
             self.next_edge_button.hide()
             self.contour_button.show()
@@ -592,7 +592,7 @@ class Menu(widgets.QGroupBox):
     # Contour tracing button functionality
     def contour_button_was_clicked(self) -> None:
         if len(self.contour_points) != 2:
-            self._vue.texte.setText("Error: select exactly two points.")
+            self._vue.texte.setText("<h1>Error: select exactly two points.</h1>")
             return
 
         start, goal = self.contour_points
@@ -615,7 +615,7 @@ class Menu(widgets.QGroupBox):
         result_img = self.draw_contour(path, im)
         result_img.save(self._contour_result_name)
         self._vue.print_stocked_image(self._contour_result_name)
-        self._vue.texte.setText(f"Detected edge ! Length : {len(path)} pixels")
+        self._vue.texte.setText(f"<h1>Detected edge ! Length : {len(path)} pixels</h1>")
         # Reset contour mode
         self.contour_mode = False
         self.contour_button.hide()
@@ -627,7 +627,7 @@ class Menu(widgets.QGroupBox):
     
     def contour_button_was_clicked_2(self) -> None:
         if len(self.contour_points) < 2:
-            self._vue.texte.setText("Error: select exactly two points.")
+            self._vue.texte.setText("<h1>Error: select exactly two points.</h1>")
             return
         
         start, goal = self.contour_points
@@ -730,7 +730,7 @@ class Menu(widgets.QGroupBox):
         result_img = self.draw_contour(complete_contour, im)
         result_img.save(self._contour_result_name)
         self._vue.print_stocked_image(self._contour_result_name)
-        self._vue.texte.setText(f"Detected edge ! Length : {len(complete_contour)} pixels")
+        self._vue.texte.setText(f"<h1>Detected edge ! Length : {len(complete_contour)} pixels</h1>")
         
         # Reset contour mode
         self.contour_mode = False
@@ -771,32 +771,32 @@ class Menu(widgets.QGroupBox):
     def gradient_magnitude_button_was_clicked(self) -> None:
         """Handles the button click event to display the gradient magnitude image."""
         self._vue.print_stocked_image(self._gradient_magnitude_name)
-        self._vue.texte.setText("Gradient Magnitude image is displayed.")
+        self._vue.texte.setText("<h1>Gradient Magnitude image is displayed.</h1>")
     
     # Smoothed gradient button functionality
     def smoothed_gradient_button_was_clicked(self) -> None:
         """Handles the button click event to display the smoothed gradient image."""
         self._vue.print_stocked_image(self._smoothed_gradient_name)
-        self._vue.texte.setText("Smoothed Gradient image is displayed.")
+        self._vue.texte.setText("<h1>Smoothed Gradient image is displayed.</h1>")
     
     # Weight map button functionality
     def weight_map_button_was_clicked(self) -> None:
         """Handles the button click event to display the weight map image."""
         self._vue.print_stocked_image(self._weight_map_name)
-        self._vue.texte.setText("Weight Map image is displayed.")
+        self._vue.texte.setText("<h1>Weight Map image is displayed.</h1>")
     
     # Contour button functionality
     def print_contour_button_was_clicked(self) -> None:
         """Handles the button click event to display the contour image."""
         self._vue.print_stocked_image(self._contour_result_name)
-        self._vue.texte.setText("Contour image is displayed.")
+        self._vue.texte.setText("<h1>Contour image is displayed.</h1>")
     
     # New contour button functionality
     def new_contour_button_was_clicked(self) -> None:
         """Handles the button click event to reset the contour tracing."""
         self.contour_mode = True
         self.contour_points = []
-        self._vue.texte.setText("Select two points on a contour to trace it.")
+        self._vue.texte.setText("<h1>Select two points on a contour to trace it.</h1>")
         self._edge_images_computed = False
         self._vue.print_stocked_image(self._original_image_name)
         self._starting_and_ending_points_set = False
@@ -806,7 +806,7 @@ class Menu(widgets.QGroupBox):
     def segmentation_button_was_clicked(self) -> None:
         """Handles the button click event to perform image segmentation."""
         self._more_points_needed = True
-        self._vue.texte.setText("Please choose segmentation points by clicking on the image.\nWhen all points are chosen, click the 'All points chosen' button.")
+        self._vue.texte.setText("<h1>Please choose segmentation points by clicking on the image.\nWhen all points are chosen, click the 'All points chosen' button.")
         self.all_points_chosen_button.show()
         self.reset_segmentation_button.setEnabled(True)
     
@@ -827,7 +827,7 @@ class Menu(widgets.QGroupBox):
         img = ui.Image.fromarray(segmentation, 'RGB')
         img.save(self._segmentation_image_name)
         self._vue.print_stocked_image(self._segmentation_image_name)
-        self._vue.texte.setText("Image segmentation completed.")
+        self._vue.texte.setText("<h1>Image segmentation completed.</h1>")
         self._points_list = []
         self._vue.bar.hide()
         self._vue.bar.set_single()
@@ -838,7 +838,7 @@ class Menu(widgets.QGroupBox):
         """Handles the button click event to reset the image segmentation."""
         self._segmentation_computed = False
         self._vue.print_stocked_image(self._original_image_name)
-        self._vue.texte.setText("Segmentation reset. Select a starting point.")
+        self._vue.texte.setText("<h1>Segmentation reset. Select a starting point.</h1>")
         self.erase_points_was_clicked()
         self._more_points_needed = False
         self.all_points_chosen_button.hide()
