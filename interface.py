@@ -47,6 +47,7 @@ class Chargement(widgets.QProgressBar):
             self.reinitialise(-value)
         elif 100 - 100*value//self.maxi > self.value():
             self.setValue(int(100 - 100*value/self.maxi))
+        super().update()
 
 class Fenetre(widgets.QLabel):
     """A window class to display an image and handle mouse click events"""
@@ -378,7 +379,7 @@ class Menu(widgets.QGroupBox):
         self._vue.bar.show()
         self.obs.add_observer(self._vue.bar)
         im = self._original_image_grey_level
-        self._distances_costs = dijkstra.distances_costs(start, end, im, self._list_visited, self._edge_detection, obs=self.obs)
+        self._distances_costs = dijkstra.distances_costs(start, end, im, self._list_visited, obs=self.obs)
         distances_map_image = dijkstra.coloration_map(self._distances_costs, im)
         img = Image.fromarray(distances_map_image)
         img.save(self._distances_map_image_name)
@@ -783,8 +784,8 @@ class Menu(widgets.QGroupBox):
             return
         self.obs.add_observer(self._vue.bar)
         im = self._original_image_grey_level
-        self._vue.bar.reinitialise(im.width*im.height)
-        self._vue.bar.set_multiple(len(self._points_list)+1)
+        self._vue.bar.reinitialise(len(self._points_list))
+        self._vue.bar.set_multiple(2)
         self._vue.bar.show()
         self._more_points_needed = False
         print(f"Computing segmentation with {len(self._points_list)} points.")

@@ -47,10 +47,15 @@ def distances_map(list_point: list[pc.Point], im: ui.GreyImage, obs : obs.Observ
     args = [(p, im) for p in list_point]
     list_distance_map = []
     list_colored_map = []
+    if obs is not None:
+        cpt = len(list_point)
+        obs.notify_observer(cpt)
     with Pool() as pool:
-        list_distance_map = pool.map(compute_distance_for_point, args)
-        if obs is not None:
-            obs.notify_observer(-im.width*im.height)
+        for dist in pool.imap_unordered(compute_distance_for_point, args):
+            list_distance_map.append(dist)
+            if obs is not None:
+                cpt -= 1
+                obs.notify_observer(cpt)
     return list_distance_map, list_colored_map
 
 def choice_segmentation_v1(list_point: list[pc.Point], list_distance_map: list[dict[pc.Point, float]], 
@@ -58,6 +63,7 @@ def choice_segmentation_v1(list_point: list[pc.Point], list_distance_map: list[d
     colored_map = np.zeros((grey_levels.height, grey_levels.width, 3), dtype=np.uint8)
     colors = [[255, 0, 0], [0, 255, 0], [0, 0, 255], [0, 0, 0], [255, 255, 0], [0, 255, 255], [255, 0, 255], [192, 192, 192]]
     cpt = grey_levels.width*grey_levels.height
+    obs.notify_observer(-cpt)
     for y in range(grey_levels.height):
         for x in range(grey_levels.width):
             if obs is not None:
