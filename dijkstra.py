@@ -232,7 +232,7 @@ def gradient_descent(distances: dict[pc.Point, float], grey_levels: ui.GreyImage
     print(len(descent))
     return descent
 
-def affiche_descent(descent: list[pc.Point], img: ui.GreyImage) -> np.ndarray:
+def affiche_descent(descent: list[pc.Point], img: ui.GreyImage, Sobel: int = 0) -> np.ndarray:
     """Displays the descent path on the image"""
     #colored_map = np.zeros((img.height, img.width, 3), dtype=np.uint8)
     #print(img.width, img.height)
@@ -242,8 +242,10 @@ def affiche_descent(descent: list[pc.Point], img: ui.GreyImage) -> np.ndarray:
     #        colored_map[j][i] = [img.graph[p], img.graph[p], img.graph[p]]
     #sum = 0
     for point in descent:
-    #    sum += img.cost(pc.Point(289,136), point)
-        img[point.y][point.x] = [255, 0, 0]
+        if Sobel == 0:
+            img[point.y, point.x] = [255, 0, 0]
+        else:
+            img[point.y, point.x] = [255, 255, 255]
     #print(sum)
     return img
 
@@ -295,7 +297,7 @@ def compute_gradient_magnitude(grey_img: ui.GreyImage) -> np.ndarray:
     Uses a simple 3x3 Sobel gradient. See https://fr.wikipedia.org/wiki/Filtre_de_Sobel
     Returns a 2D ndarray of the same size as the image, with floats.
     """
-    arr = grey_img.to_numpy_array()  # shape (height, width), values 0..255
+    arr = grey_img.image  # shape (height, width), values 0..255
     arr = arr.astype(float)
 
     # Sobel kernels
@@ -319,7 +321,7 @@ def compute_gradient_magnitude(grey_img: ui.GreyImage) -> np.ndarray:
     
     return grad_x,grad_y 
 
-def gradient_descent_Sobel(grey_levels: ui.GreyImage, start_point: pc.Point, end_point: pc.Point) -> list[pc.Point]:
+def gradient_descent_Sobel(grey_levels: ui.GreyImage, start_point: pc.Point, end_point: pc.Point, obs: obs.Observer|None = None) -> list[pc.Point]:
     start = time.time()
     def mini(neighbors, grad_x, grad_y, point: pc.Point, start_point: pc.Point, visited: list[pc.Point]) -> pc.Point:
         diff_x = start_point.x - point.x
@@ -327,7 +329,7 @@ def gradient_descent_Sobel(grey_levels: ui.GreyImage, start_point: pc.Point, end
         mini_point = None
         neighbours_new = []
         for i in range(len(neighbors)):
-            if neighbors[i] in list_visited:
+            if neighbors[i] in visited:
                 if visited[neighbors[i]] == False:
                     neighbours_new.append(neighbors[i])
         if len(neighbours_new) == 1:
@@ -361,10 +363,12 @@ def gradient_descent_Sobel(grey_levels: ui.GreyImage, start_point: pc.Point, end
     path = [current]
     grad_x,grad_y = compute_gradient_magnitude(grey_levels)
     visited = {}
-    for p in grey_levels.graph:
+    for p in grey_levels:
         visited[p] = False
     visited[current] = True
     while current != start_point:
+        if obs is not None:
+            obs.notify_observer(current.norm(start_point))
         #print(grad_x[current], grad_y[current])
         neighbors = grey_levels.neighbors(current)
         best = mini(neighbors, grad_x, grad_y, current, start_point, visited)
@@ -415,7 +419,7 @@ def gradient_descent_Sobel(grey_levels: ui.GreyImage, start_point: pc.Point, end
 
 
 if __name__ == "__main__":
-    im = ui.GreyImage('EZEZEZEZ.png')
+    im = ui.GreyImage('images/EZEZEZEZ.png')
     # im = ui.GreyImage('Carte.png')
     print(im.width, im.height)
     # start = pc.Point(446,332)
