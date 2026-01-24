@@ -47,6 +47,7 @@ class Chargement(widgets.QProgressBar):
             self.reinitialise(-value)
         elif 100 - 100*value//self.maxi > self.value():
             self.setValue(int(100 - 100*value/self.maxi))
+        super().update()
 
 class Fenetre(widgets.QLabel):
     """A window class to display an image and handle mouse click events"""
@@ -71,7 +72,7 @@ class Fenetre(widgets.QLabel):
                 self.points.append(p)
                 self.parent()._menu._points_list.append(point)
                 self.update()
-                self.parent()._menu._vue.texte.setText(f"{len(self.parent()._menu._points_list)} points chosen for segmentation.\nWhen all points are chosen, click the 'All points chosen' button.")
+                self.parent().texte.setText(f"<h1>{len(self.parent()._menu._points_list)} points chosen for segmentation.\nWhen all points are chosen, click the 'All points chosen' button.</h1>")
                 return
             elif self.parent()._menu.contour_mode and len(self.parent()._menu.contour_points)<2:
                 self.parent()._menu.contour_points.append(point)
@@ -80,21 +81,23 @@ class Fenetre(widgets.QLabel):
                 else:
                     self.pe = self.mapFromGlobal(gui.QCursor.pos())  # second point
                 self.update()
-                self.parent()._menu._vue.texte.setText(f"{len(self.parent()._menu.contour_points)}/2 points chosen for the contour")
+                self.parent().texte.setText(f"<h1>{len(self.parent()._menu.contour_points)}/2 points chosen for the contour</h1>")
                 return
-            elif self.parent()._menu.starting_point is None: # first point
+            elif self.parent()._menu.shortest_mode and self.parent()._menu.starting_point is None: # first point
                 self.ps = self.mapFromGlobal(gui.QCursor.pos())
                 self.parent()._menu.starting_point = point
-                self.parent().texte.setText("Select an ending point")
-            elif self.parent()._menu.ending_point is None: # second point
+                self.parent().texte.setText("<h1>Select an ending point</h1>")
+            elif self.parent()._menu.shortest_mode and self.parent()._menu.ending_point is None: # second point
                 self.pe = self.mapFromGlobal(gui.QCursor.pos())
                 self.parent()._menu.ending_point = point
                 self.parent()._menu._starting_and_ending_points_set = True
-                self.parent().texte.setText("Compute a distance map")
+                self.parent().texte.setText("<h1>Compute a distance map</h1>")
                 self.parent()._menu.distances_map_button.setEnabled(True)
                 self.parent()._menu.sobel_gradients_map_button.setEnabled(True)
-            else: # both points are already set
-                self.parent().texte.setText("Both starting and ending points are already set.")
+            elif self.parent()._menu.shortest_mode or self.parent()._menu.contour_mode or self.parent()._menu._more_points_needed: # both points are already set
+                self.parent().texte.setText("<h1>Both starting and ending points are already set.</h1>")
+            else:
+                self.parent().texte.setText("<h1>Please select a mode first.</h1>")
             self.update()
     
     def paintEvent(self, a0:gui.QPaintEvent) -> None:
@@ -123,7 +126,7 @@ class Vue(widgets.QGroupBox):
         super().__init__(None)
         self.setFixedWidth(1000)
         vertical = widgets.QVBoxLayout(self)
-        self.texte = widgets.QLabel("Select a starting point", self)
+        self.texte = widgets.QLabel("<h1>Select a starting point</h1>", self)
         self.texte.setSizePolicy(widgets.QSizePolicy.Policy.Minimum, 
                                  widgets.QSizePolicy.Policy.Fixed)
         vertical.addWidget(self.texte)
@@ -179,95 +182,108 @@ class Menu(widgets.QGroupBox):
         self.select_button = widgets.QPushButton("Select an image", self)
         self.select_button.setGeometry(10, 10, 150, 30)
         self.select_button.clicked.connect(self.select_button_was_clicked)
-        # Erase points button
-        self.select_button_erase_points = widgets.QPushButton("Erase the points", self)
-        self.select_button_erase_points.setGeometry(10, 50, 150, 30)
-        self.select_button_erase_points.clicked.connect(self.erase_points_was_clicked)
+        # Save button
+        self.save_button = widgets.QPushButton("Save the image", self)
+        self.save_button.setGeometry(10, 50, 150, 30)
+        self.save_button.clicked.connect(self.save_button_was_clicked)
         # Original image button
         self.original_image_button = widgets.QPushButton("Original image", self)
         self.original_image_button.setGeometry(10, 90, 150, 30)
         self.original_image_button.clicked.connect(self.original_image_button_was_selected)
+        
+        # Shortest path button
+        self.shortest_path_button = widgets.QPushButton("Shortest path", self)
+        self.shortest_path_button.setGeometry(10, 130, 150, 30)
+        self.shortest_path_button.clicked.connect(self.shortest_path_was_clicked)
+
+        # Erase points button
+        self.select_button_erase_points = widgets.QPushButton("Erase the points", self)
+        self.select_button_erase_points.setGeometry(10, 170, 150, 30)
+        self.select_button_erase_points.clicked.connect(self.erase_points_was_clicked)
+        self.select_button_erase_points.setEnabled(False)
+        
         # Distances map button
         self.distances_map_button = widgets.QPushButton("Distances map", self)
-        self.distances_map_button.setGeometry(10, 130, 150, 30)
+        self.distances_map_button.setGeometry(10, 210, 150, 30)
         self.distances_map_button.clicked.connect(self.distances_map_button_was_selected)
         self.distances_map_button.setEnabled(False)
         # Gradients map button
         self.gradients_map_button = widgets.QPushButton("Gradients map", self)
-        self.gradients_map_button.setGeometry(10, 170, 150, 30)
+        self.gradients_map_button.setGeometry(10, 250, 150, 30)
         self.gradients_map_button.clicked.connect(self.gradients_map_button_was_clicked)
         self.gradients_map_button.setEnabled(False)
         # Sobel gradients map button
         self.sobel_gradients_map_button = widgets.QPushButton("Sobel optimal path", self)
-        self.sobel_gradients_map_button.setGeometry(10, 210, 150, 30)
+        self.sobel_gradients_map_button.setGeometry(10, 290, 150, 30)
         self.sobel_gradients_map_button.clicked.connect(self.sobel_gradients_map_button_was_clicked)
         self.sobel_gradients_map_button.setEnabled(False)
         # Path button
         self.path_button = widgets.QPushButton("Print the optimal path", self)
-        self.path_button.setGeometry(10, 250, 150, 30)
+        self.path_button.setGeometry(10, 330, 150, 30)
         self.path_button.clicked.connect(self.path_button_was_clicked)
         self.path_button.setEnabled(False)
         # Edge detection button
         self.edge_detection_button = widgets.QPushButton("Edge detection", self)
-        self.edge_detection_button.setGeometry(10, 290, 150, 30)
+        self.edge_detection_button.setGeometry(10, 370, 150, 30)
         self.edge_detection_button.clicked.connect(self.edge_detection_button_was_clicked)
         # Reset edge detection button
         self.reset_edge_button = widgets.QPushButton("Reset edge detection", self)
-        self.reset_edge_button.setGeometry(10, 330, 150, 30)
+        self.reset_edge_button.setGeometry(10, 410, 150, 30)
         self.reset_edge_button.clicked.connect(self.reset_edge_detection)
         self.reset_edge_button.setEnabled(False)
         # Next edge image button
         self.next_edge_button = widgets.QPushButton("Next image →", self)
-        self.next_edge_button.setGeometry(10, 450, 150, 30) 
+        self.next_edge_button.setGeometry(10, 530, 150, 30) 
         self.next_edge_button.clicked.connect(self.show_next_edge_image)
         self.next_edge_button.hide()
         # edge button
         self.contour_button = widgets.QPushButton("Draw the edge", self)
-        self.contour_button.setGeometry(10, 450, 150, 30)
+        self.contour_button.setGeometry(10, 530, 150, 30)
         self.contour_button.clicked.connect(self.contour_button_was_clicked_2)
         self.contour_button.hide()
         # gradient magnitude_button
         self.gradient_magnitude_button = widgets.QPushButton("Gradient Magnitude", self)
-        self.gradient_magnitude_button.setGeometry(10, 490, 150, 30)
+        self.gradient_magnitude_button.setGeometry(10, 570, 150, 30)
         self.gradient_magnitude_button.clicked.connect(self.gradient_magnitude_button_was_clicked)
         self.gradient_magnitude_button.hide() 
         # smoothed_gradient_button
         self.smoothed_gradient_button = widgets.QPushButton("Smoothed Gradient", self)
-        self.smoothed_gradient_button.setGeometry(10, 530, 150, 30)
+        self.smoothed_gradient_button.setGeometry(10, 610, 150, 30)
         self.smoothed_gradient_button.clicked.connect(self.smoothed_gradient_button_was_clicked)
         self.smoothed_gradient_button.hide()
         # weight_map_button
         self.weight_map_button = widgets.QPushButton("Weight Map", self)
-        self.weight_map_button.setGeometry(10, 570, 150, 30)
+        self.weight_map_button.setGeometry(10, 650, 150, 30)
         self.weight_map_button.clicked.connect(self.weight_map_button_was_clicked)
         self.weight_map_button.hide()
         # contour_button
         self.print_contour_button = widgets.QPushButton("Map with contour", self)
-        self.print_contour_button.setGeometry(10, 610, 150, 30)
+        self.print_contour_button.setGeometry(10, 690, 150, 30)
         self.print_contour_button.clicked.connect(self.print_contour_button_was_clicked)
         self.print_contour_button.hide()
         # new_contour_button
         self.new_contour_button = widgets.QPushButton("New contour", self)
-        self.new_contour_button.setGeometry(10, 650, 150, 30)
+        self.new_contour_button.setGeometry(10, 730, 150, 30)
         self.new_contour_button.clicked.connect(self.new_contour_button_was_clicked)
         self.new_contour_button.hide()
         # Image segmentation button 
         self.segmentation_button = widgets.QPushButton("Image segmentation", self)
-        self.segmentation_button.setGeometry(10, 370, 150, 30)
+        self.segmentation_button.setGeometry(10, 450, 150, 30)
         self.segmentation_button.clicked.connect(self.segmentation_button_was_clicked)
         # Reset segmentation button
         self.reset_segmentation_button = widgets.QPushButton("Reset segmentation", self)
-        self.reset_segmentation_button.setGeometry(10, 410, 150, 30)
+        self.reset_segmentation_button.setGeometry(10, 490, 150, 30)
         self.reset_segmentation_button.clicked.connect(self.reset_segmentation_button_was_clicked)
         self.reset_segmentation_button.setEnabled(False)
         # All points chosen
         self.all_points_chosen_button = widgets.QPushButton("All points chosen", self)
-        self.all_points_chosen_button.setGeometry(10, 450, 150, 30)
+        self.all_points_chosen_button.setGeometry(10, 530, 150, 30)
         self.all_points_chosen_button.clicked.connect(self.all_points_chosen_button_was_clicked)
         self.all_points_chosen_button.hide()
 
         # vue
         self._vue = vue
+        self.shortest_mode = False
         # starting image
         self._original_image_name = 'images/Carte.png'
         self._original_image_grey_level = ui.GreyImage(self._original_image_name)
@@ -349,14 +365,29 @@ class Menu(widgets.QGroupBox):
             self._edge_images_computed = False
             self.erase_points_was_clicked()
             self._vue.ratio = max(gui.QPixmap(file_name).width()/1000, gui.QPixmap(file_name).height()/700)
-            self._vue.texte.setText("Image has been selected. Select a starting point")
+            self._vue.texte.setText("<h1>Image has been selected. Select a starting point</h1>")
             self.distances_map_button.setEnabled(False)
             self.gradients_map_button.setEnabled(False)
             self.sobel_gradients_map_button.setEnabled(False)
             self.path_button.setEnabled(False)
             self.reset_edge_detection()
             self.reset_segmentation_button_was_clicked()
+
+    # Save button functionality
+    def save_button_was_clicked(self) -> None:
+        """Handles the button click event to open a file dialog and save the current image."""
+        file_name, _ = widgets.QFileDialog.getSaveFileName(self, filter="Images (*.png *.xpm *.jpg)")
+        print(file_name)
+        if file_name != "":
+            self._vue.image.pixmap().save(file_name)
+
     
+    def shortest_path_was_clicked(self):
+        self.shortest_mode = True
+        self.select_button_erase_points.setEnabled(True)
+        self.edge_detection_button.setEnabled(False)
+        self.segmentation_button.setEnabled(False)
+
     # Erase points button functionality
     def erase_points_was_clicked(self) -> None:
         """Handles the button click event to erase the selected starting and ending points."""
@@ -370,7 +401,7 @@ class Menu(widgets.QGroupBox):
         self._gradients_map_computed = False
         self._optimal_path_computed = False
         self._vue.image.update()
-        self._vue.texte.setText("Select a starting point")
+        self._vue.texte.setText("<h1>Select a starting point</h1>")
         self.distances_map_button.setEnabled(False)
         self.gradients_map_button.setEnabled(False)
         self.sobel_gradients_map_button.setEnabled(False)
@@ -382,7 +413,10 @@ class Menu(widgets.QGroupBox):
     def original_image_button_was_selected(self) -> None:
         """Handles the button click event to display the original image."""
         self._vue.print_stocked_image(self._original_image_name)
-        self._vue.texte.setText("Original image is displayed")
+        self._vue.texte.setText("<h1>Original image is displayed</h1>")
+        self.shortest_path_button.setEnabled(True)
+        self.edge_detection_button.setEnabled(True)
+        self.segmentation_button.setEnabled(True)
 
     # Distances map button functionality
     def distances_map_creation(self, start: pc.Point, end: pc.Point) -> None:
@@ -391,12 +425,12 @@ class Menu(widgets.QGroupBox):
         self._vue.bar.show()
         self.obs.add_observer(self._vue.bar)
         im = self._original_image_grey_level
-        self._distances_costs = dijkstra.distances_costs(start, end, im, self._list_visited, self._edge_detection, obs=self.obs)
+        self._distances_costs = dijkstra.distances_costs(start, end, im, self._list_visited, obs=self.obs)
         distances_map_image = dijkstra.coloration_map(self._distances_costs, im)
         img = Image.fromarray(distances_map_image)
         img.save(self._distances_map_image_name)
         self._distances_map_computed = True
-        self._vue.texte.setText("Compute a gradient map")
+        self._vue.texte.setText("<h1>Compute a gradient map</h1>")
         self._vue.bar.hide()
         self.obs.del_observer(self._vue.bar)
 
@@ -435,7 +469,7 @@ class Menu(widgets.QGroupBox):
         img = Image.fromarray(self._grad_image)
         img.save(self._gradients_map_image_name)
         self._gradients_map_computed = True
-        self._vue.texte.setText("You can now print the optimal path")
+        self._vue.texte.setText("<h1>You can now print the optimal path</h1>")
         self._vue.bar.hide()
         self.obs.del_observer(self._vue.bar)
         
@@ -450,22 +484,27 @@ class Menu(widgets.QGroupBox):
             self._vue.print_stocked_image(self._gradients_map_image_name)
             self.path_button.setEnabled(True)
         else:
-            self._vue.texte.setText("Please select starting and ending points by clicking on the image.")
+            self._vue.texte.setText("<h1>Please select starting and ending points by clicking on the image.</h1>")
     
     def sobel_gradients_map_button_was_clicked(self) -> None:
         """Handles the button click event to display the Sobel gradients map."""
         if self._sobel_gradients_map_computed:
             self._vue.print_stocked_image(self._sobel_gradients_map_image_name)
             return
+        self.obs.add_observer(self._vue.bar)
         im = self._original_image_grey_level
-        sobel_grad = dijkstra.gradient_descent_Sobel(im, self._starting_point, self._ending_point)
+        self._vue.bar.reinitialise(self._starting_point.norm(self._ending_point))
+        self._vue.bar.show()
+        sobel_grad = dijkstra.gradient_descent_Sobel(im, self._starting_point, self._ending_point, self.obs)
         base = np.stack([im.image, im.image, im.image], axis=-1).astype(np.uint8)
         img = dijkstra.affiche_descent(sobel_grad, base, 1)
         img_pil = Image.fromarray(img.astype(np.uint8))
         img_pil.save(self._sobel_gradients_map_image_name)
         self._sobel_gradients_map_computed = True
         self._vue.print_stocked_image(self._sobel_gradients_map_image_name)
-        self._vue.texte.setText("Sobel gradients optimal path is displayed.")
+        self._vue.texte.setText("<h1>Sobel gradients optimal path is displayed.</h1>")
+        self._vue.bar.hide()
+        self.obs.del_observer(self._vue.bar)
 
     # Path button functionality
     def path_button_was_clicked(self) -> None:
@@ -481,7 +520,7 @@ class Menu(widgets.QGroupBox):
             self._optimal_path_computed = True
             self._vue.print_stocked_image(self._optimal_path_image_name)
         else:
-            self._vue.texte.setText("Please select starting and ending points by clicking on the image.")
+            self._vue.texte.setText("<h1>Please select starting and ending points by clicking on the image.</h1>")
     
     # Edge detection button functionality
     def edge_detection_button_was_clicked(self) -> None:
@@ -489,6 +528,7 @@ class Menu(widgets.QGroupBox):
         and display the three images sequentially."""
         self._edge_detection = True
         im = self._original_image_grey_level
+        self.shortest_path_button.setEnabled(False)
         self.distances_map_button.setEnabled(False)
         self.gradients_map_button.setEnabled(False)
         self.path_button.setEnabled(False)
@@ -533,9 +573,9 @@ class Menu(widgets.QGroupBox):
         # Prepare for displaying edge detection images
         self.current_edge_step = 0
         self.edge_steps = [
-            (self._original_image_name, "Edge detection: 1. Original image"),
-            (self._smoothed_gradient_name, "Edge detection: 2. Smoothed gradient (Gσ * |∇f|)"),
-            (self._weight_map_name, "Edge detection: 3. Weight map W(x,y) = 1/(ε + smoothed)")
+            (self._original_image_name, "<h1>Edge detection: 1. Original image</h1>"),
+            (self._smoothed_gradient_name, "<h1>Edge detection: 2. Smoothed gradient (Gσ * |∇f|)</h1>"),
+            (self._weight_map_name, "<h1>Edge detection: 3. Weight map W(x,y) = 1/(ε + smoothed)</h1>")
         ]
 
         # Show the next edge image button
@@ -548,7 +588,7 @@ class Menu(widgets.QGroupBox):
     def reset_edge_detection(self) -> None:
         self._edge_detection = False
         self._edge_images_computed = False
-        self._vue.texte.setText("Edge detection reset.")
+        self._vue.texte.setText("<h1>Edge detection reset.</h1>")
         self._vue.print_stocked_image(self._original_image_name)
         self.next_edge_button.hide()
         self.contour_button.hide()
@@ -575,7 +615,7 @@ class Menu(widgets.QGroupBox):
             self.current_edge_step += 1
         else:
             # End of the sequence
-            self._vue.texte.setText("Edge detection completed.\nYou can now select two points on a contour.")
+            self._vue.texte.setText("<h1>Edge detection completed.\nYou can now select two points on a contour.</h1>")
             self._vue.print_stocked_image(self._original_image_name)
             self.next_edge_button.hide()
             self.contour_button.show()
@@ -586,7 +626,7 @@ class Menu(widgets.QGroupBox):
     # Contour tracing button functionality
     def contour_button_was_clicked(self) -> None:
         if len(self.contour_points) != 2:
-            self._vue.texte.setText("Error: select exactly two points.")
+            self._vue.texte.setText("<h1>Error: select exactly two points.</h1>")
             return
 
         start, goal = self.contour_points
@@ -609,7 +649,7 @@ class Menu(widgets.QGroupBox):
         result_img = self.draw_contour(path, im)
         result_img.save(self._contour_result_name)
         self._vue.print_stocked_image(self._contour_result_name)
-        self._vue.texte.setText(f"Detected edge ! Length : {len(path)} pixels")
+        self._vue.texte.setText(f"<h1>Detected edge ! Length : {len(path)} pixels</h1>")
         # Reset contour mode
         self.contour_mode = False
         self.contour_button.hide()
@@ -621,7 +661,7 @@ class Menu(widgets.QGroupBox):
     
     def contour_button_was_clicked_2(self) -> None:
         if len(self.contour_points) < 2:
-            self._vue.texte.setText("Error: select exactly two points.")
+            self._vue.texte.setText("<h1>Error: select exactly two points.</h1>")
             return
         
         start, goal = self.contour_points
@@ -724,7 +764,7 @@ class Menu(widgets.QGroupBox):
         result_img = self.draw_contour(complete_contour, im)
         result_img.save(self._contour_result_name)
         self._vue.print_stocked_image(self._contour_result_name)
-        self._vue.texte.setText(f"Detected edge ! Length : {len(complete_contour)} pixels")
+        self._vue.texte.setText(f"<h1>Detected edge ! Length : {len(complete_contour)} pixels</h1>")
         
         # Reset contour mode
         self.contour_mode = False
@@ -765,32 +805,32 @@ class Menu(widgets.QGroupBox):
     def gradient_magnitude_button_was_clicked(self) -> None:
         """Handles the button click event to display the gradient magnitude image."""
         self._vue.print_stocked_image(self._gradient_magnitude_name)
-        self._vue.texte.setText("Gradient Magnitude image is displayed.")
+        self._vue.texte.setText("<h1>Gradient Magnitude image is displayed.</h1>")
     
     # Smoothed gradient button functionality
     def smoothed_gradient_button_was_clicked(self) -> None:
         """Handles the button click event to display the smoothed gradient image."""
         self._vue.print_stocked_image(self._smoothed_gradient_name)
-        self._vue.texte.setText("Smoothed Gradient image is displayed.")
+        self._vue.texte.setText("<h1>Smoothed Gradient image is displayed.</h1>")
     
     # Weight map button functionality
     def weight_map_button_was_clicked(self) -> None:
         """Handles the button click event to display the weight map image."""
         self._vue.print_stocked_image(self._weight_map_name)
-        self._vue.texte.setText("Weight Map image is displayed.")
+        self._vue.texte.setText("<h1>Weight Map image is displayed.</h1>")
     
     # Contour button functionality
     def print_contour_button_was_clicked(self) -> None:
         """Handles the button click event to display the contour image."""
         self._vue.print_stocked_image(self._contour_result_name)
-        self._vue.texte.setText("Contour image is displayed.")
+        self._vue.texte.setText("<h1>Contour image is displayed.</h1>")
     
     # New contour button functionality
     def new_contour_button_was_clicked(self) -> None:
         """Handles the button click event to reset the contour tracing."""
         self.contour_mode = True
         self.contour_points = []
-        self._vue.texte.setText("Select two points on a contour to trace it.")
+        self._vue.texte.setText("<h1>Select two points on a contour to trace it.</h1>")
         self._edge_images_computed = False
         self._vue.print_stocked_image(self._original_image_name)
         self._starting_and_ending_points_set = False
@@ -800,8 +840,10 @@ class Menu(widgets.QGroupBox):
     def segmentation_button_was_clicked(self) -> None:
         """Handles the button click event to perform image segmentation."""
         self._more_points_needed = True
-        self._vue.texte.setText("Please choose segmentation points by clicking on the image.\nWhen all points are chosen, click the 'All points chosen' button.")
+        self._vue.texte.setText("<h1>Please choose segmentation points by clicking on the image.\nWhen all points are chosen, click the 'All points chosen' button.")
         self.all_points_chosen_button.show()
+        self.edge_detection_button.setEnabled(False)
+        self.shortest_path_button.setEnabled(False)
         self.reset_segmentation_button.setEnabled(True)
     
     def all_points_chosen_button_was_clicked(self) -> None:
@@ -811,8 +853,8 @@ class Menu(widgets.QGroupBox):
             return
         self.obs.add_observer(self._vue.bar)
         im = self._original_image_grey_level
-        self._vue.bar.reinitialise(im.width*im.height)
-        self._vue.bar.set_multiple(len(self._points_list)+1)
+        self._vue.bar.reinitialise(len(self._points_list)+1)
+        self._vue.bar.set_multiple(2)
         self._vue.bar.show()
         self._more_points_needed = False
         print(f"Computing segmentation with {len(self._points_list)} points.")
@@ -821,7 +863,7 @@ class Menu(widgets.QGroupBox):
         img = ui.Image.fromarray(segmentation, 'RGB')
         img.save(self._segmentation_image_name)
         self._vue.print_stocked_image(self._segmentation_image_name)
-        self._vue.texte.setText("Image segmentation completed.")
+        self._vue.texte.setText("<h1>Image segmentation completed.</h1>")
         self._points_list = []
         self._vue.bar.hide()
         self._vue.bar.set_single()
@@ -832,7 +874,7 @@ class Menu(widgets.QGroupBox):
         """Handles the button click event to reset the image segmentation."""
         self._segmentation_computed = False
         self._vue.print_stocked_image(self._original_image_name)
-        self._vue.texte.setText("Segmentation reset. Select a starting point.")
+        self._vue.texte.setText("<h1>Segmentation reset. Select a starting point.</h1>")
         self.erase_points_was_clicked()
         self._more_points_needed = False
         self.all_points_chosen_button.hide()

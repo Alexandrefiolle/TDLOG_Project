@@ -215,7 +215,7 @@ def gradient_descent(distances: dict[pc.Point, float], grey_levels: ui.GreyImage
     list_cost = []
     cost_ = 0
     while point != start_point:
-            next_point = test_minimum_neighbours(point, grad_x, grad_y, grey_levels, dist, visited, list_visited, start_point)
+            next_point = test_minimum_neighbours(point, grad_x, grad_y, grey_levels, distances, visited, list_visited, start_point)
             if next_point is None:
                 descent.pop()
                 next_point = descent[-1]
@@ -321,7 +321,7 @@ def compute_gradient_magnitude(grey_img: ui.GreyImage) -> np.ndarray:
     
     return grad_x,grad_y 
 
-def gradient_descent_Sobel(grey_levels: ui.GreyImage, start_point: pc.Point, end_point: pc.Point) -> list[pc.Point]:
+def gradient_descent_Sobel(grey_levels: ui.GreyImage, start_point: pc.Point, end_point: pc.Point, obs: obs.Observer|None = None) -> list[pc.Point]:
     start = time.time()
     def mini(neighbors, grad_x, grad_y, point: pc.Point, start_point: pc.Point, visited: list[pc.Point]) -> pc.Point:
         diff_x = start_point.x - point.x
@@ -367,6 +367,8 @@ def gradient_descent_Sobel(grey_levels: ui.GreyImage, start_point: pc.Point, end
         visited[p] = False
     visited[current] = True
     while current != start_point:
+        if obs is not None:
+            obs.notify_observer(current.norm(start_point))
         #print(grad_x[current], grad_y[current])
         neighbors = grey_levels.neighbors(current)
         best = mini(neighbors, grad_x, grad_y, current, start_point, visited)
