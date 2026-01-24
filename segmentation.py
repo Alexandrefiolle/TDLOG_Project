@@ -61,7 +61,7 @@ def distances_map(list_point: list[pc.Point], im: ui.GreyImage, obs : obs.Observ
 def choice_segmentation_v1(list_point: list[pc.Point], list_distance_map: list[dict[pc.Point, float]], 
                         grey_levels: ui.GreyImage, obs:obs.Observer|None = None) -> np.ndarray:
     colored_map = np.zeros((grey_levels.height, grey_levels.width, 3), dtype=np.uint8)
-    colors = [[255, 0, 0], [0, 255, 0], [0, 0, 255], [0, 0, 0], [255, 255, 0], [0, 255, 255], [255, 0, 255], [192, 192, 192]]
+    colors = [[255, 0, 0], [0, 255, 0], [0, 0, 255], [0, 0, 0], [255, 255, 0], [0, 255, 255], [255, 0, 255], [192, 192, 192], [128, 0, 0], [128, 128, 0], [0, 128, 0], [128, 0, 128], [0, 128, 128], [0, 0, 128]]
     cpt = grey_levels.width*grey_levels.height
     obs.notify_observer(-cpt)
     for y in range(grey_levels.height):
