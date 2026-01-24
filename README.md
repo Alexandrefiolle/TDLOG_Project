@@ -173,4 +173,8 @@ The result is:
 
 ### How it works with the interface?
 
+After the choice of an image, we enter the mode "contour detection" by clicking on the button **edge detection**. The maps from steps 1, 2, 3, are computed, and we can observe them by using the button **Next image**. After, you are invited to choose two points on a contour, and let the last step be achieved by clicking on **Draw edges**.
+Eventually, feel free to compare all the images obtained by using the buttons appeared for this purpose. 
+To leave this mode, just click on **Reset edge detection**. 
+
 ## Application 2 - Image segmentation
