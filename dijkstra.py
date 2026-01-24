@@ -1,3 +1,4 @@
+
 "This file dwells on the implementation of Dijkstra's algorithm "
 "to compute shortest paths on a graph represented by image grey levels."
 
@@ -467,3 +468,5 @@ if __name__ == "__main__":
     final_img_s = affiche_descent(descent_sobel, final_img_a, 1)
     final_img_s = ui.Image.fromarray(final_img_s, 'RGB')
     final_img_s.show()
+    
+    
