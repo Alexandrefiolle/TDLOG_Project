@@ -1,4 +1,3 @@
-
 "This file dwells on the implementation of Dijkstra's algorithm "
 "to compute shortest paths on a graph represented by image grey levels."
 
@@ -418,15 +417,34 @@ def gradient_descent_Sobel(grey_levels: ui.GreyImage, start_point: pc.Point, end
     print("longueur du chemin initial", len(path))
     return final_descent
 
+def affiche_descent_image(descent: list[pc.Point], img: ui.GreyImage, Sobel: int = 0, first_time: int = 0) -> np.ndarray:
+    """Displays the descent path on the original image"""
+    if first_time == 0:
+        print(len(img.image), len(img.image[0]))
+        new_img = np.zeros((img.height, img.width, 3), dtype=np.uint8)
+        for y in range(len(img.image)):
+            for x in range(len(img.image[0])):
+                point = pc.Point(x,y)
+                new_img[y, x] = [img.__getitem__(point), img.__getitem__(point), img.__getitem__(point)]
+    else:
+        new_img = img
+    for point in descent:
+        if Sobel == 0:
+            new_img[point.y, point.x] = [255, 0, 0]
+        else:
+            new_img[point.y, point.x] = [255, 255, 255]
+    return new_img
+
+
 
 if __name__ == "__main__":
-    im = ui.GreyImage('images/EZEZEZEZ.png')
-    # im = ui.GreyImage('Carte.png')
+    #im = ui.GreyImage('images/EZEZEZEZ.png')
+    im = ui.GreyImage('images/Carte.png')
     print(im.width, im.height)
-    # start = pc.Point(446,332)
-    # end = pc.Point(716,272)
-    start = pc.Point(170,296)
-    end = pc.Point(53,51)
+    start = pc.Point(446,332)
+    end = pc.Point(716,272)
+    #start = pc.Point(180,300)
+    #end = pc.Point(53,51)
     list_visited = []
     distances = distances_costs(start, end, im, list_visited)
     print("distances okay")
@@ -459,13 +477,13 @@ if __name__ == "__main__":
     grad_image_ = ui.Image.fromarray(grad_image, 'RGB')
     grad_image_.show()
     descent_amelioration = amelioration_descent(distances, im, start, end, list_visited)
-    final_img_a = affiche_descent(descent_amelioration, grad_image)
+    final_img = affiche_descent_image(descent_amelioration, im, Sobel=0, first_time=0)
     #final_img_a = ui.Image.fromarray(final_img_a, 'RGB')
     #final_img_a.show()
     print("Sobel")
     descent_sobel = gradient_descent_Sobel(im, start, end)
     print("end Sobel")
-    final_img_s = affiche_descent(descent_sobel, final_img_a, 1)
+    final_img_s = affiche_descent_image(descent_sobel, final_img, Sobel=1, first_time=1)
     final_img_s = ui.Image.fromarray(final_img_s, 'RGB')
     final_img_s.show()
     
