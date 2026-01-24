@@ -215,7 +215,7 @@ def gradient_descent(distances: dict[pc.Point, float], grey_levels: ui.GreyImage
     list_cost = []
     cost_ = 0
     while point != start_point:
-            next_point = test_minimum_neighbours(point, grad_x, grad_y, grey_levels, dist, visited, list_visited, start_point)
+            next_point = test_minimum_neighbours(point, grad_x, grad_y, grey_levels, distances, visited, list_visited, start_point)
             if next_point is None:
                 descent.pop()
                 next_point = descent[-1]
