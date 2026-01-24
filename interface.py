@@ -876,8 +876,10 @@ class Menu(widgets.QGroupBox):
         self._vue.print_stocked_image(self._original_image_name)
         self._vue.texte.setText("<h1>Segmentation reset. Select a starting point.</h1>")
         self.erase_points_was_clicked()
+        self._more_points_needed = False
         self.all_points_chosen_button.hide()
         self._points_list = []
+        self.reset_segmentation_button.setEnabled(False)
             
     
 class Window(widgets.QMainWindow):
