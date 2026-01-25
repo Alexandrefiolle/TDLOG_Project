@@ -245,7 +245,7 @@ def affiche_descent(descent: list[pc.Point], img: ui.GreyImage, Sobel: int = 0) 
         if Sobel == 0:
             img[point.y, point.x] = [255, 0, 0]
         else:
-            img[point.y, point.x] = [255, 255, 255]
+            img[point.y, point.x] = [0, 255, 0]
     #print(sum)
     return img
 
@@ -432,7 +432,7 @@ def affiche_descent_image(descent: list[pc.Point], img: ui.GreyImage, Sobel: int
         if Sobel == 0:
             new_img[point.y, point.x] = [255, 0, 0]
         else:
-            new_img[point.y, point.x] = [255, 255, 255]
+            new_img[point.y, point.x] = [0, 255, 0]
     return new_img
 
 

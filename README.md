@@ -178,3 +178,35 @@ Eventually, feel free to compare all the images obtained by using the buttons ap
 To leave this mode, just click on **Reset edge detection**. 
 
 ## Application 2 - Image segmentation
+
+The problem of image segmentation can be resolved with the distances map only. We implemented this method to segment an image.
+
+### Applications
+
+Image segmentation is a problem with a wide range of applications. Let us enumerate some of them:
+- Medical images : it helps analysing and certifying organs, cells, tumours,...
+- Autonous driving : it helps the car to identify others vehicles and obtacles on the road
+- ...
+
+### Steps
+
+1) Let the user choose some initial points on the image
+
+2) Then compute the distances maps from all the points chosen (1 distance map for 1 point)
+
+3) Finally take every pixel of the image and see from which initial point it is the nearest by using the distances maps
+
+### Example
+
+Let us consider this labyrinth image : 
+
+![Carte](images/EZEZEZEZ.png)
+
+The result of the segmentation is :
+
+![Carte](Readme_pictures/readme_segmentation_image.png)
+
+### How it works with the interface?
+
+After the choice of an image, we enter the mode "image segmentation" by clicking on the button **image segmentation**. After, you are invited to choose as many points as you want on the image. When you have chosen all the points you wanted, just click on **All points chosen**
+To leave this mode, just click on **Reset segmentation**. 
