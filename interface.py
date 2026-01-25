@@ -702,12 +702,10 @@ class Menu(widgets.QGroupBox):
         self._vue.bar.set_single()
         self.obs.del_observer(self._vue.bar)
         
-        # Trouver les points équidistants avec un seuil plus large
         difference_dict = dist_dict_start - dist_dict_end
         tolerance = 1e-3
         equidistance_points = [p for p in difference_dict if abs(difference_dict[p]) < tolerance]
         
-        # MÉTHODE : Trouver les points équidistants les plus éloignés de start et goal
         def euclidean_distance(p1, p2):
             return ((p1.x - p2.x)**2 + (p1.y - p2.y)**2)**0.5
         
@@ -717,8 +715,8 @@ class Menu(widgets.QGroupBox):
             dist_to_goal = euclidean_distance(p, goal)
             return min(dist_to_start, dist_to_goal)
         
-        # Trier les points équidistants par leur distance minimale à start/goal (ordre décroissant)
-        # On veut les points les PLUS ÉLOIGNÉS de start et goal
+        # Sort the equidistance points by their minimum distance to start/goal in descending order
+        # This way, we prioritize points that are far from both start and goal
         equidistance_points_sorted = sorted(equidistance_points, 
                                         key=min_distance_to_start_goal, 
                                         reverse=True)
@@ -726,8 +724,8 @@ class Menu(widgets.QGroupBox):
         # Prendre le premier point (le plus éloigné)
         point1 = equidistance_points_sorted[0]
         
-        # Prendre le deuxième point qui est également éloigné de start/goal
-        # ET éloigné spatialement de point1 pour assurer qu'ils sont sur des côtés opposés
+        # Take the second point that is also far from start/goal
+        # and spatially distant from point1 to ensure they are on opposite sides
         point2 = max(equidistance_points_sorted[1:], 
                     key=lambda p: min(euclidean_distance(p, point1), 
                                     min_distance_to_start_goal(p)))
