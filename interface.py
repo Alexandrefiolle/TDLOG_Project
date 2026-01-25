@@ -662,6 +662,7 @@ class Menu(widgets.QGroupBox):
         self.print_contour_button.show()
     
     def contour_button_was_clicked_2(self) -> None:
+        """ Handles the button click event to trace the contour between two selected points."""
         if len(self.contour_points) < 2:
             self._vue.texte.setText("<h1>Error: select exactly two points.</h1>")
             return
@@ -741,7 +742,6 @@ class Menu(widgets.QGroupBox):
         print(f"    - Dijkstra distance: {dist_dict_start[point2]:.2f}")
         print(f"  Distance between point1 and point2: {euclidean_distance(point1, point2):.2f}")
         
-        # CRÉER LE CONTOUR FERMÉ
         # Chemin 1 : start → point1
         path_start_to_p1 = self.reconstruct_path(dist_dict_start, point1, start)
         
@@ -754,13 +754,11 @@ class Menu(widgets.QGroupBox):
         # Chemin 4 : point2 → start
         path_p2_to_start = self.reconstruct_path(dist_dict_start, point2, start)
         
-        # Assembler le contour fermé
         complete_contour = (path_start_to_p1 +           # start → point1
                         path_p1_to_goal[::-1] +       # point1 → goal
                         path_goal_to_p2 +             # goal → point2
                         path_p2_to_start[::-1])       # point2 → start
         
-        # Sauvegarder l'image avec le contour
         result_img = self.draw_contour(complete_contour, im)
         result_img.save(self._contour_result_name)
         self._vue.print_stocked_image(self._contour_result_name)
@@ -776,6 +774,7 @@ class Menu(widgets.QGroupBox):
         self.new_contour_button.show()
 
     def reconstruct_path(self, dist: ui.NumpyDict, current: pc.Point, start: pc.Point) -> list[pc.Point]:
+        """Reconstructs the path from the distance dictionary."""
         path = [current]
         while current != start and dist[current] > 0:
             neighbors = self._original_image_grey_level.neighbors(current)
@@ -788,6 +787,7 @@ class Menu(widgets.QGroupBox):
         return path
 
     def draw_contour(self, path: list[pc.Point], grey_img: ui.GreyImage) -> Image.Image:
+        """Draws the contour path on the grey level image."""
         arr = grey_img.image
         # Convert to uint8 for RGB stacking
         arr_uint8 = arr.astype(np.uint8)
