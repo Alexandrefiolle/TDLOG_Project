@@ -420,12 +420,12 @@ def gradient_descent_Sobel(grey_levels: ui.GreyImage, start_point: pc.Point, end
 def affiche_descent_image(descent: list[pc.Point], img: ui.GreyImage, Sobel: int = 0, first_time: int = 0) -> np.ndarray:
     """Displays the descent path on the original image"""
     if first_time == 0:
-        print(len(img.image), len(img.image[0]))
+        img_np = img.image
+        print(len(img_np), len(img_np[0]))
         new_img = np.zeros((img.height, img.width, 3), dtype=np.uint8)
-        for y in range(len(img.image)):
-            for x in range(len(img.image[0])):
-                point = pc.Point(x,y)
-                new_img[y, x] = [img.__getitem__(point), img.__getitem__(point), img.__getitem__(point)]
+        for y in range(img.height):
+            for x in range(img.width):
+                new_img[y, x] = [img_np[y,x], img_np[y,x], img_np[y,x]]
     else:
         new_img = img
     for point in descent:
