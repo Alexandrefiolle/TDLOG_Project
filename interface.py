@@ -72,7 +72,7 @@ class Fenetre(widgets.QLabel):
                 self.points.append(p)
                 self.parent()._menu._points_list.append(point)
                 self.update()
-                self.parent().texte.setText(f"<h1>{len(self.parent()._menu._points_list)} points chosen for segmentation.\nWhen all points are chosen, click the 'All points chosen' button.</h1>")
+                self.parent().texte.setText(f"<h1>{len(self.parent()._menu._points_list)} points chosen for segmentation. <br>When all points are chosen, click the 'All points chosen' button.</h1>")
                 return
             elif self.parent()._menu.contour_mode and len(self.parent()._menu.contour_points)<2:
                 self.parent()._menu.contour_points.append(point)
@@ -617,7 +617,7 @@ class Menu(widgets.QGroupBox):
             self.current_edge_step += 1
         else:
             # End of the sequence
-            self._vue.texte.setText("<h1>Edge detection completed.\nYou can now select two points on a contour.</h1>")
+            self._vue.texte.setText("<h1>Edge detection completed.<br>You can now select two points on a contour.</h1>")
             self._vue.print_stocked_image(self._original_image_name)
             self.next_edge_button.hide()
             self.contour_button.show()
@@ -842,7 +842,7 @@ class Menu(widgets.QGroupBox):
     def segmentation_button_was_clicked(self) -> None:
         """Handles the button click event to perform image segmentation."""
         self._more_points_needed = True
-        self._vue.texte.setText("<h1>Please choose segmentation points by clicking on the image.\nWhen all points are chosen, click the 'All points chosen' button.")
+        self._vue.texte.setText("<h1>Please choose segmentation points by clicking on the image. <br> When all points are chosen, click the 'All points chosen' button.")
         self.all_points_chosen_button.show()
         self.edge_detection_button.setEnabled(False)
         self.shortest_path_button.setEnabled(False)
