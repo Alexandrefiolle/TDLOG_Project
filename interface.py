@@ -363,6 +363,8 @@ class Menu(widgets.QGroupBox):
             self._gradients_map_computed = False
             self._optimal_path_computed = False
             self._edge_images_computed = False
+            self._sobel_gradients_map_computed = False
+            self._segmentation_computed = False
             self.erase_points_was_clicked()
             self._vue.ratio = max(gui.QPixmap(file_name).width()/1000, gui.QPixmap(file_name).height()/700)
             self._vue.texte.setText("<h1>Image has been selected. Select a starting point</h1>")
@@ -400,6 +402,7 @@ class Menu(widgets.QGroupBox):
         self._distances_map_computed = False
         self._gradients_map_computed = False
         self._optimal_path_computed = False
+        self._sobel_gradients_map_computed = False
         self._vue.image.update()
         self._vue.texte.setText("<h1>Select a starting point</h1>")
         self.distances_map_button.setEnabled(False)
@@ -496,8 +499,7 @@ class Menu(widgets.QGroupBox):
         self._vue.bar.reinitialise(self._starting_point.norm(self._ending_point))
         self._vue.bar.show()
         sobel_grad = dijkstra.gradient_descent_Sobel(im, self._starting_point, self._ending_point, self.obs)
-        base = np.stack([im.image, im.image, im.image], axis=-1).astype(np.uint8)
-        img = dijkstra.affiche_descent(sobel_grad, base, 1)
+        img = dijkstra.affiche_descent_image(sobel_grad, im, Sobel=1, first_time=0)
         img_pil = Image.fromarray(img.astype(np.uint8))
         img_pil.save(self._sobel_gradients_map_image_name)
         self._sobel_gradients_map_computed = True
@@ -514,7 +516,7 @@ class Menu(widgets.QGroupBox):
         elif self._starting_and_ending_points_set:
             im = self._original_image_grey_level
             descent = dijkstra.amelioration_descent(self._distances_costs, im, self._starting_point, self._ending_point, self._list_visited)
-            final_img = dijkstra.affiche_descent(descent, self._grad_image)
+            final_img = dijkstra.affiche_descent_image(descent, im, Sobel=0, first_time=0)
             img = Image.fromarray(final_img)
             img.save(self._optimal_path_image_name)
             self._optimal_path_computed = True
