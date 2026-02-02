@@ -9,6 +9,7 @@ import time
 from multiprocessing import Pool
 
 def points(nb_points: int, height: int, width: int) -> list[pc.Point]:
+    """Generates a list of random points within the given height and width."""
     list_points = []
     for _ in range(nb_points):
         x = random.randint(0, width)
@@ -37,20 +38,22 @@ def distances_costs(start: pc.Point, grey_levels: ui.GreyImage, obs : obs.Observ
                 to_visit.append(neighbor, dist[neighbor])
     return dist
 
-def compute_distance_for_point(args):
+def compute_distance_for_point(args: tuple[pc.Point, ui.GreyImage]) -> dict[pc.Point, float]:
+    """Helper function to compute distances for a given point and image."""
     p, im = args
     dist = distances_costs(p, im, None)
     return dist
 
 
 def distances_map(list_point: list[pc.Point], im: ui.GreyImage, obs : obs.Observer|None = None) -> list[np.ndarray]:
+    """Computes the distance maps for a list of points in the given image."""
     args = [(p, im) for p in list_point]
     list_distance_map = []
     list_colored_map = []
     if obs is not None:
         cpt = len(list_point)
         obs.notify_observer(cpt)
-    with Pool() as pool:
+    with Pool() as pool: # Create a pool of worker processes
         for dist in pool.imap_unordered(compute_distance_for_point, args):
             list_distance_map.append(dist)
             if obs is not None:
@@ -60,6 +63,7 @@ def distances_map(list_point: list[pc.Point], im: ui.GreyImage, obs : obs.Observ
 
 def choice_segmentation_v1(list_point: list[pc.Point], list_distance_map: list[dict[pc.Point, float]], 
                         grey_levels: ui.GreyImage, obs:obs.Observer|None = None) -> np.ndarray:
+    """Segments the image based on the closest point from the list of points using the distance maps."""
     colored_map = np.zeros((grey_levels.height, grey_levels.width, 3), dtype=np.uint8)
     colors = [[255, 0, 0], [0, 255, 0], [0, 0, 255], [0, 0, 0], [255, 255, 0], [0, 255, 255], [255, 0, 255], [192, 192, 192], [128, 0, 0], [128, 128, 0], [0, 128, 0], [128, 0, 128], [0, 128, 128], [0, 0, 128]]
     cpt = grey_levels.width*grey_levels.height
@@ -84,7 +88,6 @@ def choice_segmentation_v1(list_point: list[pc.Point], list_distance_map: list[d
             
 if __name__ == "__main__":
     start = time.time()
-    #im = ui.GreyImage('EZEZEZEZ.png')
     im = ui.GreyImage('images/Carte.png')
     print("height: ", im.height, ", width : ", im.width)
     r = random.randint(3,8)

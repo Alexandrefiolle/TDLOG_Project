@@ -14,7 +14,7 @@ class Point:
         """Checks if two points are equal based on their coordinates."""
         return (self.x == other.x) and (self.y == other.y)
 
-    def norm(self, other: "Point") -> float:
+    def norm(self, other: Point) -> float:
         """Computes the Euclidean distance between this point and another point."""
         return np.sqrt((self.x - other.x) ** 2 + (self.y - other.y) ** 2)
     
