@@ -309,14 +309,15 @@ def compute_gradient_magnitude(grey_img: ui.GreyImage) -> np.ndarray:
                         [ 0,  0,  0],
                         [ 1,  2,  1]], dtype=float)
 
-    grad_x = np.zeros_like(arr)
-    grad_y = np.zeros_like(arr)
+    grad_x = np.zeros_like(arr[:, :, 0])
+    grad_y = np.zeros_like(arr[:, :, 0])
 
-    h, w = arr.shape
-    for y in range(1, h-1):
-        for x in range(1, w-1):
-            grad_x[y, x] = np.sum(arr[y-1:y+2, x-1:x+2] * sobel_x)
-            grad_y[y, x] = np.sum(arr[y-1:y+2, x-1:x+2] * sobel_y)
+    h, w, c = arr.shape
+    for k in range(c):
+        for y in range(1, h-1):
+            for x in range(1, w-1):
+                grad_x[y, x] += np.sum(arr[y-1:y+2, x-1:x+2, k] * sobel_x)
+                grad_y[y, x] += np.sum(arr[y-1:y+2, x-1:x+2, k] * sobel_y)
 
     
     return grad_x,grad_y 
@@ -417,15 +418,10 @@ def gradient_descent_Sobel(grey_levels: ui.GreyImage, start_point: pc.Point, end
     print("longueur du chemin initial", len(path))
     return final_descent
 
-def affiche_descent_image(descent: list[pc.Point], img: ui.GreyImage, Sobel: int = 0, first_time: int = 0) -> np.ndarray:
+def affiche_descent_image(descent: list[pc.Point], img: ui.GreyImage|np.ndarray, Sobel: int = 0, first_time: int = 0) -> np.ndarray:
     """Displays the descent path on the original image"""
-    if first_time == 0:
-        img_np = img.image
-        print(len(img_np), len(img_np[0]))
-        new_img = np.zeros((img.height, img.width, 3), dtype=np.uint8)
-        for y in range(img.height):
-            for x in range(img.width):
-                new_img[y, x] = [img_np[y,x], img_np[y,x], img_np[y,x]]
+    if isinstance(img, ui.GreyImage):
+        new_img = np.copy(img.image).astype(np.uint8)
     else:
         new_img = img
     for point in descent:

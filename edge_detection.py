@@ -32,18 +32,19 @@ def compute_gradient_magnitude(grey_img: ui.GreyImage, obs:obs.Observer|None = N
                         [ 0,  0,  0],
                         [ 1,  2,  1]], dtype=float)
 
-    grad_x = np.zeros_like(arr)
-    grad_y = np.zeros_like(arr)
+    grad_x = np.zeros_like(arr[:, :, 0])
+    grad_y = np.zeros_like(arr[:, :, 0])
 
-    h, w = arr.shape
-    cpt = h*w
-    for y in range(1, h-1):
-        for x in range(1, w-1):
-            cpt -= 1
-            if obs is not None:
-                obs.notify_observer(cpt)
-            grad_x[y, x] = np.sum(arr[y-1:y+2, x-1:x+2] * sobel_x)
-            grad_y[y, x] = np.sum(arr[y-1:y+2, x-1:x+2] * sobel_y)
+    h, w, c = arr.shape
+    cpt = h*w*3
+    for k in range(c):
+        for y in range(1, h-1):
+            for x in range(1, w-1):
+                cpt -= 1
+                if obs is not None:
+                    obs.notify_observer(cpt)
+                grad_x[y, x] += np.sum(arr[y-1:y+2, x-1:x+2, k] * sobel_x)
+                grad_y[y, x] += np.sum(arr[y-1:y+2, x-1:x+2, k] * sobel_y)
 
     # Magnitude
     magnitude = np.sqrt(grad_x**2 + grad_y**2)

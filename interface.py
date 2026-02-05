@@ -757,7 +757,7 @@ class Menu(widgets.QGroupBox):
 
     def draw_contour(self, path: list[pc.Point], grey_img: ui.GreyImage) -> Image.Image:
         """Draws the contour path on the grey level image."""
-        rgb = grey_img._image.astype(np.uint8)# shape (H, W, 3), uint8
+        rgb = grey_img.image.astype(np.uint8)# shape (H, W, 3), uint8
         # red line drawing
         for p in path:
             for dx in [-2, -1, 0, 1, 2]:

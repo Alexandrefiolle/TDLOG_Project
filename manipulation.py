@@ -8,10 +8,10 @@ class GreyImage:
     """A class representing a grey-scale image as a graph of grey levels and stocking dimensions."""
     def __init__(self, file_path : str) -> None:
         """Loads the image from the given file path and initializes the graph representation."""
-        im = Image.open(file_path)
-        self._image = np.array(im, dtype=np.int16)
-        self._height = self._image.shape[0]
-        self._width = self._image.shape[1]
+        im = Image.open(file_path).convert("RGB")
+        self.image = np.array(im, dtype=np.int16)
+        self._height = self.image.shape[0]
+        self._width = self.image.shape[1]
 
     @property
     def height(self) -> int:
@@ -22,16 +22,9 @@ class GreyImage:
         """Returns the width of the image."""
         return self._width
     
-    @property
-    def image(self) -> np.ndarray:
-        if len(self._image.shape) > 2:
-            return np.average(self._image, axis=2)
-        else:
-            return self._image
-    
     def __getitem__(self, key: pc.Point) -> int:
         """Allows accessing the grey level of a point using indexing."""
-        return self._image[key.y][key.x]
+        return self.image[key.y][key.x]
     
     def neighbors(self, m: pc.Point) -> list[pc.Point]:
         """Returns the list of neighbors of a given point m"""
