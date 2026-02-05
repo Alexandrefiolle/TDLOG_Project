@@ -10,7 +10,7 @@ class Observer:
         """Adds an observer to the list."""
         self.liste.append(ob)
 
-    def del_observer(self, ob: 'Observer'):
+    def del_observer(self, ob: 'Observer') -> None:
         """Removes an observer from the list."""
         if ob in self.liste:
             self.liste.remove(ob)

@@ -3,6 +3,7 @@
 from PIL import Image
 import numpy as np
 import point_class as pc
+from __future__ import annotations
 
 class GreyImage:
     """A class representing a grey-scale image as a graph of grey levels and stocking dimensions."""
@@ -44,7 +45,8 @@ class GreyImage:
         """Computes the cost induced two points of the image"""
         return epsilon + np.sum(np.abs(self[m0] - self[m]))
     
-    def __iter__(self):
+    def __iter__(self) -> pc.Point:
+        """Allows iteration over all points in the image."""
         return (pc.Point(x, y) for x in range(self.width) for y in range(self.height))
     
 class NumpyDict:
@@ -72,10 +74,12 @@ class NumpyDict:
         """Allows accessing the grey level of a point using indexing."""
         self.map[key.y][key.x] = value
 
-    def __iter__(self):
+    def __iter__(self) -> pc.Point:
+        """Allows iteration over all points in the image."""
         return (pc.Point(x, y) for x in range(self.width) for y in range(self.height))
     
-    def __sub__(self, other):
+    def __sub__(self, other) -> NumpyDict:
+        """Subtracts two NumpyDict objects element-wise."""
         assert self._height == other._height and self._width == other._width, "Dimensions must match for subtraction."
         result = NumpyDict.__new__(NumpyDict)
         result.map = self.map - other.map

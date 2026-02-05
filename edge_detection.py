@@ -46,9 +46,7 @@ def compute_gradient_magnitude(grey_img: ui.GreyImage, obs:obs.Observer|None = N
                 grad_x[y, x] += np.sum(arr[y-1:y+2, x-1:x+2, k] * sobel_x)
                 grad_y[y, x] += np.sum(arr[y-1:y+2, x-1:x+2, k] * sobel_y)
 
-    # Magnitude
     magnitude = np.sqrt(grad_x**2 + grad_y**2)
-
     return magnitude 
 
 
@@ -71,37 +69,8 @@ def compute_edge_weight_map(smoothed_magnitude: np.ndarray, epsilon: float = EDG
 
 def cost_edges_edge_detection(epsilon: float, neighbor: pc.Point, dist: dict[pc.Point, float], 
                              grey_img: ui.GreyImage, weight_map: np.ndarray) -> float:
-    """
-    Cost function to be used in distances_costs when edge_detection=True.
-    """
+    """Cost function to be used in distances_costs when edge_detection=True."""
     w = weight_map[neighbor.y, neighbor.x]
     if w <= 0:
         return 1e10 
     return w
-
-
-
-"""
-def demo_edge_weight_map(grey_img: ui.GreyImage, sigma: float = GAUSSIAN_SIGMA, epsilon: float = EDGE_EPSILON) -> np.ndarray:
-    
-    import interface as vis
-
-    magnitude = compute_gradient_magnitude(grey_img)
-    smoothed = smooth_gradient_magnitude(magnitude, sigma)
-    weight_map = compute_edge_weight_map(smoothed, epsilon)
-
-    # Visualisation
-    mag_vis = np.clip(magnitude / magnitude.max() * 255, 0, 255).astype(np.uint8) if magnitude.max() > 0 else magnitude.astype(np.uint8)
-    smooth_vis = np.clip(smoothed / smoothed.max() * 255, 0, 255).astype(np.uint8) if smoothed.max() > 0 else smoothed.astype(np.uint8)
-    weight_vis = np.clip(weight_map / weight_map.max() * 255, 0, 255).astype(np.uint8) if weight_map.max() > 0 else weight_map.astype(np.uint8)
-
-    img_mag = ui.Image.fromarray(mag_vis, mode='L')
-    img_smooth = ui.Image.fromarray(smooth_vis, mode='L')
-    img_weight = ui.Image.fromarray(weight_vis, mode='L')
-
-    img_mag.show(title="Gradient Magnitude |∇f|")
-    img_smooth.show(title="Smoothed Gradient Gσ * |∇f|")
-    img_weight.show(title="Weight Map W(x,y)")
-
-    return weight_map  # Return the weight map for further use in pathfinding
-"""
