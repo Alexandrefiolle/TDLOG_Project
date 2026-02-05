@@ -23,3 +23,9 @@ class Point:
         # between points when the priority is the same. When the priority is the same we don't care which point we use first
         # for dijkstra, returning true is enough for our implementation
         return True
+    
+    def __sub__(self, other):
+        return Point(self.x - other.x, self.y - other.y)
+
+    def vect(self, other):
+        return self.x*other.y - self.y*other.x

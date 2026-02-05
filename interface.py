@@ -707,40 +707,9 @@ class Menu(widgets.QGroupBox):
         tolerance = 1e-3
         equidistance_points = [p for p in difference_dict if abs(difference_dict[p]) < tolerance]
         
-        def euclidean_distance(p1, p2):
-            return ((p1.x - p2.x)**2 + (p1.y - p2.y)**2)**0.5
-        
-        def min_distance_to_start_goal(p):
-            """Distance minimale entre le point p et {start, goal}"""
-            dist_to_start = euclidean_distance(p, start)
-            dist_to_goal = euclidean_distance(p, goal)
-            return min(dist_to_start, dist_to_goal)
-        
-        # Sort the equidistance points by their minimum distance to start/goal in descending order
-        # This way, we prioritize points that are far from both start and goal
-        equidistance_points_sorted = sorted(equidistance_points, 
-                                        key=min_distance_to_start_goal, 
-                                        reverse=True)
-        
-        # Prendre le premier point (le plus éloigné)
-        point1 = equidistance_points_sorted[0]
-        
-        # Take the second point that is also far from start/goal
-        # and spatially distant from point1 to ensure they are on opposite sides
-        point2 = max(equidistance_points_sorted[1:], 
-                    key=lambda p: min(euclidean_distance(p, point1), 
-                                    min_distance_to_start_goal(p)))
-        
-        print(f"\nSelected points:")
-        print(f"  Point 1: ({point1.x}, {point1.y})")
-        print(f"    - Distance to start: {euclidean_distance(point1, start):.2f}")
-        print(f"    - Distance to goal: {euclidean_distance(point1, goal):.2f}")
-        print(f"    - Dijkstra distance: {dist_dict_start[point1]:.2f}")
-        print(f"  Point 2: ({point2.x}, {point2.y})")
-        print(f"    - Distance to start: {euclidean_distance(point2, start):.2f}")
-        print(f"    - Distance to goal: {euclidean_distance(point2, goal):.2f}")
-        print(f"    - Dijkstra distance: {dist_dict_start[point2]:.2f}")
-        print(f"  Distance between point1 and point2: {euclidean_distance(point1, point2):.2f}")
+        point1 = min(equidistance_points, key=lambda p : dist_dict_start[p] + 10e6*np.sign((p - start).vect(goal - start)))
+
+        point2 = min(equidistance_points, key=lambda p : dist_dict_start[p] - 10e6*np.sign((p - start).vect(goal - start)))
         
         # Chemin 1 : start → point1
         path_start_to_p1 = self.reconstruct_path(dist_dict_start, point1, start)
@@ -788,10 +757,7 @@ class Menu(widgets.QGroupBox):
 
     def draw_contour(self, path: list[pc.Point], grey_img: ui.GreyImage) -> Image.Image:
         """Draws the contour path on the grey level image."""
-        arr = grey_img.image
-        # Convert to uint8 for RGB stacking
-        arr_uint8 = arr.astype(np.uint8)
-        rgb = np.stack([arr_uint8, arr_uint8, arr_uint8], axis=-1)  # shape (H, W, 3), uint8
+        rgb = grey_img._image.astype(np.uint8)# shape (H, W, 3), uint8
         # red line drawing
         for p in path:
             for dx in [-2, -1, 0, 1, 2]:
