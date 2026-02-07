@@ -289,6 +289,15 @@ class Menu(widgets.QGroupBox):
         self.all_points_chosen_button.clicked.connect(self.all_points_chosen_button_was_clicked)
         self.all_points_chosen_button.hide()
 
+        #Epsilon
+        self.epsilon_label = widgets.QLabel("<h3>Epsilon :</h3>", self)
+        self.epsilon_label.setGeometry(10, 570, 150, 30)
+        self.epsilon_spin_box = widgets.QDoubleSpinBox(self)
+        self.epsilon_spin_box.setGeometry(10, 600, 150, 30)
+        self.epsilon_spin_box.setValue(2.)
+        self.epsilon_spin_box.valueChanged.connect(slot=lambda d: (dijkstra.__setattr__("epsilon", d)))
+
+
         # vue
         self._vue = vue
         self.shortest_mode = False
@@ -440,6 +449,7 @@ class Menu(widgets.QGroupBox):
     # Distances map button functionality
     def distances_map_creation(self, start: pc.Point, end: pc.Point) -> None:
         """Creates the distances map and stores it in the corresponding view."""
+        print(dijkstra.epsilon)
         self._vue.bar.reinitialise(start.norm(end))
         self._vue.bar.show()
         self.obs.add_observer(self._vue.bar)

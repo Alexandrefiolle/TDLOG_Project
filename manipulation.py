@@ -1,9 +1,10 @@
 "this file contains the GreyImage class which handles the loading and manipulation of grey-scale images."
 
+from __future__ import annotations
 from PIL import Image
 import numpy as np
 import point_class as pc
-from __future__ import annotations
+
 
 class GreyImage:
     """A class representing a grey-scale image as a graph of grey levels and stocking dimensions."""
