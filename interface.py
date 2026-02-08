@@ -1,4 +1,4 @@
-"This file aims at creating a simple interface which allows the user to open and display an image."
+"""This file aims at creating a simple interface which allows the user to open and display an image."""
 
 from __future__ import annotations 
 import numpy as np
@@ -408,7 +408,7 @@ class Menu(widgets.QGroupBox):
         im = self._original_image_grey_level
         # Compute distances costs using fast marching algorithm
         self._distances_costs = dijkstra.distances_costs(start, end, im, self._list_visited, obs=self.obs)
-        distances_map_image = dijkstra.coloration_map(self._distances_costs, im)
+        distances_map_image = dijkstra.distances_map(self._distances_costs, im, gradient=0)
         img = Image.fromarray(distances_map_image)
         img.save(self._distances_map_image_name)
         self._distances_map_computed = True
@@ -439,7 +439,7 @@ class Menu(widgets.QGroupBox):
         self._vue.bar.reinitialise(2*im.width*im.height)
         self._vue.bar.show()
         # Compute gradient on image
-        self._grad_image = dijkstra.gradient_on_image(self._distances_costs, im, self.obs)
+        self._grad_image = dijkstra.distances_map(self._distances_costs, im, gradient=1)
         img = Image.fromarray(self._grad_image)
         img.save(self._gradients_map_image_name)
         self._gradients_map_computed = True
@@ -471,7 +471,7 @@ class Menu(widgets.QGroupBox):
         self._vue.bar.show()
         # Compute Sobel gradient descent
         sobel_grad = dijkstra.gradient_descent_Sobel(im, self._starting_point, self._ending_point, self.obs)
-        img = dijkstra.affiche_descent_image(sobel_grad, im, Sobel=1, first_time=0)
+        img = dijkstra.affiche_descent_image(sobel_grad, im, Sobel=1)
         img_pil = Image.fromarray(img.astype(np.uint8))
         img_pil.save(self._sobel_gradients_map_image_name)
         self._sobel_gradients_map_computed = True
@@ -489,7 +489,7 @@ class Menu(widgets.QGroupBox):
             im = self._original_image_grey_level
             # Gradient descent from ending point to starting point
             descent = dijkstra.amelioration_descent(self._distances_costs, im, self._starting_point, self._ending_point, self._list_visited)
-            final_img = dijkstra.affiche_descent_image(descent, im, Sobel=0, first_time=0)
+            final_img = dijkstra.affiche_descent_image(descent, im, Sobel=0)
             img = Image.fromarray(final_img)
             img.save(self._optimal_path_image_name)
             self._optimal_path_computed = True

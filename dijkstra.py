@@ -75,11 +75,11 @@ def distances_costs(start: pc.Point, end: pc.Point|None, grey_levels: ui.GreyIma
                     to_visit.append(neighbor, dist[neighbor]+neighbor.norm(end))
     return dist
 
-def coloration_map(distances: ui.NumpyDict, grey_levels: ui.GreyImage) -> np.ndarray:
+def coloration_map(distances: ui.NumpyDict) -> np.ndarray:
     """Colors the map according to the distances computed"""
     max_dist = np.max(distances.map, where=np.isfinite(distances.map), initial=0)
     min_dist = np.min(distances.map)
-    intensity = (distances.map - min_dist)/(max_dist - min_dist)
+    intensity = (distances.map - min_dist)/(max_dist - min_dist) # normalization (between 0 and 1)
     myMap = plt.get_cmap('Spectral')
     myMap.set_over(color='black')
     colored_map = (myMap(intensity)[:, :, :3] * 255).astype(np.uint8)
@@ -137,16 +137,14 @@ def gradient_x(dist: dict[pc.Point, float], grey_levels: ui.GreyImage, obs = Non
            image_gradient[point] = gradient_point_x(point, dist, grey_levels)
     return image_gradient
 
-def gradient_on_image(dist: dict[pc.Point, float], grey_levels: ui.GreyImage, obs: obs.Observer|None = None) -> np.ndarray:
+def gradient_on_image(grad_x: dict[pc.Point, float], grad_y: dict[pc.Point, float]) -> np.ndarray:
     """Display the gradient on an image"""
-    grad_x = gradient_x(dist, grey_levels, obs)
-    grad_y = gradient_y(dist, grey_levels, obs)
     # Create colored map based on gradient magnitude and direction
     myMap = plt.get_cmap('GnBu')
-    intensity = np.sqrt(np.abs(grad_x.map) + np.abs(grad_y.map))
+    intensity = np.sqrt(np.abs(grad_x.map) + np.abs(grad_y.map)) # compute the gradient magnitude
     np.putmask(intensity, np.isinf(intensity), 0)
-    intensity = intensity/np.max(intensity)
-    theta = np.arctan2(grad_x.map,grad_y.map)/(2*np.pi) + 0.5
+    intensity = intensity/np.max(intensity) # normalization (between 0 and 1)
+    theta = np.arctan2(grad_x.map,grad_y.map)/(2*np.pi) + 0.5 # gradient direction and normalization (between 0 and 1)
     colored_map = np.einsum("ij, ijk -> ijk", intensity, myMap(theta)[:, :, :3])
     return (colored_map * 255).astype(np.uint8)
 
@@ -171,12 +169,12 @@ def test_minimum_neighbours(point: pc.Point, grad_x: dict[pc.Point, float], grad
         mini_point = neighbours[0]
     else: 
         if pc.Point(point.x-copysign(1,grad_x[point]), point.y) in neighbours: 
-            # we test the neighbour in the direction of the gradient
+            # we test the neighbour in the opposite direction of the gradient
             if (abs(grad_x[point]) < abs(grad_y[point]) or grad_y[point] == 0) :
                 mini_point = pc.Point(point.x-int(copysign(1,grad_x[point])), point.y)
 
         if pc.Point(point.x, point.y-copysign(1,grad_y[point])) in neighbours:
-            # we test the neighbour in the direction of the gradient
+            # we test the neighbour in the opposite direction of the gradient
             if (abs(grad_y[point]) < abs(grad_x[point]) or grad_x[point] == 0) :
                 mini_point = pc.Point(point.x, int(point.y-copysign(1,grad_y[point])))
         
@@ -226,29 +224,37 @@ def gradient_descent(distances: dict[pc.Point, float], grey_levels: ui.GreyImage
             else: # we continue the descent
                 visited[next_point] = True
                 descent.append(next_point)
-            #print(i, point, next_point)  
             cost_ += grey_levels.cost(point, next_point)
             list_cost.append(cost_)
             point = next_point
             i+=1
-            assert(i<20000) # to be sure that the while loop is not infinite
+            assert(i<20000) # to be sure that the while loop is not infinite (to prevent a bug to happen)
     print("cost of the descent: ", list_cost[-1])
     print(len(descent))
     return descent
 
 def affiche_descent(descent: list[pc.Point], img: ui.GreyImage, Sobel: int = 0) -> np.ndarray:
-    """Displays the descent path on the image"""
+    """
+    Displays the descent path on the image
+    Entry : descent : descent path
+            img : the image we want to display the descent on
+         Sobel : an integer to see which type of gradient we use (0 for the gradient on the distance map, 1 for the Sobel gradient) 
+    """
     for point in descent:
         if Sobel == 0:
             img[point.y, point.x] = [255, 0, 0]
         else:
             img[point.y, point.x] = [0, 255, 0]
-    #print(sum)
     return img
 
-def distances_map(start: pc.Point, end: pc.Point, grey_levels: ui.GreyImage) -> np.ndarray:
+def distances_map(dist: dict[pc.Point, float], grey_levels: ui.GreyImage, gradient: int = 0) -> np.ndarray:
     """Generates a colored distances map from start to end points based on grey levels."""
-    return coloration_map(distances_costs(start, end, grey_levels), grey_levels)
+    if gradient == 0:
+        return coloration_map(dist)
+    else:
+        grad_x = gradient_x(dist, grey_levels)
+        grad_y = gradient_y(dist, grey_levels)
+        return gradient_on_image(grad_x, grad_y)
 
 def amelioration_descent(distances: dict[pc.Point, float], grey_levels: ui.GreyImage, 
                          start_point: pc.Point, end_point: pc.Point, 
@@ -419,8 +425,13 @@ def gradient_descent_Sobel(grey_levels: ui.GreyImage, start_point: pc.Point, end
     print("longueur du chemin initial", len(path))
     return final_descent
 
-def affiche_descent_image(descent: list[pc.Point], img: ui.GreyImage|np.ndarray, Sobel: int = 0, first_time: int = 0) -> np.ndarray:
-    """Displays the descent path on the original image"""
+def affiche_descent_image(descent: list[pc.Point], img: ui.GreyImage|np.ndarray, Sobel: int = 0) -> np.ndarray:
+    """
+    Displays the descent path on the original image
+    Entry : descent : descent path
+            img : the image we want to display the descent on
+            Sobel : an integer to see which type of gradient we use (0 for the gradient on the distance map, 1 for the Sobel gradient) 
+    """
     if isinstance(img, ui.GreyImage):
         new_img = np.copy(img.image).astype(np.uint8)
     else:
@@ -442,7 +453,7 @@ if __name__ == "__main__":
     list_visited = []
     distances = distances_costs(start, end, im, list_visited)
     print("distances okay")
-    colored_map = coloration_map(distances, im)
+    colored_map = coloration_map(distances)
     print("coloration map okay")
     colored_map[start.y, start.x] = [255,0,0]
     for k in range(10):
@@ -456,16 +467,16 @@ if __name__ == "__main__":
         colored_map[end.y, end.x-k] = [0,255,0]
     img = ui.Image.fromarray(colored_map, 'RGB')
     img.show()
-    grad_image = gradient_on_image(distances, im)
+    grad_image = distances_map(distances, im, gradient=1)
     print("grad image okay")
     grad_image_ = ui.Image.fromarray(grad_image, 'RGB')
     grad_image_.show()
     descent_amelioration = amelioration_descent(distances, im, start, end, list_visited)
-    final_img = affiche_descent_image(descent_amelioration, im, Sobel=0, first_time=0)
+    final_img = affiche_descent_image(descent_amelioration, im, Sobel=0)
     print("Sobel")
     descent_sobel = gradient_descent_Sobel(im, start, end)
     print("end Sobel")
-    final_img_s = affiche_descent_image(descent_sobel, final_img, Sobel=1, first_time=1)
+    final_img_s = affiche_descent_image(descent_sobel, final_img, Sobel=1)
     final_img_s = ui.Image.fromarray(final_img_s, 'RGB')
     final_img_s.show()
     
