@@ -187,45 +187,62 @@ class Menu(widgets.QGroupBox):
         self.setFixedWidth(200)
 
         # Buttons
-        buttons_info = pd.DataFrame.from_records([["Select an image", self.select_button_was_clicked, True],
-                   ["Save the image", self.save_button_was_clicked,True],
-                   ["Original image", self.original_image_button_was_clicked,True],
-                   ["Shortest path", self.shortest_path_was_clicked,True],
-                   ["Erase the points", self.erase_points_was_clicked,False],
-                   ["Distances map", self.distances_map_button_was_clicked,False],
-                   ["Gradients map", self.gradients_map_button_was_clicked,False],
-                   ["Sobel optimal path", self.sobel_gradients_map_button_was_clicked,False],
-                   ["Print the optimal path", self.path_button_was_clicked,False],
-                   ["Edge detection", self.edge_detection_button_was_clicked,True],
-                   ["Reset edge detection", self.reset_edge_detection_button_was_clicked,False],
-                   ["Next image →", self.show_next_edge_image_button_was_clicked,False],
-                   ["Draw the edge", self.contour_button_was_clicked_2,False],
-                   ["Gradient Magnitude", self.gradient_magnitude_button_was_clicked,False],
-                   ["Smoothed Gradient", self.smoothed_gradient_button_was_clicked,False],
-                   ["Weight Map", self.weight_map_button_was_clicked,False],
-                   ["Map with contour", self.print_contour_button_was_clicked,False],
-                   ["New contour", self.new_contour_button_was_clicked,False],
-                   ["Image segmentation", self.segmentation_button_was_clicked,True],
-                   ["Reset segmentation", self.reset_segmentation_button_was_clicked,False],
-                   ["All points chosen", self.all_points_chosen_button_was_clicked, False]], columns=["Label", "Function", "Enable"])
+        buttons_info = pd.DataFrame.from_records([["Select an image", self.select_button_was_clicked, True, "General"],
+                   ["Save the image", self.save_button_was_clicked,True, "General"],
+                   ["Original image", self.original_image_button_was_clicked,True, "General"],
+                   ["Shortest path", self.shortest_path_was_clicked,True, "Shortest path"],
+                   ["Erase the points", self.erase_points_was_clicked,False, "Shortest path"],
+                   ["Distances map", self.distances_map_button_was_clicked,False, "Shortest path"],
+                   ["Gradients map", self.gradients_map_button_was_clicked,False, "Shortest path"],
+                   ["Sobel optimal path", self.sobel_gradients_map_button_was_clicked,False, "Shortest path"],
+                   ["Print the optimal path", self.path_button_was_clicked,False, "Shortest path"],
+                   ["Edge detection", self.edge_detection_button_was_clicked,True, "Edge detection"],
+                   ["Reset edge detection", self.reset_edge_detection_button_was_clicked,False, "Edge detection"],
+                   ["Next image →", self.show_next_edge_image_button_was_clicked,False, "Edge detection"],
+                   ["Draw the edge", self.contour_button_was_clicked_2,False, "Edge detection"],
+                   ["Gradient Magnitude", self.gradient_magnitude_button_was_clicked,False, "Edge detection"],
+                   ["Smoothed Gradient", self.smoothed_gradient_button_was_clicked,False, "Edge detection"],
+                   ["Weight Map", self.weight_map_button_was_clicked,False, "Edge detection"],
+                   ["Map with contour", self.print_contour_button_was_clicked,False, "Edge detection"],
+                   ["New contour", self.new_contour_button_was_clicked,False, "Edge detection"],
+                   ["Image segmentation", self.segmentation_button_was_clicked,True, "Segmentation"],
+                   ["Reset segmentation", self.reset_segmentation_button_was_clicked,False, "Segmentation"],
+                   ["All points chosen", self.all_points_chosen_button_was_clicked, False, "Segmentation"]], 
+                   columns=["Label", "Function", "Enable", "Section"])
         
         self.buttons : dict[str, widgets.QPushButton] = dict()
-        vertical = widgets.QVBoxLayout(self)
+        stacked_widget = widgets.QStackedWidget(self)
+        vertical : dict[str, widgets.QVBoxLayout]= dict()
+        for section in ["General", "Shortest path", "Edge detection", "Segmentation"]:
+            page = widgets.QWidget()
+            vertical[section] = widgets.QVBoxLayout(page)
+            stacked_widget.addWidget(page)
+
         for _, button in buttons_info.iterrows():
             self.buttons[button["Label"]] = widgets.QPushButton(button["Label"], self)
             self.buttons[button["Label"]].setMinimumHeight(30)
-            vertical.addWidget(self.buttons[button["Label"]])
+            vertical[button["Section"]].addWidget(self.buttons[button["Label"]])
             self.buttons[button["Label"]].clicked.connect(button["Function"])
             self.buttons[button["Label"]].setVisible(button["Enable"])
 
         #Epsilon
         self.epsilon_label = widgets.QLabel("<h3>Epsilon :</h3>", self)
-        vertical.addWidget(self.epsilon_label)
+        vertical["Shortest path"].addWidget(self.epsilon_label)
         self.epsilon_spin_box = widgets.QDoubleSpinBox(self)
-        vertical.addWidget(self.epsilon_spin_box)
+        vertical["Shortest path"].addWidget(self.epsilon_spin_box)
         self.epsilon_spin_box.setValue(2.)
         self.epsilon_spin_box.valueChanged.connect(slot=lambda d: (dijkstra.__setattr__("epsilon", d)))
-        vertical.addStretch(0)
+        
+        page_combo_box = widgets.QComboBox(self)
+        for section in ["General", "Shortest path", "Edge detection", "Segmentation"]:
+            vertical[section].addStretch(0)
+            page_combo_box.addItem(section)
+
+        page_combo_box.activated.connect(stacked_widget.setCurrentIndex)
+
+        layout = widgets.QVBoxLayout(self)
+        layout.addWidget(page_combo_box)
+        layout.addWidget(stacked_widget)
 
         # vue
         self._vue = vue
