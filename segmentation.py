@@ -9,7 +9,12 @@ import time
 from multiprocessing import Pool
 
 def points(nb_points: int, height: int, width: int) -> list[pc.Point]:
-    """Generates a list of random points within the given height and width."""
+    """Used for testing only
+    Entries : - nb_points : the number of points to generate
+              - height : the height of the image
+              - width : the width of the image
+    Returns : list of random points within the given height and width.
+    """
     list_points = []
     for _ in range(nb_points):
         x = random.randint(0, width)
@@ -19,7 +24,12 @@ def points(nb_points: int, height: int, width: int) -> list[pc.Point]:
     return list_points
 
 def distances_costs(start: pc.Point, grey_levels: ui.GreyImage, obs : obs.Observer|None = None) -> dict[pc.Point, float]:
-    """Computes the list of shortest path costs from start until we reach the end point"""
+    """
+    Entries : - start : the starting point of the path
+              - grey_levels : the initial image
+              - obs : an observer to notify the progress of the computation
+    Returns : a dictionary that gives the cost of the shortest path costs from start to each point of the image
+    """
     dist = ui.NumpyDict(grey_levels)
     dist[start] = 0
     to_visit = d.PriorityQueue_heap([])
@@ -39,14 +49,21 @@ def distances_costs(start: pc.Point, grey_levels: ui.GreyImage, obs : obs.Observ
     return dist
 
 def compute_distance_for_point(args: tuple[pc.Point, ui.GreyImage]) -> dict[pc.Point, float]:
-    """Helper function to compute distances for a given point and image."""
+    """Helper function to compute distances for a given point and image.
+    Entry : args : a tuple containing the point and the image
+    Returns : a dictionary that gives the cost of the shortest path costs from the given point to each point of the image
+    """
     p, im = args
     dist = distances_costs(p, im, None)
     return dist
 
 
 def distances_map(list_point: list[pc.Point], im: ui.GreyImage, obs : obs.Observer|None = None) -> list[np.ndarray]:
-    """Computes the distance maps for a list of points in the given image."""
+    """
+    Entries : - list_point : the list of points for which we want to compute the distance maps
+              - im : the initial image
+              - obs : an observer to notify the progress of the computation
+    Returns : a list of distance maps, one for each point in the list of points."""
     args = [(p, im) for p in list_point]
     list_distance_map = []
     list_colored_map = []
@@ -63,9 +80,17 @@ def distances_map(list_point: list[pc.Point], im: ui.GreyImage, obs : obs.Observ
 
 def choice_segmentation_v1(list_point: list[pc.Point], list_distance_map: list[dict[pc.Point, float]], 
                         grey_levels: ui.GreyImage, obs:obs.Observer|None = None) -> np.ndarray:
-    """Segments the image based on the closest point from the list of points using the distance maps."""
+    """
+    Entries : - list_point : the list of points for which we want to compute the distance maps
+              - list_distance_map : the list of distance maps, one for each point in the list of points
+              - grey_levels : the initial image
+              - obs : an observer to notify the progress of the computation
+    Returns : a colored map of the segmentation, where each pixel is colored based on the closest point from the list of points using the distance maps.
+    """
     colored_map = np.zeros((grey_levels.height, grey_levels.width, 3), dtype=np.uint8)
-    colors = [[255, 0, 0], [0, 255, 0], [0, 0, 255], [0, 0, 0], [255, 255, 0], [0, 255, 255], [255, 0, 255], [192, 192, 192], [128, 0, 0], [128, 128, 0], [0, 128, 0], [128, 0, 128], [0, 128, 128], [0, 0, 128]]
+    colors = [[255, 0, 0], [0, 255, 0], [0, 0, 255], [0, 0, 0], [255, 255, 0], 
+              [0, 255, 255], [255, 0, 255], [192, 192, 192], [128, 0, 0], [128, 128, 0], 
+              [0, 128, 0], [128, 0, 128], [0, 128, 128], [0, 0, 128]] # with this implementation, we can handle 14 points only
     cpt = grey_levels.width*grey_levels.height
     obs.notify_observer(-cpt)
     for y in range(grey_levels.height):

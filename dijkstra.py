@@ -54,6 +54,7 @@ def distances_costs(start: pc.Point, end: pc.Point|None, grey_levels: ui.GreyIma
               - list_visited : to store the points visited
               - edge_detection : a boolean to know if we want to use the edge detection or not
               - weight_map : the edge detection map (if edge_detection is True)
+              - obs : an observer to notify the progress of the computation
     Returns : - a dictionary that stores the shortest path costs from start to each point visited
               - the list of points visited during the algorithm"""
     dist = ui.NumpyDict(grey_levels)
@@ -87,7 +88,7 @@ def distances_costs(start: pc.Point, end: pc.Point|None, grey_levels: ui.GreyIma
 def gradient_point_x(point: pc.Point, distances: dict[pc.Point, float], grey_levels: ui.GreyImage) -> float:
     """
     Entry : - point : the point we want to compute the gradient for
-            - distances : the distance map computed by distances_costs function
+            - distances : the distances computed by distances_costs function
             - grey_levels : the initial image 
     Returns : the gradient value over x for the given point
     """
@@ -107,7 +108,7 @@ def gradient_point_x(point: pc.Point, distances: dict[pc.Point, float], grey_lev
 def gradient_point_y(point: pc.Point, distances: dict[pc.Point, float], grey_levels: ui.GreyImage) -> float:
     """
     Entry : - point : the point we want to compute the gradient for
-            - distances : the distance map computed by distances_costs function
+            - distances : the distances computed by distances_costs function
             - grey_levels : the initial image 
     Returns : the gradient value over y for the given point
     """
@@ -124,7 +125,7 @@ def gradient_point_y(point: pc.Point, distances: dict[pc.Point, float], grey_lev
 
 def gradient_y(dist: dict[pc.Point, float], grey_levels: ui.GreyImage, obs = None) -> dict[pc.Point, float]:
     """
-    Entry : - dist : the distance map computed by distances_costs function
+    Entry : - dist : the distances computed by distances_costs function
             - grey_levels : the initial image
             - obs : an observer to notify the progress of the computation
     Returns : a dictionary that stores the gradient over y for each point visited
@@ -141,7 +142,7 @@ def gradient_y(dist: dict[pc.Point, float], grey_levels: ui.GreyImage, obs = Non
 
 def gradient_x(dist: dict[pc.Point, float], grey_levels: ui.GreyImage, obs = None) -> dict[pc.Point, float]:
     """
-    Entry : - dist : the distance map computed by distances_costs function
+    Entry : - dist : the distances computed by distances_costs function
             - grey_levels : the initial image
             - obs : an observer to notify the progress of the computation
     Returns : a dictionary that stores the gradient over x for each point visited
@@ -157,13 +158,10 @@ def gradient_x(dist: dict[pc.Point, float], grey_levels: ui.GreyImage, obs = Non
     return image_gradient
 
 # Auxiliary function to computate of neighbourhoods in gradient descent
-def valid_neighbours(point: pc.Point, visited: dict[pc.Point, bool],
-                    ) -> list[pc.Point]:
+def valid_neighbours(point: pc.Point, visited: dict[pc.Point, bool]) -> list[pc.Point]:
     """
-    Entries : - grey_levels : the initial image
-              - point : the current point
+    Entries : - point : the current point
               - visited : a dictionary that stores if a point has been visited during the descent or not
-              - list_visited : the list of points visited by dijkstra's algorithm
     Returns : the list of valid neighbours of the current point 
     """
     neighbours = [pc.Point(point.x-1,point.y), pc.Point(point.x,point.y+1), pc.Point(point.x+1,point.y), pc.Point(point.x,point.y-1)]
@@ -221,9 +219,9 @@ def test_minimum_neighbours(point: pc.Point, grad_x: dict[pc.Point, float], grad
                 mini_point = neighbours[0]
     return mini_point
 
-def mini(neighbors: list[pc.Point], grad_x: dict[pc.Point, float], grad_y: dict[pc.Point, float], point: pc.Point, start_point: pc.Point, visited: list[pc.Point]) -> pc.Point:
+def mini(neighbours: list[pc.Point], grad_x: dict[pc.Point, float], grad_y: dict[pc.Point, float], point: pc.Point, start_point: pc.Point, visited: list[pc.Point]) -> pc.Point:
         """ For Sobel descent
-        Entries : - neighbors : the neighbors of the current point
+        Entries : - neighbours : the neighbours of the current point
                   - grad_x : the gradient over x for each point visited
                   - grad_y : the gradient over y for each point visited
                   - point : the current point
@@ -235,10 +233,10 @@ def mini(neighbors: list[pc.Point], grad_x: dict[pc.Point, float], grad_y: dict[
         diff_y = start_point.y - point.y
         mini_point = None
         neighbours_new = []
-        for i in range(len(neighbors)):
-            if neighbors[i] in visited:
-                if visited[neighbors[i]] == False:
-                    neighbours_new.append(neighbors[i])
+        for i in range(len(neighbours)):
+            if neighbours[i] in visited:
+                if visited[neighbours[i]] == False:
+                    neighbours_new.append(neighbours[i])
         if len(neighbours_new) == 1: # only one valid neighbour
             mini_point = neighbours_new[0]
         if pc.Point(point.x-copysign(1,grad_x[point.y, point.x]), point.y) in neighbours_new :
@@ -271,11 +269,7 @@ def mini(neighbors: list[pc.Point], grad_x: dict[pc.Point, float], grad_y: dict[
 # Amelioration function for gradient descent
 def amelioration_descent(grey_levels: ui.GreyImage, initial_descent: list[pc.Point]) -> list[pc.Point]:
     """
-    Entries : - distances : the distance map computed by distances_costs function
-              - grey_levels : the initial image
-              - start_point : the starting point of the path
-              - end_point : the ending point of the path
-              - list_visited : the list of points visited by dijkstra's algorithm
+    Entries : - grey_levels : the initial image
               - initial_descent : the initial descent path from end_point to start_point
     Returns : the improved gradient descent path by removing unnecessary points from end_point to start_point"""
     final_descent = [initial_descent[0]]
@@ -315,7 +309,7 @@ def amelioration_descent(grey_levels: ui.GreyImage, initial_descent: list[pc.Poi
 def gradient_descent(distances: dict[pc.Point, float], grey_levels: ui.GreyImage, 
                      start_point: pc.Point, end_point: pc.Point) -> list[pc.Point]:
     """Performs gradient descent on the distance map to find the shortest path from end_point to start_point
-    Entries : - distances : the distance map computed by distances_costs function
+    Entries : - distances : the distances computed by distances_costs function
               - grey_levels : the initial image
               - start_point : the starting point of the path
               - end_point : the ending point of the path
@@ -389,7 +383,7 @@ def gradient_descent_Sobel(grey_levels: ui.GreyImage, start_point: pc.Point, end
               - start_point : the starting point of the path
               - end_point : the ending point of the path
               - obs : an observer to notify the progress of the descent
-    Returns : the descent path from end_point to start_point using the Sobel gradient on the grey level image
+    Returns : the descent path from end_point to start_point using the Sobel gradient 
     """
     start = time.time()
     
@@ -420,7 +414,7 @@ def gradient_descent_Sobel(grey_levels: ui.GreyImage, start_point: pc.Point, end
 # Display functions
 def coloration_map(distances: ui.NumpyDict) -> np.ndarray:
     """
-    Entry : distances : the shortests distances from the start point to each point visited previously in distances_costs function
+    Entry : distances : the distances computed by distances_costs function
     Returns : a colored map based on the distances costs.
     """
     max_dist = np.max(distances.map, where=np.isfinite(distances.map), initial=0)
@@ -448,7 +442,7 @@ def gradient_on_image(grad_x: dict[pc.Point, float], grad_y: dict[pc.Point, floa
 
 def distances_map(dist: dict[pc.Point, float], grey_levels: ui.GreyImage, gradient: int = 0) -> np.ndarray:
     """
-    Entry : - dist : the distance map computed by distances_costs function
+    Entry : - dist : the distances computed by distances_costs function
             - grey_levels : the initial image
             - gradient : an integer to see which type of map we want to compute 
               (0 for the colored distances map, other for the gradient on the distance map)
@@ -463,10 +457,10 @@ def distances_map(dist: dict[pc.Point, float], grey_levels: ui.GreyImage, gradie
 
 def affiche_descent_image(descent: list[pc.Point], img: ui.GreyImage|np.ndarray, Sobel: int = 0) -> np.ndarray:
     """
-    Displays the descent path on the original image
     Entry : descent : descent path
             img : the image we want to display the descent on
             Sobel : an integer to see which type of gradient we use (0 for the gradient on the distance map, 1 for the Sobel gradient) 
+    Returns : the original image with the descent path displayed on it
     """
     if isinstance(img, ui.GreyImage):
         new_img = np.copy(img.image).astype(np.uint8)
