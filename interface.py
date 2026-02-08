@@ -488,7 +488,7 @@ class Menu(widgets.QGroupBox):
         elif self._starting_and_ending_points_set: # If points are set, compute and display
             im = self._original_image_grey_level
             # Gradient descent from ending point to starting point
-            descent = dijkstra.amelioration_descent(self._distances_costs, im, self._starting_point, self._ending_point, self._list_visited)
+            descent = dijkstra.gradient_descent(self._distances_costs, im, self._starting_point, self._ending_point)
             final_img = dijkstra.affiche_descent_image(descent, im, Sobel=0)
             img = Image.fromarray(final_img)
             img.save(self._optimal_path_image_name)
