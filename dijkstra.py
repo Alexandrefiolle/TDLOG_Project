@@ -440,7 +440,7 @@ def gradient_on_image(grad_x: dict[pc.Point, float], grad_y: dict[pc.Point, floa
     colored_map = np.einsum("ij, ijk -> ijk", intensity, myMap(theta)[:, :, :3])
     return (colored_map * 255).astype(np.uint8)
 
-def distances_map(dist: dict[pc.Point, float], grey_levels: ui.GreyImage, gradient: int = 0) -> np.ndarray:
+def distances_map(dist: dict[pc.Point, float], grey_levels: ui.GreyImage, gradient: int = 0, obs:obs.Observer|None=None) -> np.ndarray:
     """
     Entry : - dist : the distances computed by distances_costs function
             - grey_levels : the initial image
@@ -451,8 +451,8 @@ def distances_map(dist: dict[pc.Point, float], grey_levels: ui.GreyImage, gradie
     if gradient == 0:
         return coloration_map(dist)
     else:
-        grad_x = gradient_x(dist, grey_levels)
-        grad_y = gradient_y(dist, grey_levels)
+        grad_x = gradient_x(dist, grey_levels, obs)
+        grad_y = gradient_y(dist, grey_levels, obs)
         return gradient_on_image(grad_x, grad_y)
 
 def affiche_descent_image(descent: list[pc.Point], img: ui.GreyImage|np.ndarray, Sobel: int = 0) -> np.ndarray:

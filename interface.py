@@ -439,7 +439,7 @@ class Menu(widgets.QGroupBox):
         self._vue.bar.reinitialise(2*im.width*im.height)
         self._vue.bar.show()
         # Compute gradient on image
-        self._grad_image = dijkstra.distances_map(self._distances_costs, im, gradient=1)
+        self._grad_image = dijkstra.distances_map(self._distances_costs, im, gradient=1, obs=self.obs)
         img = Image.fromarray(self._grad_image)
         img.save(self._gradients_map_image_name)
         self._gradients_map_computed = True
